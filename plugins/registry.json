@@ -14,7 +14,7 @@
       "category": "build-tools",
       "keywords": ["gradle", "wrapper", "build"],
       "license": "MIT",
-      "repository": "./example-gradle-plugin",
+      "repository": "https://github.com/jonnybbb/claude-gradle-skills/tree/main/plugins/example-gradle-plugin",
       "skills": [
         {
           "name": "gradle-init",
