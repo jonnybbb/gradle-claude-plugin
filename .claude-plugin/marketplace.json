@@ -1,36 +1,38 @@
 {
-  "name": "Gradle Performance Tools",
+  "name": "Gradle Expert Tools",
   "owner": {
     "name": "Johannes Bühler",
     "email": "jonnybbb@gmail.com"
   },
   "metadata": {
-    "description": "Official marketplace for Gradle performance optimization tools and skills for Claude Code",
-    "version": "1.0.0",
+    "description": "Comprehensive Gradle expertise and tools for Claude Code - performance, dependencies, troubleshooting, and more",
+    "version": "1.1.0",
     "repository": "https://github.com/jonnybbb/claude-gradle-skills"
   },
   "plugins": [
     {
-      "name": "gradle-performance",
+      "name": "gradle-expert",
       "source": {
         "type": "github",
         "repo": "jonnybbb/claude-gradle-skills"
       },
-      "description": "Comprehensive Gradle build performance optimization based on official Gradle documentation. Analyze builds, recommend optimizations, and apply best practices for configuration cache, build cache, parallel execution, and more.",
-      "version": "1.0.0",
+      "description": "Comprehensive Gradle expertise for Claude Code. Build optimization, dependency management, troubleshooting, project setup, multi-module builds, plugin development, and more. Based on official Gradle documentation.",
+      "version": "1.1.0",
       "author": {
         "name": "Johannes Bühler",
         "email": "jonnybbb@gmail.com"
       },
       "keywords": [
         "gradle",
+        "build-tool",
         "performance",
         "optimization",
-        "build",
-        "cache",
+        "dependencies",
+        "troubleshooting",
         "java",
         "kotlin",
-        "android"
+        "android",
+        "multi-module"
       ],
       "category": "development"
     }

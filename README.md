@@ -1,10 +1,10 @@
-# Claude Code - Gradle Performance Optimization Plugin
+# Claude Code - Gradle Expert Plugin
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/jonnybbb/claude-gradle-skills)
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/jonnybbb/claude-gradle-skills)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-Plugin-purple.svg)](https://docs.claude.com/en/docs/claude-code/plugins)
 
-This Claude Code plugin provides comprehensive knowledge and tools for optimizing Gradle build performance based on [official Gradle documentation](https://docs.gradle.org/current/userguide/performance.html).
+This Claude Code plugin provides comprehensive Gradle expertise covering all aspects of Gradle build automation based on [official Gradle documentation](https://docs.gradle.org/current/userguide/userguide.html).
 
 ## 📦 Installation
 
@@ -19,7 +19,7 @@ Add this marketplace to Claude Code:
 Then install the plugin:
 
 ```bash
-/plugin install gradle-performance
+/plugin install gradle-expert
 ```
 
 ### Option 2: Install Directly from GitHub
@@ -41,29 +41,55 @@ cd claude-gradle-skills
 
 ## Overview
 
-The Gradle Performance plugin enables Claude Code to:
-- Analyze existing Gradle build configurations
-- Recommend performance optimizations
-- Apply best practices from official Gradle documentation
-- Generate optimized `gradle.properties` configurations
-- Identify common performance bottlenecks
-- Provide expert guidance on all Gradle performance features
+The Gradle Expert plugin provides Claude Code with comprehensive Gradle knowledge across multiple domains:
+
+### 🎯 General Gradle Expertise
+- Project initialization and structure
+- Dependency management and resolution
+- Task creation and configuration
+- Plugin development and application
+- Build script organization
+- Multi-module project setup
+- Source set configuration
+- Publishing artifacts
+
+### ⚡ Performance Optimization
+- Configuration cache (50-80% faster builds)
+- Build cache (30-70% faster clean builds)
+- Parallel execution (20-50% faster multi-module builds)
+- File system watching
+- JVM memory tuning
+- Kotlin incremental compilation
+- KSP over KAPT optimization
+
+### 🔧 Troubleshooting & Debugging
+- Dependency conflict resolution
+- Build failure diagnosis
+- Task debugging
+- Build scan analysis
+- Performance profiling
+- Cache issues
+- Version conflicts
+
+### 🏗️ Multi-Module Projects
+- Project structure best practices
+- Inter-module dependencies
+- Composite builds
+- Shared configuration
+- Version catalog management
+
+### 🧪 Testing Configuration
+- JUnit 5 setup
+- Test filtering and execution
+- Integration test configuration
+- Parallel test execution
+- Test reporting
 
 ## Features
 
-### 🚀 Core Optimizations Covered
-
-1. **Configuration Cache** - Cache configuration phase results (50-80% faster builds)
-2. **Build Cache** - Reuse task outputs from previous builds (30-70% faster)
-3. **Parallel Execution** - Execute tasks in parallel across projects
-4. **File System Watching** - Improve incremental build performance
-5. **JVM Memory Tuning** - Optimize memory settings for your project size
-6. **Kotlin Optimizations** - Incremental compilation and KSP over KAPT
-7. **Dependency Management** - Optimize dependency resolution
-
 ### 📁 Plugin Structure
 
-This plugin follows the [Claude Code plugin format](https://docs.claude.com/en/docs/claude-code/plugins-reference):
+This plugin includes multiple specialized skills:
 
 ```
 .
@@ -71,8 +97,10 @@ This plugin follows the [Claude Code plugin format](https://docs.claude.com/en/d
 │   ├── plugin.json              # Plugin manifest
 │   └── marketplace.json         # Marketplace configuration
 ├── skills/
-│   └── gradle-performance/
-│       └── SKILL.md             # Main performance optimization skill
+│   ├── general/
+│   │   └── SKILL.md            # General Gradle expertise
+│   └── performance/
+│       └── SKILL.md            # Performance optimization skill
 ├── templates/
 │   └── gradle.properties.optimized  # Optimized gradle.properties template
 ├── QUICK_REFERENCE.md           # Quick reference guide
@@ -82,80 +110,104 @@ This plugin follows the [Claude Code plugin format](https://docs.claude.com/en/d
 
 ## Usage with Claude Code
 
-### Quick Start
+### Quick Start Examples
 
-1. **Ask Claude to analyze your build**:
-   ```
-   Analyze my Gradle build configuration and suggest performance improvements
-   ```
-
-2. **Apply optimizations**:
-   ```
-   Apply recommended Gradle performance optimizations to my gradle.properties
-   ```
-
-3. **Get specific guidance**:
-   ```
-   How can I enable configuration cache in my Gradle project?
-   ```
-
-### Common Use Cases
-
-#### Analyze Existing Configuration
+#### 1. **General Gradle Help**
 ```
-Review my gradle.properties and identify missing performance optimizations
+How do I create a multi-module Gradle project?
 ```
 
-#### Generate Optimized Configuration
 ```
-Create an optimized gradle.properties for a large multi-module Android project
-```
-
-#### Troubleshoot Performance Issues
-```
-My Gradle builds are slow. Help me identify and fix performance bottlenecks
+Help me set up JUnit 5 in my Gradle project
 ```
 
-#### Migration Assistance
 ```
-Help me migrate to configuration cache
-```
-
-## Performance Optimizations
-
-### Key Settings
-
-The skill provides guidance on all critical Gradle performance settings:
-
-```properties
-# Configuration Cache (Gradle 8.1+)
-org.gradle.configuration-cache=true
-
-# Build Cache
-org.gradle.caching=true
-
-# Parallel Execution
-org.gradle.parallel=true
-
-# File System Watching
-org.gradle.vfs.watch=true
-
-# Memory Configuration
-org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g
-
-# Kotlin Optimizations
-kotlin.incremental=true
-kotlin.daemon.jvmargs=-Xmx2g
+How do I manage dependencies for a multi-module project?
 ```
 
-### Expected Performance Improvements
+#### 2. **Performance Optimization**
+```
+Analyze my Gradle build configuration and suggest performance improvements
+```
 
-| Optimization | Expected Improvement |
-|--------------|---------------------|
+```
+Apply recommended Gradle performance optimizations to my gradle.properties
+```
+
+```
+Help me enable configuration cache in my project
+```
+
+#### 3. **Troubleshooting**
+```
+My Gradle build is failing with a dependency conflict. Help me resolve it.
+```
+
+```
+Why is my Gradle build so slow?
+```
+
+```
+I'm getting an OutOfMemoryError during builds. How do I fix it?
+```
+
+#### 4. **Project Setup**
+```
+Set up a new Spring Boot project with Gradle
+```
+
+```
+Help me configure Kotlin DSL for my Gradle build
+```
+
+```
+Create a Gradle plugin for my custom build logic
+```
+
+## Skills Included
+
+### 1. General Gradle Skill
+
+Provides expertise in:
+- Project setup and initialization
+- Dependency management (configurations, catalogs, constraints)
+- Plugin development and application
+- Task management and lifecycle
+- Build script best practices
+- Multi-module project structure
+- Testing configuration
+- Publishing and distribution
+- IDE integration
+- Gradle wrapper management
+
+**Key Commands Covered:**
+```bash
+gradle init
+./gradlew build
+./gradlew dependencies
+./gradlew tasks --all
+./gradlew wrapper --gradle-version 8.5
+```
+
+### 2. Performance Optimization Skill
+
+Specialized knowledge for optimizing build performance:
+- Configuration cache setup and troubleshooting
+- Build cache configuration (local and remote)
+- Parallel execution tuning
+- File system watching
+- JVM memory configuration
+- Kotlin-specific optimizations
+- Dependency resolution optimization
+- Build profiling and analysis
+
+**Expected Performance Improvements:**
+| Optimization | Improvement |
+|--------------|-------------|
 | Configuration Cache | 50-80% faster subsequent builds |
 | Build Cache | 30-70% faster clean builds |
 | Parallel Execution | 20-50% faster multi-module builds |
-| Combined Optimizations | 70-90% faster in optimal scenarios |
+| Combined | 70-90% faster in optimal scenarios |
 
 ## Templates
 
@@ -188,41 +240,99 @@ A complete, production-ready `gradle.properties` template is available in `templ
    ./gradlew clean build --scan
    ```
 
+## Common Use Cases
+
+### Setting Up a New Project
+```
+Initialize a new Kotlin application with Gradle using best practices
+```
+
+Claude will help you:
+- Run `gradle init` with appropriate parameters
+- Set up build.gradle.kts with modern APIs
+- Configure dependencies and repositories
+- Add testing framework
+- Set up performance optimizations
+
+### Migrating to Kotlin DSL
+```
+Help me migrate my Groovy build.gradle to Kotlin build.gradle.kts
+```
+
+Claude will:
+- Convert syntax from Groovy to Kotlin
+- Use type-safe accessors
+- Apply Kotlin DSL best practices
+- Update string interpolation
+- Fix common migration issues
+
+### Optimizing Build Performance
+```
+My builds are taking 5 minutes. Optimize my Gradle configuration.
+```
+
+Claude will:
+- Analyze current configuration
+- Enable configuration cache
+- Set up build cache
+- Configure parallel execution
+- Tune JVM memory
+- Provide measurement strategy
+
+### Resolving Dependency Conflicts
+```
+I have a version conflict between guava 30.0 and 31.0. How do I resolve it?
+```
+
+Claude will:
+- Show dependency tree analysis
+- Explain conflict resolution strategies
+- Provide force/constraint solutions
+- Suggest dependency management best practices
+
 ## Best Practices
 
-### 1. Always Measure Performance
-
-Before and after applying optimizations:
+### 1. Always Use the Gradle Wrapper
 ```bash
-# Generate build scan
-./gradlew build --scan
-
-# Generate profile report
-./gradlew build --profile
+# Update wrapper to latest version
+./gradlew wrapper --gradle-version 8.5
 ```
 
-### 2. Verify Configuration Cache Compatibility
+### 2. Prefer Modern APIs
+```groovy
+// Modern (recommended)
+tasks.register('myTask') {
+    // Lazy configuration
+}
 
-```bash
-# Test configuration cache
-./gradlew build --configuration-cache
-
-# Check for problems
-./gradlew build --configuration-cache --configuration-cache-problems=warn
+// Old (avoid)
+task myTask {
+    // Eager configuration
+}
 ```
 
-### 3. Keep Gradle Updated
+### 3. Use Dependency Catalogs
+```toml
+# gradle/libs.versions.toml
+[versions]
+junit = "5.10.0"
 
-```bash
-# Update to latest Gradle version
-./gradlew wrapper --gradle-version 8.11
+[libraries]
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 ```
 
-### 4. Use Modern Gradle APIs
+### 4. Enable Performance Features
+```properties
+# gradle.properties
+org.gradle.configuration-cache=true
+org.gradle.caching=true
+org.gradle.parallel=true
+```
 
-- Prefer `tasks.register()` over `task` for lazy evaluation
-- Avoid work in configuration phase
-- Use task configuration avoidance
+### 5. Keep Gradle Updated
+```bash
+./gradlew wrapper --gradle-version latest
+```
 
 ## Troubleshooting
 
@@ -233,75 +343,32 @@ Increase heap size in gradle.properties:
 org.gradle.jvmargs=-Xmx6g -XX:MaxMetaspaceSize=1536m
 ```
 
-### Configuration Cache Issues
+### Dependency Resolution Failures
 
-Check compatibility and warnings:
 ```bash
-./gradlew build --configuration-cache --configuration-cache-problems=warn
+# View dependency tree
+./gradlew dependencies
+
+# Refresh dependencies
+./gradlew build --refresh-dependencies
 ```
 
-Common fixes:
-- Avoid `buildscript` block side effects
-- Use lazy task configuration
-- Don't use `Project` at execution time
+### Slow Builds
 
-### Slow Dependency Resolution
+```bash
+# Generate build scan for analysis
+./gradlew build --scan
 
-Add to build.gradle:
-```groovy
-configurations.all {
-    resolutionStrategy {
-        cacheDynamicVersionsFor 10, 'minutes'
-        cacheChangingModulesFor 4, 'hours'
-    }
-}
-```
-
-## Advanced Topics
-
-### Remote Build Cache
-
-Configure in `settings.gradle`:
-```groovy
-buildCache {
-    local {
-        enabled = true
-    }
-    remote(HttpBuildCache) {
-        url = 'https://your-cache-server.com/cache/'
-        push = true
-    }
-}
-```
-
-### Kotlin KSP vs KAPT
-
-Migrate from KAPT to KSP for better performance:
-
-**Before (KAPT)**:
-```kotlin
-plugins {
-    kotlin("kapt")
-}
-dependencies {
-    kapt("com.google.dagger:dagger-compiler:2.x")
-}
-```
-
-**After (KSP)**:
-```kotlin
-plugins {
-    id("com.google.devtools.ksp") version "1.9.x-1.0.x"
-}
-dependencies {
-    ksp("com.google.dagger:dagger-compiler:2.x")
-}
+# Profile the build
+./gradlew build --profile
 ```
 
 ## Resources
 
-- [Official Gradle Performance Guide](https://docs.gradle.org/current/userguide/performance.html)
+- [Official Gradle Documentation](https://docs.gradle.org/current/userguide/userguide.html)
+- [Gradle Performance Guide](https://docs.gradle.org/current/userguide/performance.html)
 - [Gradle Best Practices](https://docs.gradle.org/current/userguide/best_practices_performance.html)
+- [Gradle Plugin Portal](https://plugins.gradle.org/)
 - [Build Scans](https://scans.gradle.com)
 - [Gradle Releases](https://gradle.org/releases/)
 
@@ -310,7 +377,7 @@ dependencies {
 ### Testing Locally
 
 1. Clone this repository
-2. Make your changes to the skill or templates
+2. Make your changes to skills or templates
 3. Install locally in Claude Code:
    ```bash
    /plugin install /path/to/claude-gradle-skills
@@ -318,24 +385,25 @@ dependencies {
 4. Test the plugin functionality
 5. Uninstall and reinstall after changes:
    ```bash
-   /plugin uninstall gradle-performance
+   /plugin uninstall gradle-expert
    /plugin install /path/to/claude-gradle-skills
    ```
 
 ### Plugin Structure
 
-- **`skills/gradle-performance/SKILL.md`**: The main skill file containing all optimization knowledge
+- **`skills/general/SKILL.md`**: General Gradle expertise
+- **`skills/performance/SKILL.md`**: Performance optimization knowledge
 - **`.claude-plugin/plugin.json`**: Plugin metadata and configuration
 - **`.claude-plugin/marketplace.json`**: Marketplace listing configuration
 - **`templates/`**: Reusable configuration templates
 
-### Adding Features
+### Adding New Skills
 
-1. Edit `skills/gradle-performance/SKILL.md` to add new optimization techniques
-2. Update `templates/gradle.properties.optimized` with new settings
+1. Create a new directory under `skills/` (e.g., `skills/android/`)
+2. Add `SKILL.md` with expertise in that domain
 3. Update version in `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`
-4. Update QUICK_REFERENCE.md with quick tips
-5. Document changes in README.md
+4. Document the new skill in README.md
+5. Test with real-world scenarios
 
 ## Contributing
 
@@ -343,8 +411,8 @@ Contributions are welcome! To improve this plugin:
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Update the skill in `skills/gradle-performance/SKILL.md` with new best practices
-4. Update `templates/gradle.properties.optimized` with new settings
+3. Update skills in `skills/*/SKILL.md` with new best practices
+4. Update `templates/` with new configurations
 5. Update this README with usage examples
 6. Test with real-world Gradle projects
 7. Bump version numbers in plugin.json and marketplace.json
@@ -352,11 +420,14 @@ Contributions are welcome! To improve this plugin:
 
 ### Contribution Ideas
 
-- Add more Gradle optimization techniques as they're released
+- Add Android-specific Gradle skill
+- Add Spring Boot/Micronaut Gradle configurations
 - Include more build script examples
 - Add troubleshooting guides for specific scenarios
 - Create additional templates for different project types
-- Add slash commands for common operations
+- Add slash commands for common Gradle operations
+- Create integration test examples
+- Add Docker/container build configurations
 
 ## 📄 License
 
@@ -364,7 +435,7 @@ This plugin is released under the [MIT License](LICENSE). See LICENSE file for d
 
 ## 🙏 Acknowledgments
 
-- Based on official [Gradle Performance Documentation](https://docs.gradle.org/current/userguide/performance.html)
+- Based on official [Gradle Documentation](https://docs.gradle.org/)
 - Built for the [Claude Code](https://www.anthropic.com/news/claude-code-plugins) plugin ecosystem
 
 ## 📞 Support
@@ -374,6 +445,22 @@ This plugin is released under the [MIT License](LICENSE). See LICENSE file for d
 - **Documentation**: [Claude Code Docs](https://docs.claude.com/en/docs/claude-code)
 
 ## Version History
+
+### v1.1.0 (2025-11-05)
+- **BREAKING**: Renamed plugin from `gradle-performance` to `gradle-expert`
+- Added comprehensive general Gradle skill covering all aspects of Gradle
+- Restructured skills into modular format: `general/` and `performance/`
+- Expanded scope beyond just performance to include:
+  - Project setup and structure
+  - Dependency management
+  - Task configuration
+  - Plugin development
+  - Multi-module projects
+  - Testing
+  - Publishing
+  - Troubleshooting
+- Updated keywords and descriptions to reflect broader scope
+- Maintained all existing performance optimization features
 
 ### v1.0.0 (2025-11-05)
 - Initial release with comprehensive Gradle performance optimizations based on Gradle 8.x documentation
