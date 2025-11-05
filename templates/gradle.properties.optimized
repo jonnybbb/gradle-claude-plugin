@@ -1,0 +1,182 @@
+# Gradle Build Performance Optimization
+# Based on https://docs.gradle.org/current/userguide/performance.html
+# Place this file in your project root directory
+
+# ============================================================================
+# CORE PERFORMANCE OPTIMIZATIONS
+# ============================================================================
+
+# Configuration Cache (Gradle 8.1+)
+# Caches the result of the configuration phase for dramatic speedup
+# Can improve build times by 50-80% for subsequent builds
+# May require build script adjustments for compatibility
+org.gradle.configuration-cache=true
+
+# Build Cache
+# Reuses task outputs from previous builds
+# Can reduce build times by 30-70%
+# Works with local and remote cache servers
+org.gradle.caching=true
+
+# Parallel Execution
+# Executes tasks from different projects in parallel
+# Utilizes multiple CPU cores effectively
+# Particularly beneficial for multi-module projects
+org.gradle.parallel=true
+
+# File System Watching (Gradle 7.0+)
+# Watches file system to detect changes for better incremental builds
+# Reduces file system scanning overhead
+org.gradle.vfs.watch=true
+
+# Gradle Daemon (Usually enabled by default)
+# Keeps Gradle process running in background
+# Eliminates JVM startup overhead
+org.gradle.daemon=true
+
+# ============================================================================
+# JVM MEMORY CONFIGURATION
+# ============================================================================
+
+# JVM Memory Settings for Large Projects
+# Adjust these values based on your project size:
+# - Small projects: -Xmx1g -XX:MaxMetaspaceSize=384m
+# - Medium projects: -Xmx2g -XX:MaxMetaspaceSize=512m
+# - Large projects: -Xmx4g -XX:MaxMetaspaceSize=1g
+# - Very large projects: -Xmx6g -XX:MaxMetaspaceSize=1536m
+
+org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8
+
+# Modern JVM Optimizations (Java 17+)
+# Uncomment for Java 17+ projects to use G1GC with tuned parameters
+# org.gradle.jvmargs=-Xmx4g -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:ParallelGCThreads=4 -XX:ConcGCThreads=2 -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8
+
+# ============================================================================
+# WORKER CONFIGURATION
+# ============================================================================
+
+# Maximum number of worker processes
+# Default is number of CPU cores
+# Uncomment and adjust if you want to limit parallel execution
+# org.gradle.workers.max=8
+
+# ============================================================================
+# KOTLIN-SPECIFIC OPTIMIZATIONS
+# ============================================================================
+
+# Enable Incremental Compilation for Kotlin
+# Compiles only changed files and their dependencies
+kotlin.incremental=true
+
+# Enable Incremental Compilation for Kotlin/JS
+# kotlin.incremental.js=true
+
+# Kotlin Daemon JVM Arguments
+# Separate from Gradle JVM settings
+kotlin.daemon.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=512m
+
+# Enable Kotlin Compiler Daemon
+# Keeps Kotlin compiler process running
+kotlin.compiler.execution.strategy=daemon
+
+# ============================================================================
+# ANDROID-SPECIFIC OPTIMIZATIONS (if applicable)
+# ============================================================================
+
+# Use AndroidX
+# android.useAndroidX=true
+
+# Disable Jetifier if not needed (AndroidX migration complete)
+# android.enableJetifier=false
+
+# Enable Android build cache
+# android.enableBuildCache=true
+
+# Enable Android R8 code shrinker (replaces ProGuard)
+# android.enableR8=true
+# android.enableR8.fullMode=true
+
+# ============================================================================
+# DEPENDENCY MANAGEMENT
+# ============================================================================
+
+# Dependency Verification Mode
+# Options: strict, lenient, off
+# org.gradle.dependency.verification=lenient
+
+# HTTP Connection Timeout (milliseconds)
+# org.gradle.cache.timeout=60000
+
+# ============================================================================
+# DEBUG AND LOGGING (disable in production)
+# ============================================================================
+
+# Show more detailed warnings
+# org.gradle.warning.mode=all
+
+# Enable debug logging for specific features
+# org.gradle.debug=false
+
+# Configuration cache debugging
+# org.gradle.configuration-cache.problems=warn
+
+# ============================================================================
+# ADDITIONAL OPTIMIZATIONS
+# ============================================================================
+
+# Enable Console Output Optimization
+# Improves console output performance
+org.gradle.console=rich
+
+# Enable Unsafe Configuration Cache Reuse (use with caution)
+# Only enable if you understand the implications
+# org.gradle.unsafe.configuration-cache=true
+
+# ============================================================================
+# REMOTE BUILD CACHE CONFIGURATION (optional)
+# ============================================================================
+
+# If using remote build cache, configure in settings.gradle instead:
+#
+# buildCache {
+#     local {
+#         enabled = true
+#     }
+#     remote(HttpBuildCache) {
+#         url = 'https://your-cache-server.com/cache/'
+#         push = true
+#         credentials {
+#             username = System.getenv("GRADLE_CACHE_USERNAME")
+#             password = System.getenv("GRADLE_CACHE_PASSWORD")
+#         }
+#     }
+# }
+
+# ============================================================================
+# NOTES
+# ============================================================================
+#
+# 1. Configuration Cache requires Gradle 8.1+ and may need build script changes
+#    Test with: ./gradlew build --configuration-cache
+#    Check problems: ./gradlew build --configuration-cache --configuration-cache-problems=warn
+#
+# 2. Always measure performance improvements using build scans:
+#    ./gradlew build --scan
+#
+# 3. Profile your builds to identify bottlenecks:
+#    ./gradlew build --profile
+#    Report will be in build/reports/profile/
+#
+# 4. For multi-project builds, ensure projects don't have problematic
+#    cross-project dependencies that prevent parallel execution
+#
+# 5. Keep Gradle updated for latest performance improvements:
+#    ./gradlew wrapper --gradle-version latest
+#
+# 6. Expected performance improvements:
+#    - Configuration Cache: 50-80% faster subsequent builds
+#    - Build Cache: 30-70% faster clean builds
+#    - Parallel Execution: 20-50% faster multi-module builds
+#    - Combined: 70-90% faster in optimal scenarios
+#
+# ============================================================================
