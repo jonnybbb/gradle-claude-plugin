@@ -1,0 +1,21 @@
+{
+  "name": "gradle-plugin",
+  "version": "1.0.0",
+  "description": "Claude Code plugin providing comprehensive Gradle skills, commands, and automation for building, testing, and managing Gradle projects.",
+  "author": {
+    "name": "Johannes Bühler",
+    "url": "https://github.com/jonnybbb"
+  },
+  "homepage": "https://github.com/jonnybbb/claude-gradle-skills",
+  "repository": "https://github.com/jonnybbb/claude-gradle-skills",
+  "license": "MIT",
+  "keywords": [
+    "gradle",
+    "build",
+    "java",
+    "kotlin",
+    "build-automation",
+    "dependency-management",
+    "testing"
+  ]
+}

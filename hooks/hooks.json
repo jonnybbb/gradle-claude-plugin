@@ -1,0 +1,53 @@
+{
+  "hooks": [
+    {
+      "name": "gradle-project-detection",
+      "event": "project-opened",
+      "description": "Detect if the project uses Gradle and offer assistance",
+      "action": {
+        "type": "check",
+        "conditions": [
+          {
+            "fileExists": "build.gradle"
+          },
+          {
+            "fileExists": "build.gradle.kts"
+          }
+        ],
+        "message": "I noticed this is a Gradle project. I can help you build, test, manage dependencies, and more. Type `/gradle-build` to build the project or ask me anything about Gradle."
+      }
+    },
+    {
+      "name": "gradle-build-validation",
+      "event": "pre-commit",
+      "description": "Optionally validate the build before committing",
+      "action": {
+        "type": "suggest",
+        "message": "Would you like me to run `./gradlew build` to validate the project before committing?"
+      }
+    },
+    {
+      "name": "dependency-update-check",
+      "event": "file-changed",
+      "description": "Notify when build files are modified",
+      "action": {
+        "type": "notify",
+        "conditions": [
+          {
+            "filePattern": "**/build.gradle"
+          },
+          {
+            "filePattern": "**/build.gradle.kts"
+          },
+          {
+            "filePattern": "**/settings.gradle"
+          },
+          {
+            "filePattern": "**/settings.gradle.kts"
+          }
+        ],
+        "message": "Build configuration changed. Consider running `./gradlew build` to verify the changes."
+      }
+    }
+  ]
+}
