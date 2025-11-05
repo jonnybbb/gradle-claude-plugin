@@ -1,15 +1,53 @@
-# Claude Code - Gradle Performance Optimization Skills
+# Claude Code - Gradle Performance Optimization Plugin
 
-This repository provides Claude Code with comprehensive knowledge and tools for optimizing Gradle build performance based on [official Gradle documentation](https://docs.gradle.org/current/userguide/performance.html).
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/jonnybbb/claude-gradle-skills)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Claude Code](https://img.shields.io/badge/Claude%20Code-Plugin-purple.svg)](https://docs.claude.com/en/docs/claude-code/plugins)
+
+This Claude Code plugin provides comprehensive knowledge and tools for optimizing Gradle build performance based on [official Gradle documentation](https://docs.gradle.org/current/userguide/performance.html).
+
+## 📦 Installation
+
+### Option 1: Install from Marketplace (Recommended)
+
+Add this marketplace to Claude Code:
+
+```bash
+/plugin marketplace add jonnybbb/claude-gradle-skills
+```
+
+Then install the plugin:
+
+```bash
+/plugin install gradle-performance
+```
+
+### Option 2: Install Directly from GitHub
+
+```bash
+/plugin install jonnybbb/claude-gradle-skills
+```
+
+### Option 3: Local Development
+
+Clone the repository and install locally:
+
+```bash
+git clone https://github.com/jonnybbb/claude-gradle-skills.git
+cd claude-gradle-skills
+# In Claude Code, run:
+/plugin install /path/to/claude-gradle-skills
+```
 
 ## Overview
 
-The Gradle Performance skill enables Claude Code to:
+The Gradle Performance plugin enables Claude Code to:
 - Analyze existing Gradle build configurations
 - Recommend performance optimizations
 - Apply best practices from official Gradle documentation
 - Generate optimized `gradle.properties` configurations
 - Identify common performance bottlenecks
+- Provide expert guidance on all Gradle performance features
 
 ## Features
 
@@ -23,16 +61,23 @@ The Gradle Performance skill enables Claude Code to:
 6. **Kotlin Optimizations** - Incremental compilation and KSP over KAPT
 7. **Dependency Management** - Optimize dependency resolution
 
-### 📁 Repository Structure
+### 📁 Plugin Structure
+
+This plugin follows the [Claude Code plugin format](https://docs.claude.com/en/docs/claude-code/plugins-reference):
 
 ```
 .
-├── .claude/
-│   └── skills/
-│       └── gradle-performance.md    # Main performance optimization skill
+├── .claude-plugin/
+│   ├── plugin.json              # Plugin manifest
+│   └── marketplace.json         # Marketplace configuration
+├── skills/
+│   └── gradle-performance/
+│       └── SKILL.md             # Main performance optimization skill
 ├── templates/
 │   └── gradle.properties.optimized  # Optimized gradle.properties template
-└── README.md                        # This file
+├── QUICK_REFERENCE.md           # Quick reference guide
+├── LICENSE                      # MIT License
+└── README.md                    # This file
 ```
 
 ## Usage with Claude Code
@@ -260,19 +305,85 @@ dependencies {
 - [Build Scans](https://scans.gradle.com)
 - [Gradle Releases](https://gradle.org/releases/)
 
+## 🛠️ Plugin Development
+
+### Testing Locally
+
+1. Clone this repository
+2. Make your changes to the skill or templates
+3. Install locally in Claude Code:
+   ```bash
+   /plugin install /path/to/claude-gradle-skills
+   ```
+4. Test the plugin functionality
+5. Uninstall and reinstall after changes:
+   ```bash
+   /plugin uninstall gradle-performance
+   /plugin install /path/to/claude-gradle-skills
+   ```
+
+### Plugin Structure
+
+- **`skills/gradle-performance/SKILL.md`**: The main skill file containing all optimization knowledge
+- **`.claude-plugin/plugin.json`**: Plugin metadata and configuration
+- **`.claude-plugin/marketplace.json`**: Marketplace listing configuration
+- **`templates/`**: Reusable configuration templates
+
+### Adding Features
+
+1. Edit `skills/gradle-performance/SKILL.md` to add new optimization techniques
+2. Update `templates/gradle.properties.optimized` with new settings
+3. Update version in `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`
+4. Update QUICK_REFERENCE.md with quick tips
+5. Document changes in README.md
+
 ## Contributing
 
-To improve this skill:
+Contributions are welcome! To improve this plugin:
 
-1. Update `.claude/skills/gradle-performance.md` with new best practices
-2. Update `templates/gradle.properties.optimized` with new settings
-3. Update this README with usage examples
-4. Test with real-world Gradle projects
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Update the skill in `skills/gradle-performance/SKILL.md` with new best practices
+4. Update `templates/gradle.properties.optimized` with new settings
+5. Update this README with usage examples
+6. Test with real-world Gradle projects
+7. Bump version numbers in plugin.json and marketplace.json
+8. Submit a pull request
 
-## License
+### Contribution Ideas
 
-This repository is provided as-is for use with Claude Code.
+- Add more Gradle optimization techniques as they're released
+- Include more build script examples
+- Add troubleshooting guides for specific scenarios
+- Create additional templates for different project types
+- Add slash commands for common operations
+
+## 📄 License
+
+This plugin is released under the [MIT License](LICENSE). See LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- Based on official [Gradle Performance Documentation](https://docs.gradle.org/current/userguide/performance.html)
+- Built for the [Claude Code](https://www.anthropic.com/news/claude-code-plugins) plugin ecosystem
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/jonnybbb/claude-gradle-skills/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/jonnybbb/claude-gradle-skills/discussions)
+- **Documentation**: [Claude Code Docs](https://docs.claude.com/en/docs/claude-code)
 
 ## Version History
 
-- **v1.0** - Initial release with comprehensive Gradle performance optimizations based on Gradle 8.x documentation
+### v1.0.0 (2025-11-05)
+- Initial release with comprehensive Gradle performance optimizations based on Gradle 8.x documentation
+- Skills for configuration cache, build cache, parallel execution, file system watching
+- JVM memory optimization guidance
+- Kotlin-specific optimizations (incremental compilation, KSP)
+- Optimized gradle.properties template
+- Quick reference guide
+- Full Claude Code plugin marketplace support
+
+---
+
+Made with ❤️ for the Gradle and Claude Code communities

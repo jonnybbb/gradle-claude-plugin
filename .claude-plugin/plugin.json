@@ -1,0 +1,26 @@
+{
+  "name": "gradle-performance",
+  "version": "1.0.0",
+  "description": "Comprehensive Gradle build performance optimization based on official Gradle documentation. Analyze builds, recommend optimizations, and apply best practices for configuration cache, build cache, parallel execution, and more.",
+  "author": {
+    "name": "Johannes Bühler",
+    "email": "jonnybbb@gmail.com",
+    "url": "https://github.com/jonnybbb"
+  },
+  "homepage": "https://github.com/jonnybbb/claude-gradle-skills",
+  "repository": "https://github.com/jonnybbb/claude-gradle-skills",
+  "license": "MIT",
+  "keywords": [
+    "gradle",
+    "performance",
+    "optimization",
+    "build",
+    "cache",
+    "java",
+    "kotlin",
+    "android",
+    "speed",
+    "build-time"
+  ],
+  "category": "development"
+}
