@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "1.0.0",
+  "name": "claude-gradle-plugin",
+  "version": "1.0.0",
+  "displayName": "Gradle Development Suite",
+  "description": "Comprehensive Claude plugin for Gradle development with skills for project analysis, build optimization, dependency management, performance tuning, and migration guidance. Supports Gradle 8+ and 9+ with migration paths from Gradle 6 and 7.",
+  "author": {
+    "name": "Claude Gradle Plugin Team",
+    "email": "gradle-plugin@example.com",
+    "url": "https://github.com/jonnybbb/claude-gradle-plugin"
+  },
+  "homepage": "https://github.com/jonnybbb/claude-gradle-plugin",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jonnybbb/claude-gradle-plugin"
+  },
+  "license": "MIT",
+  "keywords": [
+    "gradle",
+    "build",
+    "java",
+    "kotlin",
+    "groovy",
+    "dependencies",
+    "optimization",
+    "performance",
+    "build-cache",
+    "configuration-cache",
+    "tooling-api",
+    "migration",
+    "plugin-development",
+    "task-development"
+  ],
+  "commands": {
+    "glob": "commands/**/*.md",
+    "description": "Custom Gradle commands for quick access to build tasks, analysis, and troubleshooting"
+  },
+  "skills": {
+    "glob": "skills/**/SKILL.md",
+    "description": "Gradle development skills that Claude invokes autonomously for project analysis, optimization, and problem-solving"
+  },
+  "agents": {
+    "typescript": [
+      {
+        "path": "agents/gradle-build-agent.ts",
+        "name": "gradle-build-agent",
+        "description": "Agent for executing and managing complex Gradle builds with automated error detection"
+      },
+      {
+        "path": "agents/gradle-doctor-agent.ts",
+        "name": "gradle-doctor-agent",
+        "description": "Comprehensive build health analysis agent that diagnoses performance issues and configuration problems"
+      },
+      {
+        "path": "agents/gradle-migration-agent.ts",
+        "name": "gradle-migration-agent",
+        "description": "Agent for guiding Gradle version migrations from 6/7 to 8/9 with automated compatibility checks"
+      },
+      {
+        "path": "agents/gradle-dependency-agent.ts",
+        "name": "gradle-dependency-agent",
+        "description": "Advanced dependency analysis and conflict resolution agent"
+      }
+    ]
+  },
+  "hooks": {
+    "glob": "hooks/hooks.json",
+    "description": "Lifecycle hooks for build validation, automatic error detection, and optimization suggestions"
+  },
+  "configuration": {
+    "gradle": {
+      "defaultVersion": "8.5",
+      "supportedVersions": ["8.0", "8.1", "8.2", "8.3", "8.4", "8.5", "9.0"],
+      "migrationVersions": ["6.0", "6.9", "7.0", "7.6"],
+      "javaVersion": "17",
+      "parallelBuild": true,
+      "buildCache": true,
+      "configurationCache": true
+    },
+    "plugin": {
+      "autoAnalyze": true,
+      "validateBuildFiles": true,
+      "suggestOptimizations": true,
+      "autoFixSimpleIssues": false,
+      "detectCheckTaskFailures": true,
+      "provideMigrationGuidance": true
+    },
+    "tools": {
+      "jbangEnabled": true,
+      "toolingApiEnabled": true,
+      "documentationUrl": "https://docs.gradle.org/current/userguide/userguide.html"
+    }
+  },
+  "permissions": {
+    "required": ["Skill", "Bash", "Read", "Write"],
+    "optional": ["Git", "WebFetch"]
+  }
+}

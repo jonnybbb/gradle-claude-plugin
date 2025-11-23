@@ -1,0 +1,225 @@
+///usr/bin/env jbang "$0" "$@" ; exit $?
+//DEPS org.gradle:gradle-tooling-api:8.5
+//DEPS org.slf4j:slf4j-simple:2.0.9
+//JAVA 17+
+
+import org.gradle.tooling.GradleConnector;
+import org.gradle.tooling.ProjectConnection;
+import org.gradle.tooling.model.GradleProject;
+import org.gradle.tooling.model.build.BuildEnvironment;
+
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
+
+/**
+ * Gradle Build Health Analyzer
+ *
+ * Uses Gradle Tooling API to analyze build health and configuration.
+ *
+ * Usage: jbang analyze-build-health.jbang [project-dir]
+ */
+public class AnalyzeBuildHealth {
+
+    public static void main(String[] args) {
+        String projectDir = args.length > 0 ? args[0] : System.getProperty("user.dir");
+
+        System.out.println("=== Gradle Build Health Analysis ===");
+        System.out.println("Project: " + projectDir);
+        System.out.println();
+
+        try (ProjectConnection connection = GradleConnector.newConnector()
+                .forProjectDirectory(new File(projectDir))
+                .connect()) {
+
+            // Get build environment
+            analyzeBuildEnvironment(connection);
+
+            // Get project structure
+            analyzeProjectStructure(connection, projectDir);
+
+            // Check configuration files
+            checkConfigurationFiles(projectDir);
+
+            // Generate health score
+            int healthScore = calculateHealthScore(projectDir);
+            System.out.println("\n=== Overall Health Score: " + healthScore + "/100 ===");
+
+            if (healthScore < 60) {
+                System.out.println("⚠️  Build health needs improvement");
+            } else if (healthScore < 80) {
+                System.out.println("✅ Build health is good, minor improvements possible");
+            } else {
+                System.out.println("🎉 Excellent build health!");
+            }
+
+        } catch (Exception e) {
+            System.err.println("Error analyzing build: " + e.getMessage());
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+    private static void analyzeBuildEnvironment(ProjectConnection connection) {
+        System.out.println("--- Build Environment ---");
+
+        try {
+            BuildEnvironment env = connection.getModel(BuildEnvironment.class);
+
+            System.out.println("Gradle Version: " + env.getGradle().getGradleVersion());
+            System.out.println("Java Home: " + env.getJava().getJavaHome());
+            System.out.println("Java Version: " + env.getJava().getJavaVersion());
+            System.out.println("JVM Args: " + env.getJava().getJvmArguments());
+
+            // Check Gradle version
+            String version = env.getGradle().getGradleVersion();
+            String majorVersion = version.split("\\.")[0];
+            if (Integer.parseInt(majorVersion) < 8) {
+                System.out.println("⚠️  Consider upgrading to Gradle 8+");
+            }
+
+        } catch (Exception e) {
+            System.err.println("Failed to get build environment: " + e.getMessage());
+        }
+
+        System.out.println();
+    }
+
+    private static void analyzeProjectStructure(ProjectConnection connection, String projectDir) {
+        System.out.println("--- Project Structure ---");
+
+        try {
+            GradleProject project = connection.getModel(GradleProject.class);
+
+            System.out.println("Root Project: " + project.getName());
+            System.out.println("Project Path: " + project.getProjectDirectory());
+
+            int moduleCount = countModules(project);
+            System.out.println("Modules: " + moduleCount);
+
+            if (moduleCount > 1) {
+                System.out.println("Type: Multi-module project");
+                if (moduleCount > 20) {
+                    System.out.println("💡 Large project - ensure parallel builds and configuration cache enabled");
+                }
+            } else {
+                System.out.println("Type: Single-module project");
+            }
+
+            // Check for buildSrc
+            File buildSrc = new File(projectDir, "buildSrc");
+            if (buildSrc.exists() && buildSrc.isDirectory()) {
+                System.out.println("✅ buildSrc detected (convention plugins)");
+            }
+
+        } catch (Exception e) {
+            System.err.println("Failed to analyze project structure: " + e.getMessage());
+        }
+
+        System.out.println();
+    }
+
+    private static int countModules(GradleProject project) {
+        int count = 1; // Root project
+        for (GradleProject child : project.getChildren()) {
+            count += countModules(child);
+        }
+        return count;
+    }
+
+    private static void checkConfigurationFiles(String projectDir) {
+        System.out.println("--- Configuration Files ---");
+
+        // Check gradle.properties
+        File gradleProps = new File(projectDir, "gradle.properties");
+        if (gradleProps.exists()) {
+            System.out.println("✅ gradle.properties found");
+            checkGradleProperties(gradleProps);
+        } else {
+            System.out.println("❌ gradle.properties not found");
+            System.out.println("   Recommendation: Create gradle.properties with performance settings");
+        }
+
+        // Check version catalog
+        File versionCatalog = new File(projectDir, "gradle/libs.versions.toml");
+        if (versionCatalog.exists()) {
+            System.out.println("✅ Version catalog detected");
+        } else {
+            System.out.println("⚠️  No version catalog - consider creating gradle/libs.versions.toml");
+        }
+
+        // Check wrapper
+        File wrapperProps = new File(projectDir, "gradle/wrapper/gradle-wrapper.properties");
+        if (wrapperProps.exists()) {
+            System.out.println("✅ Gradle wrapper configured");
+        } else {
+            System.out.println("❌ No Gradle wrapper");
+        }
+
+        System.out.println();
+    }
+
+    private static void checkGradleProperties(File propsFile) {
+        try {
+            String content = Files.readString(propsFile.toPath());
+
+            boolean hasCaching = content.contains("org.gradle.caching=true");
+            boolean hasParallel = content.contains("org.gradle.parallel=true");
+            boolean hasConfigCache = content.contains("org.gradle.configuration-cache=true");
+            boolean hasJvmArgs = content.contains("org.gradle.jvmargs");
+
+            if (!hasCaching) {
+                System.out.println("   ⚠️  Build cache not enabled");
+            }
+            if (!hasParallel) {
+                System.out.println("   ⚠️  Parallel builds not enabled");
+            }
+            if (!hasConfigCache) {
+                System.out.println("   💡 Configuration cache not enabled (consider for Gradle 8+)");
+            }
+            if (!hasJvmArgs) {
+                System.out.println("   ⚠️  Daemon heap size not configured");
+            }
+
+        } catch (Exception e) {
+            System.err.println("Failed to read gradle.properties: " + e.getMessage());
+        }
+    }
+
+    private static int calculateHealthScore(String projectDir) {
+        int score = 50; // Base score
+
+        // Check for gradle.properties
+        if (new File(projectDir, "gradle.properties").exists()) {
+            score += 10;
+
+            try {
+                String props = Files.readString(Paths.get(projectDir, "gradle.properties"));
+                if (props.contains("org.gradle.caching=true")) score += 15;
+                if (props.contains("org.gradle.parallel=true")) score += 10;
+                if (props.contains("org.gradle.configuration-cache=true")) score += 10;
+                if (props.contains("org.gradle.jvmargs")) score += 5;
+            } catch (Exception e) {
+                // Ignore
+            }
+        }
+
+        // Check for version catalog
+        if (new File(projectDir, "gradle/libs.versions.toml").exists()) {
+            score += 10;
+        }
+
+        // Check for buildSrc
+        if (new File(projectDir, "buildSrc").exists()) {
+            score += 10;
+        }
+
+        // Check for wrapper
+        if (new File(projectDir, "gradle/wrapper/gradle-wrapper.properties").exists()) {
+            score += 10;
+        }
+
+        return Math.min(score, 100);
+    }
+}

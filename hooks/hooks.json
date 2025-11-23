@@ -1,0 +1,91 @@
+{
+  "hooks": [
+    {
+      "event": "PreToolUse",
+      "matcher": {
+        "toolName": "bash_command",
+        "pattern": "gradle.*build"
+      },
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash -c 'echo \"🔍 Pre-build validation...\"; if [ -f gradle.properties ]; then echo \"✅ gradle.properties found\"; else echo \"⚠️  gradle.properties not found - consider creating one\"; fi'",
+          "timeout": 3000,
+          "allowFailure": true
+        }
+      ]
+    },
+    {
+      "event": "PostToolUse",
+      "matcher": {
+        "toolName": "bash_command",
+        "pattern": "gradle.*build"
+      },
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash -c 'if [ -d build/reports/tests ]; then echo \"📊 Test reports available in build/reports/tests/\"; fi; if [ -d build/libs ]; then echo \"📦 Build artifacts in build/libs/\"; fi'",
+          "timeout": 2000,
+          "allowFailure": true
+        }
+      ]
+    },
+    {
+      "event": "PreToolUse",
+      "matcher": {
+        "toolName": "bash_command",
+        "pattern": "gradle.*test"
+      },
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash -c 'echo \"🧪 Running tests...\"; echo \"Tip: Use --tests <pattern> to run specific tests\"'",
+          "timeout": 2000,
+          "allowFailure": true
+        }
+      ]
+    },
+    {
+      "event": "PostToolUse",
+      "matcher": {
+        "toolName": "bash_command",
+        "pattern": "gradle.*(check|test)"
+      },
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash -c 'if [ -f build/reports/tests/test/index.html ]; then echo \"📝 Test report: build/reports/tests/test/index.html\"; fi; if grep -r \"FAILED\" build/test-results/test/*.xml 2>/dev/null; then echo \"❌ Some tests failed - check reports\"; exit 1; fi'",
+          "timeout": 5000,
+          "allowFailure": true
+        }
+      ]
+    },
+    {
+      "event": "PreToolUse",
+      "matcher": {
+        "toolName": "bash_command",
+        "pattern": "gradle.*clean"
+      },
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash -c 'echo \"🧹 Cleaning build directory...\"; if [ -d build ]; then echo \"Build size: $(du -sh build 2>/dev/null | cut -f1)\"; fi'",
+          "timeout": 2000,
+          "allowFailure": true
+        }
+      ]
+    },
+    {
+      "event": "Stop",
+      "matcher": {},
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash -c 'if [ -f .gradle/gradle.daemon.log ]; then echo \"📋 Gradle daemon log available\"; fi'",
+          "timeout": 1000,
+          "allowFailure": true
+        }
+      ]
+    }
+  ]
+}

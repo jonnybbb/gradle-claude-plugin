@@ -1,0 +1,123 @@
+///usr/bin/env jbang "$0" "$@" ; exit $?
+//DEPS org.gradle:gradle-tooling-api:8.5
+//DEPS org.slf4j:slf4j-simple:2.0.9
+//JAVA 17+
+
+import org.gradle.tooling.GradleConnector;
+import org.gradle.tooling.ProjectConnection;
+import org.gradle.tooling.model.GradleProject;
+
+import java.io.File;
+import java.io.ByteArrayOutputStream;
+import java.util.*;
+
+/**
+ * Gradle Dependency Graph Generator
+ *
+ * Generates dependency graphs for Gradle projects using the Tooling API.
+ *
+ * Usage: jbang dependency-graph.jbang [project-dir] [configuration]
+ */
+public class DependencyGraph {
+
+    public static void main(String[] args) {
+        String projectDir = args.length > 0 ? args[0] : System.getProperty("user.dir");
+        String configuration = args.length > 1 ? args[1] : "compileClasspath";
+
+        System.out.println("=== Dependency Graph Analysis ===");
+        System.out.println("Project: " + projectDir);
+        System.out.println("Configuration: " + configuration);
+        System.out.println();
+
+        try (ProjectConnection connection = GradleConnector.newConnector()
+                .forProjectDirectory(new File(projectDir))
+                .connect()) {
+
+            // Get project structure
+            GradleProject project = connection.getModel(GradleProject.class);
+            System.out.println("Project: " + project.getName());
+
+            // Execute dependencies task to get graph
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            connection.newBuild()
+                    .forTasks("dependencies")
+                    .withArguments("--configuration", configuration, "--console=plain")
+                    .setStandardOutput(output)
+                    .run();
+
+            String dependencyOutput = output.toString("UTF-8");
+
+            // Parse and analyze dependencies
+            analyzeDependencies(dependencyOutput, configuration);
+
+        } catch (Exception e) {
+            System.err.println("Error generating dependency graph: " + e.getMessage());
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+    private static void analyzeDependencies(String output, String configuration) {
+        System.out.println("\n--- Dependency Analysis ---");
+
+        String[] lines = output.split("\n");
+        int totalDeps = 0;
+        int conflicts = 0;
+        List<String> conflictList = new ArrayList<>();
+
+        for (String line : lines) {
+            if (line.contains("+---") || line.contains("\\---")) {
+                totalDeps++;
+            }
+            if (line.contains("->")) {
+                conflicts++;
+                conflictList.add(line.trim());
+            }
+        }
+
+        System.out.println("Total Dependencies: " + totalDeps);
+        System.out.println("Version Conflicts: " + conflicts);
+
+        if (conflicts > 0) {
+            System.out.println("\n--- Conflicts Detected ---");
+            for (String conflict : conflictList.subList(0, Math.min(10, conflictList.size()))) {
+                System.out.println("  " + conflict);
+            }
+            if (conflictList.size() > 10) {
+                System.out.println("  ... and " + (conflictList.size() - 10) + " more");
+            }
+
+            System.out.println("\n💡 Recommendations:");
+            System.out.println("  1. Run: gradle dependencyInsight --dependency <lib> --configuration " + configuration);
+            System.out.println("  2. Consider using dependency constraints or platforms");
+            System.out.println("  3. Review transitive dependencies for version alignment");
+        } else {
+            System.out.println("✅ No version conflicts detected");
+        }
+
+        // Check for specific common issues
+        checkCommonIssues(output);
+    }
+
+    private static void checkCommonIssues(String output) {
+        System.out.println("\n--- Common Issues Check ---");
+
+        boolean hasSLF4JMultiple = output.contains("slf4j-log4j12") && output.contains("logback-classic");
+        if (hasSLF4JMultiple) {
+            System.out.println("⚠️  Multiple SLF4J bindings detected");
+            System.out.println("   Recommendation: Exclude slf4j-log4j12 or logback-classic");
+        }
+
+        boolean hasGuavaConflict = output.contains("guava") && output.contains("-android") && output.contains("-jre");
+        if (hasGuavaConflict) {
+            System.out.println("⚠️  Guava Android and JRE variants conflict");
+            System.out.println("   Recommendation: Force one variant: guava:*-jre or guava:*-android");
+        }
+
+        boolean hasJUnit4And5 = output.contains("junit:junit:4") && output.contains("junit-jupiter");
+        if (hasJUnit4And5) {
+            System.out.println("💡 Both JUnit 4 and JUnit 5 detected");
+            System.out.println("   Consider: Migrating fully to JUnit 5");
+        }
+    }
+}
