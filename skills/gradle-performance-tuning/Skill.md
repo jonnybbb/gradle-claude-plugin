@@ -17,41 +17,56 @@ Invoke when users mention:
 - Build cache issues
 - Gradle daemon problems
 
-## Optimization Areas
+## Quick Optimizations
 
 ### 1. Build Cache
 ```properties
 org.gradle.caching=true
 ```
+See `build-cache.md` for detailed cache configuration
 
 ### 2. Parallel Execution
 ```properties
 org.gradle.parallel=true
 org.gradle.workers.max=8
 ```
+See `parallel-builds.md` for parallel execution details
 
 ### 3. Daemon Tuning
 ```properties
 org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g
 ```
+See `daemon-optimization.md` for heap sizing guidelines
 
 ### 4. Configuration Cache
 ```properties
 org.gradle.configuration-cache=true
 ```
+See `configuration-cache.md` for compatibility and troubleshooting
 
 ## Analysis Steps
 
 1. Check current gradle.properties settings
-2. Measure baseline build time
-3. Identify bottlenecks (use --profile)
+2. Measure baseline build time with `--profile`
+3. Identify bottlenecks
 4. Apply optimizations incrementally
 5. Measure improvements
 
-## Recommendations Priority
+See `performance-analysis.md` for detailed profiling guide
 
-1. HIGH: Enable build cache (50%+ speedup)
-2. HIGH: Optimize daemon heap for project size
-3. MEDIUM: Enable parallel execution
-4. MEDIUM: Configuration cache (Gradle 8+)
-5. LOW: Tune worker threads
+## Priority Recommendations
+
+1. **HIGH**: Enable build cache (50%+ speedup)
+2. **HIGH**: Optimize daemon heap for project size
+3. **MEDIUM**: Enable parallel execution
+4. **MEDIUM**: Configuration cache (Gradle 8+)
+5. **LOW**: Tune worker threads
+
+## Reference Files
+
+- **Build cache**: `build-cache.md`
+- **Configuration cache**: `configuration-cache.md`
+- **Daemon optimization**: `daemon-optimization.md`
+- **Parallel builds**: `parallel-builds.md`
+- **Performance analysis**: `performance-analysis.md`
+- **Common issues**: `performance-issues.md`

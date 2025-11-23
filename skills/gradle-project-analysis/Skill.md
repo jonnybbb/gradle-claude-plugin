@@ -22,24 +22,33 @@ Invoke this skill when the user asks about:
 1. **Detect Project Type**
    - Check for settings.gradle[.kts] to identify multi-module projects
    - List all modules and their relationships
+   - See `multimodule-analysis.md` for detailed multi-module patterns
 
 2. **Analyze Build Files**
    - Parse build.gradle[.kts] for plugins, dependencies, tasks
    - Support both Kotlin DSL and Groovy DSL
+   - See `build-file-patterns.md` for DSL-specific examples
 
 3. **Identify Configuration Patterns**
    - Version catalogs (gradle/libs.versions.toml)
    - Convention plugins (buildSrc/)
    - Gradle properties
    - Wrapper configuration
+   - See `configuration-patterns.md` for detailed patterns
 
-4. **Generate Report**
+4. **Analyze Plugins**
+   - Core Gradle plugins
+   - Community plugins (Spring Boot, Kotlin, Android, etc.)
+   - See `plugin-analysis.md` for plugin identification
+
+5. **Generate Report**
    - Project hierarchy tree
    - Applied plugins per module
    - Inter-module dependencies
    - Configuration recommendations
+   - See `report-formats.md` for output examples
 
-## Example Commands
+## Quick Commands
 
 ```bash
 # View project structure
@@ -47,13 +56,17 @@ gradle projects
 
 # List build files
 find . -name "build.gradle*" -o -name "settings.gradle*"
+
+# Check dependencies
+gradle dependencies --configuration compileClasspath
 ```
 
-## Output Format
+## Reference Files
 
-Provide a structured report with:
-- Project name and type
-- Module hierarchy
-- Plugin inventory
-- Dependency map
-- Recommendations for improvements
+For detailed information on specific topics:
+- **Multi-module projects**: See `multimodule-analysis.md`
+- **Build file patterns**: See `build-file-patterns.md`
+- **Configuration patterns**: See `configuration-patterns.md`
+- **Plugin analysis**: See `plugin-analysis.md`
+- **Report formats**: See `report-formats.md`
+- **Recommendations**: See `recommendations.md`
