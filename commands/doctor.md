@@ -355,6 +355,84 @@ Apply all? (y/n): y
 ⚠️  Manual fixes required for 3 issues (see report)
 ```
 
+## Gradle Doctor Plugin Integration
+
+The `/doctor` command integrates with the [gradle-doctor plugin](https://github.com/runningcode/gradle-doctor) to provide enhanced automated diagnostics:
+
+### Applying gradle-doctor
+
+**Add to settings.gradle.kts:**
+```kotlin
+plugins {
+    id("com.osacky.doctor") version "0.10.0"
+}
+
+doctor {
+    javaHome {
+        ensureJavaHomeMatches.set(true)
+    }
+    GCWarningThreshold.set(0.10)
+}
+```
+
+### Enhanced Diagnostics with gradle-doctor
+
+When gradle-doctor is applied, `/doctor` provides:
+
+1. **Java Configuration Validation**
+   - JAVA_HOME correctness
+   - Toolchain compatibility
+   - AI recommendations for JDK setup
+
+2. **Garbage Collection Analysis**
+   - GC overhead monitoring
+   - Automatic heap size recommendations
+   - GC algorithm optimization
+
+3. **Repository Performance**
+   - Connection speed analysis
+   - Mirror suggestions for slow repositories
+   - Network troubleshooting
+
+4. **Build Cache Metrics**
+   - Cache hit rate tracking
+   - Non-cacheable task identification
+   - Remote cache recommendations
+
+5. **Platform Compatibility**
+   - Apple Silicon (ARM) detection
+   - Rosetta 2 warnings
+   - Native JDK recommendations
+
+### Example with gradle-doctor Integration
+
+```
+=== Gradle Doctor Analysis ===
+
+⚠️  JAVA_HOME issue detected
+    Current: /usr/lib/jvm/java-11-openjdk
+    Expected: /usr/lib/jvm/java-17-openjdk
+    → AI Fix: Updating gradle.properties with correct toolchain
+
+⚠️  GC overhead: 15% of build time
+    Current heap: 2g
+    Recommended: 4g for project size
+    → AI Fix: Increasing heap size in gradle.properties
+
+✅ Repository connections: All under 1000ms
+✅ Build cache hit rate: 78% (good)
+⚠️  Running under Rosetta 2 emulation
+    → Recommendation: Install ARM-native Java distribution
+      Download: https://www.azul.com/downloads/?os=macos&architecture=arm-64-bit&package=jdk
+
+Applied Fixes:
+  ✅ Updated org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g
+  ✅ Added java.toolchain.languageVersion=17
+
+Manual Action Required:
+  □ Install ARM-native JDK for optimal performance
+```
+
 ## Integration with Build Scans
 
 ```
@@ -373,6 +451,8 @@ The build scan will provide:
 
 After generating scan, run:
   /doctor --analyze-scan <scan-url>
+
+Note: gradle-doctor automatically adds diagnostic tags to Build Scans
 ```
 
 ## Continuous Health Monitoring

@@ -250,6 +250,138 @@ const checkBuildPerformanceTool = tool(
   }
 );
 
+const checkGradleDoctorInstalledTool = tool(
+  'check_gradle_doctor_installed',
+  'Checks if gradle-doctor plugin is applied to the project',
+  {
+    projectDir: z.string().optional(),
+  },
+  async (args): Promise<CallToolResult> => {
+    try {
+      const cwd = args.projectDir || process.cwd();
+      const settingsFiles = [
+        join(cwd, 'settings.gradle.kts'),
+        join(cwd, 'settings.gradle'),
+      ];
+
+      let doctorInstalled = false;
+      let settingsFile: string | null = null;
+      let doctorVersion: string | null = null;
+
+      for (const file of settingsFiles) {
+        if (existsSync(file)) {
+          const content = readFileSync(file, 'utf-8');
+          if (content.includes('com.osacky.doctor')) {
+            doctorInstalled = true;
+            settingsFile = file;
+
+            const versionMatch = content.match(/com\.osacky\.doctor.*version\s*[=:]\s*["']([^"']+)["']/);
+            if (versionMatch) {
+              doctorVersion = versionMatch[1];
+            }
+            break;
+          }
+        }
+      }
+
+      const result = {
+        installed: doctorInstalled,
+        settingsFile,
+        version: doctorVersion,
+        recommendation: doctorInstalled
+          ? 'gradle-doctor is installed and ready to use'
+          : 'gradle-doctor not found. Install it to enable enhanced diagnostics',
+        installInstructions: doctorInstalled ? null : {
+          kotlin: `plugins {
+    id("com.osacky.doctor") version "0.10.0"
+}
+
+doctor {
+    javaHome {
+        ensureJavaHomeMatches.set(true)
+    }
+    GCWarningThreshold.set(0.10)
+}`,
+          groovy: `plugins {
+    id 'com.osacky.doctor' version '0.10.0'
+}
+
+doctor {
+    javaHome {
+        ensureJavaHomeMatches = true
+    }
+    GCWarningThreshold = 0.10
+}`,
+        },
+      };
+
+      return {
+        content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+      };
+    } catch (error: any) {
+      return {
+        content: [{ type: 'text', text: `Failed to check gradle-doctor: ${error.message}` }],
+        isError: true,
+      };
+    }
+  }
+);
+
+const runBuildWithGradleDoctorTool = tool(
+  'run_build_with_gradle_doctor',
+  'Executes build and captures gradle-doctor diagnostic output',
+  {
+    tasks: z.array(z.string()).describe('Gradle tasks to execute'),
+    projectDir: z.string().optional(),
+  },
+  async (args): Promise<CallToolResult> => {
+    try {
+      const cwd = args.projectDir || process.cwd();
+      const gradleCmd = existsSync(join(cwd, 'gradlew')) ? './gradlew' : 'gradle';
+      const command = `${gradleCmd} ${args.tasks.join(' ')}`;
+
+      const output = execSync(command, {
+        cwd,
+        encoding: 'utf-8',
+        maxBuffer: 10 * 1024 * 1024,
+      }).toString();
+
+      // Extract gradle-doctor warnings/info
+      const doctorLines = output.split('\n').filter(line =>
+        line.includes('⚠') || line.includes('gradle-doctor') ||
+        line.match(/JAVA_HOME|GC|cache hit rate|repository.*ms/i)
+      );
+
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify({
+            success: true,
+            doctorOutput: doctorLines.join('\n'),
+            fullOutputLength: output.length,
+          }, null, 2),
+        }],
+      };
+    } catch (error: any) {
+      const errorOutput = error.stdout?.toString() || error.message;
+      const doctorLines = errorOutput.split('\n').filter((line: string) =>
+        line.includes('⚠') || line.includes('gradle-doctor')
+      );
+
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify({
+            success: false,
+            error: 'Build failed',
+            doctorOutput: doctorLines.join('\n'),
+          }, null, 2),
+        }],
+      };
+    }
+  }
+);
+
 // ============================================================================
 // MCP Server
 // ============================================================================
@@ -262,6 +394,8 @@ export const mcpServer = createSdkMcpServer({
     analyzeDependenciesTool,
     analyzeBuildCacheTool,
     checkBuildPerformanceTool,
+    checkGradleDoctorInstalledTool,
+    runBuildWithGradleDoctorTool,
   ],
 });
 
@@ -279,20 +413,38 @@ export async function runGradleDoctorAgent(
 - Dependency management and conflict resolution
 - Build cache optimization
 - Multi-module project organization
+- gradle-doctor plugin integration for automated diagnostics
 
 Your role is to:
-1. Perform comprehensive build health analysis
-2. Identify configuration issues and anti-patterns
-3. Provide specific, actionable recommendations
-4. Prioritize fixes by impact and effort
-5. Generate detailed health reports
+1. Check if gradle-doctor plugin is installed and recommend installation if not
+2. Perform comprehensive build health analysis
+3. Run builds with gradle-doctor to capture diagnostic data
+4. Parse and analyze gradle-doctor output for:
+   - JAVA_HOME configuration issues
+   - GC overhead and memory tuning
+   - Repository connection performance
+   - Build cache hit rates
+   - Platform compatibility (ARM/Rosetta 2)
+5. Identify configuration issues and anti-patterns
+6. Provide specific, actionable recommendations
+7. Prioritize fixes by impact and effort
+8. Generate detailed health reports with AI-driven insights
+
+gradle-doctor integration capabilities:
+- Detect if gradle-doctor is installed
+- Suggest installation with proper configuration
+- Execute builds and capture gradle-doctor diagnostics
+- Parse diagnostic output for automated issue detection
+- Generate recommendations based on diagnostic findings
 
 Always:
+- Check for gradle-doctor installation first
 - Focus on high-impact optimizations first
 - Provide concrete examples and fixes
 - Explain the "why" behind recommendations
 - Consider project size and complexity
-- Balance performance vs maintainability`;
+- Balance performance vs maintainability
+- Distinguish between automated fixes (high confidence) and manual actions (low confidence)`;
 
   const prompt = scope
     ? `Perform ${scope} analysis of Gradle project in ${projectDir}`
@@ -319,7 +471,14 @@ Always:
   }
 }
 
-export { analyzeGradlePropertiesTool, analyzeDependenciesTool, analyzeBuildCacheTool, checkBuildPerformanceTool };
+export {
+  analyzeGradlePropertiesTool,
+  analyzeDependenciesTool,
+  analyzeBuildCacheTool,
+  checkBuildPerformanceTool,
+  checkGradleDoctorInstalledTool,
+  runBuildWithGradleDoctorTool,
+};
 
 if (require.main === module) {
   const projectDir = process.argv[2] || process.cwd();

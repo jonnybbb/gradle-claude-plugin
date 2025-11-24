@@ -36,7 +36,7 @@
     "description": "Custom Gradle commands for quick access to build tasks, analysis, and troubleshooting"
   },
   "skills": {
-    "glob": "skills/**/SKILL.md",
+    "glob": "skills/**/Skill.md",
     "description": "Gradle development skills that Claude invokes autonomously for project analysis, optimization, and problem-solving"
   },
   "agents": {
@@ -49,7 +49,7 @@
       {
         "path": "agents/gradle-doctor-agent.ts",
         "name": "gradle-doctor-agent",
-        "description": "Comprehensive build health analysis agent that diagnoses performance issues and configuration problems"
+        "description": "Build health analysis agent with gradle-doctor integration for automated diagnostics, GC tuning, repository performance, and configuration validation"
       },
       {
         "path": "agents/gradle-migration-agent.ts",

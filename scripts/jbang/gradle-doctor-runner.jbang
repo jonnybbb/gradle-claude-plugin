@@ -1,0 +1,352 @@
+///usr/bin/env jbang "$0" "$@" ; exit $?
+//DEPS org.gradle:gradle-tooling-api:8.5
+//DEPS org.slf4j:slf4j-simple:2.0.9
+//JAVA 17+
+
+import org.gradle.tooling.GradleConnector;
+import org.gradle.tooling.ProjectConnection;
+import org.gradle.tooling.BuildLauncher;
+import org.gradle.tooling.events.ProgressEvent;
+import org.gradle.tooling.events.ProgressListener;
+
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.regex.*;
+
+/**
+ * Gradle Doctor Runner
+ *
+ * Executes Gradle builds and captures gradle-doctor diagnostic output.
+ * Parses diagnostics and generates structured reports for AI analysis.
+ *
+ * Usage: jbang gradle-doctor-runner.jbang [project-dir] [tasks...]
+ * Example: jbang gradle-doctor-runner.jbang . build
+ */
+public class GradleDoctorRunner {
+
+    private static final Pattern JAVA_HOME_PATTERN = Pattern.compile("JAVA_HOME.*", Pattern.CASE_INSENSITIVE);
+    private static final Pattern GC_OVERHEAD_PATTERN = Pattern.compile("spent (\\d+)% of time in GC", Pattern.CASE_INSENSITIVE);
+    private static final Pattern REPO_SPEED_PATTERN = Pattern.compile("(Maven Central|[\\w\\s]+repository).*(\\d+)ms", Pattern.CASE_INSENSITIVE);
+    private static final Pattern CACHE_HIT_RATE_PATTERN = Pattern.compile("cache hit rate[:\\s]+(\\d+)%", Pattern.CASE_INSENSITIVE);
+    private static final Pattern ROSETTA_PATTERN = Pattern.compile("rosetta|arm64|apple silicon", Pattern.CASE_INSENSITIVE);
+
+    private static List<String> diagnosticLines = new ArrayList<>();
+    private static List<Diagnostic> diagnostics = new ArrayList<>();
+
+    static class Diagnostic {
+        String type;
+        String category;
+        String message;
+        String details;
+        String recommendation;
+
+        Diagnostic(String type, String category, String message, String details, String recommendation) {
+            this.type = type;
+            this.category = category;
+            this.message = message;
+            this.details = details;
+            this.recommendation = recommendation;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("[%s] %s: %s\n  Details: %s\n  Recommendation: %s",
+                    type.toUpperCase(), category, message, details, recommendation);
+        }
+    }
+
+    public static void main(String[] args) {
+        if (args.length < 1) {
+            System.err.println("Usage: gradle-doctor-runner.jbang [project-dir] [tasks...]");
+            System.err.println("Example: gradle-doctor-runner.jbang . build");
+            System.exit(1);
+        }
+
+        String projectDir = args[0];
+        String[] tasks = args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[]{"build"};
+
+        System.out.println("=== Gradle Doctor Runner ===");
+        System.out.println("Project: " + projectDir);
+        System.out.println("Tasks: " + String.join(", ", tasks));
+        System.out.println();
+
+        // Check if gradle-doctor is installed
+        if (!checkGradleDoctorInstalled(projectDir)) {
+            System.out.println("⚠️  gradle-doctor plugin not detected");
+            System.out.println("To install, add to settings.gradle.kts:");
+            System.out.println();
+            System.out.println("plugins {");
+            System.out.println("    id(\"com.osacky.doctor\") version \"0.10.0\"");
+            System.out.println("}");
+            System.out.println();
+            System.out.println("Continuing with build anyway...");
+            System.out.println();
+        } else {
+            System.out.println("✅ gradle-doctor plugin detected");
+            System.out.println();
+        }
+
+        try {
+            runBuildWithDiagnostics(projectDir, tasks);
+            analyzeDiagnostics();
+            generateReport();
+        } catch (Exception e) {
+            System.err.println("Error running build: " + e.getMessage());
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+    private static boolean checkGradleDoctorInstalled(String projectDir) {
+        String[] settingsFiles = {"settings.gradle.kts", "settings.gradle"};
+        for (String file : settingsFiles) {
+            try {
+                String content = new String(Files.readAllBytes(Paths.get(projectDir, file)));
+                if (content.contains("com.osacky.doctor")) {
+                    return true;
+                }
+            } catch (IOException e) {
+                // File doesn't exist or can't be read
+            }
+        }
+        return false;
+    }
+
+    private static void runBuildWithDiagnostics(String projectDir, String[] tasks) throws Exception {
+        System.out.println("--- Running Build ---");
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
+
+        try (ProjectConnection connection = GradleConnector.newConnector()
+                .forProjectDirectory(new File(projectDir))
+                .connect()) {
+
+            BuildLauncher launcher = connection.newBuild();
+            launcher.forTasks(tasks);
+
+            // Capture output
+            launcher.setStandardOutput(new TeeOutputStream(System.out, outputStream));
+            launcher.setStandardError(new TeeOutputStream(System.err, errorStream));
+
+            // Add progress listener
+            launcher.addProgressListener(new ProgressListener() {
+                @Override
+                public void statusChanged(ProgressEvent event) {
+                    // Track progress
+                }
+            });
+
+            try {
+                launcher.run();
+                System.out.println("\n✅ Build completed successfully");
+            } catch (Exception e) {
+                System.err.println("\n❌ Build failed: " + e.getMessage());
+                // Continue to analyze diagnostics even on failure
+            }
+
+            // Parse output for gradle-doctor diagnostics
+            String fullOutput = outputStream.toString() + "\n" + errorStream.toString();
+            extractDiagnostics(fullOutput);
+
+        }
+
+        System.out.println();
+    }
+
+    private static void extractDiagnostics(String output) {
+        String[] lines = output.split("\n");
+
+        for (String line : lines) {
+            // Collect all lines that might be gradle-doctor output
+            if (line.contains("⚠") || line.contains("gradle-doctor") ||
+                    line.matches(".*\\d+ ms.*") ||
+                    JAVA_HOME_PATTERN.matcher(line).find() ||
+                    GC_OVERHEAD_PATTERN.matcher(line).find() ||
+                    REPO_SPEED_PATTERN.matcher(line).find() ||
+                    CACHE_HIT_RATE_PATTERN.matcher(line).find() ||
+                    ROSETTA_PATTERN.matcher(line).find()) {
+                diagnosticLines.add(line.trim());
+            }
+        }
+    }
+
+    private static void analyzeDiagnostics() {
+        System.out.println("--- Analyzing Diagnostics ---");
+
+        boolean javaHomeIssues = false;
+        Integer gcOverhead = null;
+        List<String> slowRepositories = new ArrayList<>();
+        Integer cacheHitRate = null;
+        List<String> platformIssues = new ArrayList<>();
+
+        for (String line : diagnosticLines) {
+            // JAVA_HOME issues
+            if (JAVA_HOME_PATTERN.matcher(line).find() && line.contains("⚠")) {
+                javaHomeIssues = true;
+                diagnostics.add(new Diagnostic(
+                        "warning",
+                        "java-configuration",
+                        "JAVA_HOME configuration issue detected",
+                        line,
+                        "Verify JAVA_HOME points to correct JDK installation"
+                ));
+            }
+
+            // GC overhead
+            Matcher gcMatcher = GC_OVERHEAD_PATTERN.matcher(line);
+            if (gcMatcher.find()) {
+                gcOverhead = Integer.parseInt(gcMatcher.group(1));
+                String type = gcOverhead > 10 ? "warning" : "info";
+                diagnostics.add(new Diagnostic(
+                        type,
+                        "gc-performance",
+                        "Garbage collection overhead: " + gcOverhead + "%",
+                        line,
+                        gcOverhead > 10
+                                ? "Increase heap size in gradle.properties: org.gradle.jvmargs=-Xmx4g"
+                                : "GC overhead is acceptable"
+                ));
+            }
+
+            // Slow repositories
+            Matcher repoMatcher = REPO_SPEED_PATTERN.matcher(line);
+            if (repoMatcher.find()) {
+                int connectionTime = Integer.parseInt(repoMatcher.group(2));
+                if (connectionTime > 2000) {
+                    String repoName = repoMatcher.group(1);
+                    slowRepositories.add(repoName);
+                    diagnostics.add(new Diagnostic(
+                            "warning",
+                            "repository-performance",
+                            "Slow repository connection: " + repoName,
+                            "Connection time: " + connectionTime + "ms",
+                            "Consider using a repository mirror or caching proxy"
+                    ));
+                }
+            }
+
+            // Cache hit rate
+            Matcher cacheMatcher = CACHE_HIT_RATE_PATTERN.matcher(line);
+            if (cacheMatcher.find()) {
+                cacheHitRate = Integer.parseInt(cacheMatcher.group(1));
+                String type = cacheHitRate < 50 ? "warning" : "info";
+                diagnostics.add(new Diagnostic(
+                        type,
+                        "build-cache",
+                        "Build cache hit rate: " + cacheHitRate + "%",
+                        line,
+                        cacheHitRate < 50
+                                ? "Low cache hit rate. Consider remote build cache or check task cacheability"
+                                : "Good cache performance"
+                ));
+            }
+
+            // Platform compatibility
+            if (ROSETTA_PATTERN.matcher(line).find()) {
+                platformIssues.add(line);
+                diagnostics.add(new Diagnostic(
+                        "warning",
+                        "platform-compatibility",
+                        "Platform compatibility issue detected",
+                        line,
+                        "Use ARM-native Java distribution for better performance"
+                ));
+            }
+        }
+
+        System.out.println("Found " + diagnostics.size() + " diagnostic findings");
+        System.out.println();
+    }
+
+    private static void generateReport() {
+        System.out.println("=== Diagnostic Report ===");
+        System.out.println();
+
+        if (diagnostics.isEmpty()) {
+            System.out.println("✅ No issues detected");
+            if (diagnosticLines.isEmpty()) {
+                System.out.println("Note: gradle-doctor may not be installed or configured");
+            }
+            return;
+        }
+
+        // Categorize diagnostics
+        Map<String, List<Diagnostic>> byType = new HashMap<>();
+        for (Diagnostic d : diagnostics) {
+            byType.computeIfAbsent(d.type, k -> new ArrayList<>()).add(d);
+        }
+
+        // Calculate health score
+        int healthScore = 100;
+        healthScore -= byType.getOrDefault("error", List.of()).size() * 20;
+        healthScore -= byType.getOrDefault("warning", List.of()).size() * 10;
+        healthScore = Math.max(0, healthScore);
+
+        // Print summary
+        System.out.println("Health Score: " + healthScore + "/100");
+        System.out.println("Errors: " + byType.getOrDefault("error", List.of()).size());
+        System.out.println("Warnings: " + byType.getOrDefault("warning", List.of()).size());
+        System.out.println("Info: " + byType.getOrDefault("info", List.of()).size());
+        System.out.println();
+
+        // Print detailed diagnostics
+        for (Diagnostic diagnostic : diagnostics) {
+            System.out.println(diagnostic);
+            System.out.println();
+        }
+
+        // High-priority recommendations
+        System.out.println("=== High Priority Recommendations ===");
+        for (Diagnostic d : diagnostics) {
+            if ("warning".equals(d.type) || "error".equals(d.type)) {
+                System.out.println("• " + d.recommendation);
+            }
+        }
+        System.out.println();
+
+        // JSON output for AI consumption
+        System.out.println("=== JSON Output (for AI analysis) ===");
+        System.out.println("{");
+        System.out.println("  \"healthScore\": " + healthScore + ",");
+        System.out.println("  \"diagnosticsCount\": " + diagnostics.size() + ",");
+        System.out.println("  \"errors\": " + byType.getOrDefault("error", List.of()).size() + ",");
+        System.out.println("  \"warnings\": " + byType.getOrDefault("warning", List.of()).size() + ",");
+        System.out.println("  \"info\": " + byType.getOrDefault("info", List.of()).size());
+        System.out.println("}");
+    }
+
+    // Helper class to tee output to multiple streams
+    static class TeeOutputStream extends OutputStream {
+        private final OutputStream out1;
+        private final OutputStream out2;
+
+        TeeOutputStream(OutputStream out1, OutputStream out2) {
+            this.out1 = out1;
+            this.out2 = out2;
+        }
+
+        @Override
+        public void write(int b) throws IOException {
+            out1.write(b);
+            out2.write(b);
+        }
+
+        @Override
+        public void flush() throws IOException {
+            out1.flush();
+            out2.flush();
+        }
+
+        @Override
+        public void close() throws IOException {
+            try {
+                out1.close();
+            } finally {
+                out2.close();
+            }
+        }
+    }
+}
