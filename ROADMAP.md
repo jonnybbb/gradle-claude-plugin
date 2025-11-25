@@ -352,7 +352,7 @@ tools/
 ├── performance-profiler.java   # existing
 ├── build-health-check.java     # existing
 ├── config-cache-fixer.java     # Phase 1 ✓ DONE
-├── migration-fixer.java        # Phase 4 (planned)
+├── migration-fixer.java        # Phase 4 ✓ DONE
 └── performance-fixer.java      # Phase 5 (planned)
 
 agents/
@@ -364,7 +364,7 @@ commands/
 ├── doctor.md                   # existing
 ├── migrate.md                  # existing
 ├── fix-config-cache.md         # Phase 3 ✓ DONE
-├── migrate-gradle.md           # Phase 4 (planned)
+├── migrate-gradle.md           # Phase 4 ✓ DONE
 └── optimize.md                 # Phase 5 (update existing)
 ```
 
@@ -385,7 +385,11 @@ commands/
   - Created `commands/fix-config-cache.md`
   - Supports --auto and --dry-run flags
   - Full analyze → fix → verify workflow
-- [ ] **Phase 4**: Migration Fixer - NOT STARTED
+- [x] **Phase 4**: Migration Fixer - COMPLETE
+  - Created `tools/migration-fixer.java`
+  - Detects 22 deprecations in legacy-groovy fixture
+  - Supports 7→8 and 8→9 migration paths
+  - Created `commands/migrate-gradle.md`
 - [ ] **Phase 5**: Performance Fixer - NOT STARTED
 - [ ] **Phase 6**: Proactive Hooks - NOT STARTED
 

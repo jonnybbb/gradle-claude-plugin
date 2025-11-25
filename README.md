@@ -37,20 +37,23 @@ The `/doctor` command runs a systematic health check. You don't need to know wha
 
 ## Active Automation (NEW)
 
-The plugin now includes **auto-fix capabilities** for configuration cache issues:
+The plugin now includes **auto-fix capabilities** for common Gradle issues:
 
 ```bash
-# Detect and fix config cache issues interactively
-/fix-config-cache
-
-# Auto-apply all safe fixes (HIGH confidence)
+# Detect and fix config cache issues
 /fix-config-cache --auto
 
-# Preview what would change
+# Migrate to newer Gradle version
+/migrate-gradle 9.0 --auto
+
+# Preview changes without applying
 /fix-config-cache --dry-run
+/migrate-gradle 9.0 --dry-run
 ```
 
-The `config-cache-fixer.java` tool detects 19+ issue patterns and generates structured fix plans:
+### Configuration Cache Fixes
+
+The `config-cache-fixer.java` tool detects 19+ issue patterns:
 
 | Category | Examples | Confidence |
 |----------|----------|------------|
@@ -59,13 +62,24 @@ The `config-cache-fixer.java` tool detects 19+ issue patterns and generates stru
 | Deprecated API | `$buildDir` → `layout.buildDirectory` | HIGH (auto) |
 | Service Injection | `project.copy` → injected `FileSystemOperations` | MEDIUM (manual) |
 
+### Migration Fixes
+
+The `migration-fixer.java` tool handles Gradle version migrations (7→8, 8→9):
+
+| Category | Examples | Confidence |
+|----------|----------|------------|
+| Deprecated Properties | `archivesBaseName` → `base { archivesName }` | HIGH (auto) |
+| Task Avoidance | `task name { }` → `tasks.register("name") { }` | HIGH (auto) |
+| API Changes | `mainClassName` → `mainClass` | HIGH (auto) |
+| Convention Deprecations | Top-level `sourceCompatibility` → `java { }` block | MEDIUM (manual) |
+
 See [ROADMAP.md](ROADMAP.md) for the full automation roadmap.
 
 ## Remaining Limitations
 
 - **Integrate with Gradle Enterprise** — No build scan data integration
 - **Remember project context** — Each session starts fresh
-- **Migration auto-fix** — Detection works, fixes planned (Phase 4)
+- **Performance auto-fix** — Planned (Phase 5)
 
 Contributions welcome for remaining features.
 
@@ -122,7 +136,7 @@ jbang tools/performance-profiler.java /path/to/project
 | `gradle-troubleshooting` | Common errors, debugging techniques |
 | `gradle-doctor` | Holistic project health assessment |
 
-## Tools (6)
+## Tools (7)
 
 All tools use Gradle Tooling API for accurate introspection:
 
@@ -130,7 +144,8 @@ All tools use Gradle Tooling API for accurate introspection:
 |------|---------|
 | `gradle-analyzer.java` | Project structure, plugins, dependencies |
 | `cache-validator.java` | Configuration cache compatibility |
-| `config-cache-fixer.java` | **NEW** - Generate structured fix plans with auto-apply support |
+| `config-cache-fixer.java` | Generate config cache fix plans |
+| `migration-fixer.java` | Generate migration fix plans (7→8, 8→9) |
 | `task-analyzer.java` | Task inputs/outputs, cacheability |
 | `performance-profiler.java` | Build timing, bottlenecks |
 | `build-health-check.java` | Overall project health |
