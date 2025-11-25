@@ -22,7 +22,7 @@ class ToolOutputTest {
 
     private static final Path PLUGIN_ROOT = Path.of("..").toAbsolutePath().normalize();
     private static final Path TOOLS_DIR = PLUGIN_ROOT.resolve("tools");
-    private static final Path FIXTURES_DIR = PLUGIN_ROOT.resolve("test-fixtures/projects");
+    private static final Path FIXTURES_DIR = PLUGIN_ROOT.resolve("tests/fixtures/projects");
 
     private static boolean jbangAvailable;
 

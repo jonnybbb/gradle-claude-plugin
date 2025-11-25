@@ -33,7 +33,7 @@ import static org.assertj.core.api.Assertions.*;
  *   <li>ISSUE 16: Deprecated buildDir direct access</li>
  * </ul>
  *
- * @see test-fixtures/projects/config-cache-broken/build.gradle.kts
+ * @see tests/fixtures/projects/config-cache-broken/build.gradle.kts
  */
 @Tag("ai")
 @Tag("accuracy")

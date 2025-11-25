@@ -95,7 +95,7 @@ apt install jq   # Linux
 
 ### Setup
 ```bash
-cd test-fixtures
+cd tests/fixtures
 ./scripts/setup-fixtures.sh
 ```
 
@@ -106,11 +106,11 @@ cd test-fixtures
 
 ### Manual Testing
 ```bash
-# Test individual tool
-jbang tools/build-health-check.java test-fixtures/projects/simple-java
+# Test individual tool (from plugin root)
+jbang tools/build-health-check.java tests/fixtures/projects/simple-java
 
 # With JSON output
-jbang tools/task-analyzer.java test-fixtures/projects/config-cache-broken --json
+jbang tools/task-analyzer.java tests/fixtures/projects/config-cache-broken --json
 ```
 
 ## Expected Outputs

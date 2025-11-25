@@ -16,7 +16,7 @@ This document outlines a complete testing strategy covering all framework compon
 We need test projects representing common real-world scenarios:
 
 ```
-test-fixtures/
+tests/fixtures/
 ├── projects/
 │   ├── simple-java/              # Single module Java project
 │   ├── simple-kotlin/            # Single module Kotlin project
@@ -101,7 +101,7 @@ public class GradleAnalyzerTest {
     @Test
     void analyzesSimpleProject() {
         var result = runTool("gradle-analyzer.java", 
-            "test-fixtures/projects/simple-java", "--json");
+            "tests/fixtures/projects/simple-java", "--json");
         
         var json = parseJson(result.stdout);
         assertThat(json.get("gradleVersion")).isEqualTo("8.11");
@@ -214,7 +214,7 @@ Test Cases:
 
 set -e
 
-FIXTURES="test-fixtures/projects"
+FIXTURES="tests/fixtures/projects"
 TOOLS="tools"
 
 echo "=== Tool Tests ==="
@@ -225,14 +225,14 @@ for project in simple-java multi-module config-cache-broken legacy-groovy; do
     
     # gradle-analyzer
     jbang $TOOLS/gradle-analyzer.java $FIXTURES/$project --json > /tmp/ga-result.json
-    diff /tmp/ga-result.json test-fixtures/expected-outputs/$project/gradle-analysis.json
+    diff /tmp/ga-result.json tests/fixtures/expected-outputs/$project/gradle-analysis.json
     
     # build-health-check
     jbang $TOOLS/build-health-check.java $FIXTURES/$project --json > /tmp/bh-result.json
     # Validate score within expected range
     score=$(jq '.overallScore' /tmp/bh-result.json)
-    expected_min=$(jq '.expectedScoreMin' test-fixtures/expected-outputs/$project/health-check.json)
-    expected_max=$(jq '.expectedScoreMax' test-fixtures/expected-outputs/$project/health-check.json)
+    expected_min=$(jq '.expectedScoreMin' tests/fixtures/expected-outputs/$project/health-check.json)
+    expected_max=$(jq '.expectedScoreMax' tests/fixtures/expected-outputs/$project/health-check.json)
     
     if [[ $score -lt $expected_min || $score -gt $expected_max ]]; then
         echo "FAIL: Score $score not in range [$expected_min, $expected_max]"
@@ -460,7 +460,7 @@ describe('GradleDoctorAgent', () => {
     beforeEach(() => {
         mockAnthropic = new MockAnthropic();
         agent = new GradleDoctorAgent({
-            projectDir: 'test-fixtures/projects/simple-java',
+            projectDir: 'tests/fixtures/projects/simple-java',
             jbangToolsDir: 'tools',
             apiKey: 'test-key'
         });
@@ -501,7 +501,7 @@ describe('GradleMigrationAgent', () => {
     
     it('detects current Gradle version', async () => {
         const agent = new GradleMigrationAgent({
-            projectDir: 'test-fixtures/projects/legacy-groovy',
+            projectDir: 'tests/fixtures/projects/legacy-groovy',
             apiKey: 'test-key'
         });
         
@@ -511,7 +511,7 @@ describe('GradleMigrationAgent', () => {
     
     it('finds deprecations for 7.6 -> 8.11', async () => {
         const agent = new GradleMigrationAgent({
-            projectDir: 'test-fixtures/projects/legacy-groovy',
+            projectDir: 'tests/fixtures/projects/legacy-groovy',
             targetVersion: '8.11',
             apiKey: 'test-key'
         });
@@ -537,14 +537,14 @@ describe('GradleMigrationAgent', () => {
     
     it('applies fixes in dry-run mode without changes', async () => {
         const agent = new GradleMigrationAgent({
-            projectDir: 'test-fixtures/projects/legacy-groovy',
+            projectDir: 'tests/fixtures/projects/legacy-groovy',
             dryRun: true,
             apiKey: 'test-key'
         });
         
-        const before = readFile('test-fixtures/projects/legacy-groovy/build.gradle');
+        const before = readFile('tests/fixtures/projects/legacy-groovy/build.gradle');
         await agent.applyFixes(await agent.analyze());
-        const after = readFile('test-fixtures/projects/legacy-groovy/build.gradle');
+        const after = readFile('tests/fixtures/projects/legacy-groovy/build.gradle');
         
         expect(before).toBe(after);
     });
@@ -570,7 +570,7 @@ Test complete user workflows:
 #!/bin/bash
 # test/e2e/full-workflow.sh
 
-PROJECT="test-fixtures/projects/legacy-groovy"
+PROJECT="tests/fixtures/projects/legacy-groovy"
 
 echo "=== E2E: Full Migration Workflow ==="
 
@@ -629,12 +629,12 @@ Save expected outputs and compare on each run:
 
 ```bash
 # Generate snapshots
-jbang tools/build-health-check.java test-fixtures/projects/simple-java --json \
-    > test-fixtures/snapshots/simple-java-health.json
+jbang tools/build-health-check.java tests/fixtures/projects/simple-java --json \
+    > tests/fixtures/snapshots/simple-java-health.json
 
 # Compare on test run
-jbang tools/build-health-check.java test-fixtures/projects/simple-java --json \
-    | diff - test-fixtures/snapshots/simple-java-health.json
+jbang tools/build-health-check.java tests/fixtures/projects/simple-java --json \
+    | diff - tests/fixtures/snapshots/simple-java-health.json
 ```
 
 ### 6.2 Version Compatibility Matrix

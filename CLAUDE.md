@@ -50,14 +50,14 @@ npm run format   # Prettier
 ### Testing
 ```bash
 # Setup test fixtures
-cd test-fixtures
+cd tests/fixtures
 ./scripts/setup-fixtures.sh
 
 # Run tool tests against fixtures
 ./scripts/test-tools.sh
 
 # Manual tool test
-jbang tools/build-health-check.java test-fixtures/projects/simple-java
+jbang tools/build-health-check.java tests/fixtures/projects/simple-java
 ```
 
 ## Architecture Layers
@@ -82,14 +82,14 @@ JBang tools use the Gradle Tooling API and require:
 
 ## Test Fixtures
 
-Located in `test-fixtures/projects/`:
+Located in `tests/fixtures/projects/`:
 - `simple-java` - Healthy baseline (Gradle 9.2.1, Java 25, all best practices)
 - `config-cache-broken` - Intentional issues for detection testing
 - `legacy-groovy` - Gradle 7.6.4 for migration testing (Java 11)
 - `multi-module` - 4-module project for scale testing
 - `spring-boot` - Framework compatibility testing
 
-Expected outputs in `test-fixtures/expected-outputs/*.json`.
+Expected outputs in `tests/fixtures/expected-outputs/*.json`.
 
 ## Requirements
 

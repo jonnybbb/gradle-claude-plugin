@@ -14,7 +14,7 @@ public class FixtureLoader {
     private final Path fixturesRoot;
 
     public FixtureLoader(Path pluginRoot) {
-        this.fixturesRoot = pluginRoot.resolve("test-fixtures").resolve("projects");
+        this.fixturesRoot = pluginRoot.resolve("tests").resolve("fixtures").resolve("projects");
     }
 
     /**

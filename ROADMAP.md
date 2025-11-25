@@ -416,10 +416,10 @@ To begin Phase 1:
 touch tools/config-cache-fixer.java
 
 # Use config-cache-broken fixture for testing
-ls test-fixtures/projects/config-cache-broken/
+ls tests/fixtures/projects/config-cache-broken/
 
 # Run existing validator for reference
-jbang tools/cache-validator.java test-fixtures/projects/config-cache-broken/
+jbang tools/cache-validator.java tests/fixtures/projects/config-cache-broken/
 ```
 
 The fixer should detect the same issues as the validator, but output structured fix plans instead of just reports.

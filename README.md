@@ -215,7 +215,7 @@ skills/           → User-facing skill definitions (10 SKILL.md files)
 agents/           → Workflow orchestration (doctor.md, migration.md)
 tools/            → JBang scripts with Gradle Tooling API
 docs/reference/   → Curated documentation (skills link here)
-test-fixtures/    → Projects for validation
+tests/fixtures/    → Projects for validation
 tests/            → JUnit tests including AI-powered accuracy tests
 ```
 
