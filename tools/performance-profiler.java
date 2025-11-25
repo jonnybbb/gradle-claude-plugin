@@ -27,7 +27,7 @@ import java.util.stream.*;
  * 
  * Usage: performance-profiler.java <project-dir> [task] [--json]
  */
-public class performance_profiler {
+class performance_profiler {
     
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private static boolean jsonOutput = false;

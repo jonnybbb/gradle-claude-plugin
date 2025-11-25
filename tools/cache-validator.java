@@ -23,7 +23,7 @@ import java.util.regex.*;
  * 
  * Usage: cache-validator.java <project-dir> [--fix]
  */
-public class cache_validator {
+class cache_validator {
     
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private static boolean autoFix = false;

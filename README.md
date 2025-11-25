@@ -35,14 +35,39 @@ Skills are validated against test fixtures with documented issues. The AI respon
 ### 3. Structured Workflows
 The `/doctor` command runs a systematic health check. You don't need to know what questions to ask.
 
-## What This Plugin Does NOT Do (Yet)
+## Active Automation (NEW)
 
-- **Auto-fix issues** — Reports problems but requires manual fixes
+The plugin now includes **auto-fix capabilities** for configuration cache issues:
+
+```bash
+# Detect and fix config cache issues interactively
+/fix-config-cache
+
+# Auto-apply all safe fixes (HIGH confidence)
+/fix-config-cache --auto
+
+# Preview what would change
+/fix-config-cache --dry-run
+```
+
+The `config-cache-fixer.java` tool detects 19+ issue patterns and generates structured fix plans:
+
+| Category | Examples | Confidence |
+|----------|----------|------------|
+| Provider API | `System.getProperty` → `providers.systemProperty` | HIGH (auto) |
+| Task Avoidance | `tasks.create` → `tasks.register` | HIGH (auto) |
+| Deprecated API | `$buildDir` → `layout.buildDirectory` | HIGH (auto) |
+| Service Injection | `project.copy` → injected `FileSystemOperations` | MEDIUM (manual) |
+
+See [ROADMAP.md](ROADMAP.md) for the full automation roadmap.
+
+## Remaining Limitations
+
 - **Integrate with Gradle Enterprise** — No build scan data integration
 - **Remember project context** — Each session starts fresh
-- **Run tools automatically** — Skills provide knowledge; you run the tools
+- **Migration auto-fix** — Detection works, fixes planned (Phase 4)
 
-These would make the plugin significantly more valuable. Contributions welcome.
+Contributions welcome for remaining features.
 
 ## Quick Start
 
@@ -66,8 +91,14 @@ ln -s $(pwd)/claude-gradle-plugin ~/.claude/plugins/gradle-expert
 # Comprehensive health check
 /doctor
 
+# Detect and auto-fix configuration cache issues
+/fix-config-cache --auto
+
 # Validate configuration cache compatibility
 jbang tools/cache-validator.java /path/to/project
+
+# Generate structured fix plan (JSON output for tooling)
+jbang tools/config-cache-fixer.java /path/to/project --json
 
 # Analyze project structure
 jbang tools/gradle-analyzer.java /path/to/project --json
@@ -91,7 +122,7 @@ jbang tools/performance-profiler.java /path/to/project
 | `gradle-troubleshooting` | Common errors, debugging techniques |
 | `gradle-doctor` | Holistic project health assessment |
 
-## Tools (5)
+## Tools (6)
 
 All tools use Gradle Tooling API for accurate introspection:
 
@@ -99,6 +130,7 @@ All tools use Gradle Tooling API for accurate introspection:
 |------|---------|
 | `gradle-analyzer.java` | Project structure, plugins, dependencies |
 | `cache-validator.java` | Configuration cache compatibility |
+| `config-cache-fixer.java` | **NEW** - Generate structured fix plans with auto-apply support |
 | `task-analyzer.java` | Task inputs/outputs, cacheability |
 | `performance-profiler.java` | Build timing, bottlenecks |
 | `build-health-check.java` | Overall project health |

@@ -26,7 +26,7 @@ import java.util.stream.*;
  * 
  * Usage: build-health-check.java <project-dir> [--json] [--verbose]
  */
-public class build_health_check {
+class build_health_check {
     
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private static boolean jsonOutput = false;

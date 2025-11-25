@@ -24,7 +24,7 @@ import java.util.stream.*;
  * 
  * Usage: task-analyzer.java <project-dir> [--json] [--fix]
  */
-public class task_analyzer {
+class task_analyzer {
     
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private static boolean jsonOutput = false;
