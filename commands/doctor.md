@@ -1,6 +1,6 @@
 ---
 description: Run comprehensive Gradle build health analysis
-allowed-tools: Read, Glob, Grep, Bash, mcp__develocity__getBuilds, mcp__develocity__getTestResults
+allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, mcp__develocity__getBuilds, mcp__develocity__getTestResults
 ---
 
 # Gradle Doctor - Comprehensive Health Check
@@ -34,23 +34,63 @@ jbang tools/task-analyzer.java . --json
 
 If the Develocity MCP tools are available (`mcp__develocity__getBuilds` and `mcp__develocity__getTestResults`), query for additional insights. Skip this step gracefully if Develocity is not configured.
 
-**Detect project name** from `settings.gradle(.kts)`:
-```bash
-grep -E "^rootProject.name" settings.gradle* 2>/dev/null | head -1
-```
+#### Step 1.5.1: Gather Context
+
+Before querying Develocity, you MUST establish the correct context. Develocity queries require proper filtering to return relevant results.
+
+**Auto-detect what you can:**
+
+1. **Project name** from `settings.gradle(.kts)`:
+   ```bash
+   grep -E "^rootProject.name" settings.gradle* 2>/dev/null | head -1
+   ```
+
+2. **Current git branch**:
+   ```bash
+   git branch --show-current 2>/dev/null
+   ```
+
+3. **Current username** (for "my builds" context):
+   ```bash
+   git config user.name 2>/dev/null
+   ```
+
+**Ask user for clarification if needed:**
+
+If any of the following are unclear or ambiguous, use `AskUserQuestion` to clarify BEFORE querying Develocity:
+
+| Context | When to ask |
+|---------|-------------|
+| **Project** | If `rootProject.name` cannot be detected, or if analyzing a multi-repo setup |
+| **Username** | If user asks about "my builds" but git username doesn't match Develocity username |
+| **Branch** | If user wants branch-specific analysis (CI vs local, feature branch vs main) |
+| **Time range** | If user wants something other than "last 7 days" default |
+| **Build type** | If user wants to filter by CI vs LOCAL builds |
+
+Example clarification questions:
+- "What is your Develocity username? (Your git username is 'jdoe' - is that the same?)"
+- "Should I analyze builds from all branches, or just the current branch ('feature/xyz')?"
+- "Should I include only CI builds, only local builds, or both?"
+
+#### Step 1.5.2: Query Recent Builds
 
 **Query recent builds** (last 7 days, up to 50 builds):
 - Use `mcp__develocity__getBuilds` with:
-  - `project`: the detected root project name (or use wildcard if unknown)
+  - `project`: the detected root project name (REQUIRED - ask if unknown)
   - `fromDate`: 7 days ago in ISO-8601 format
   - `maxBuilds`: 50
   - `additionalDataToInclude`: `["attributes", "build_performance", "caching", "failures"]`
+  - `userTags`: (optional) filter by `["CI"]` or `["LOCAL"]` if user specified
+  - `username`: (optional) if user asked for "my builds"
+
+#### Step 1.5.3: Query for Flaky Tests
 
 **Query for flaky tests** (last 7 days):
 - Use `mcp__develocity__getTestResults` with:
-  - `project`: the detected root project name
+  - `project`: the detected root project name (REQUIRED - ask if unknown)
   - `fromDate`: 7 days ago
   - `includeOutcomes`: `["flaky", "failed"]`
+  - `userTags`: (optional) match the build query filters
 
 **Important**: The Develocity MCP server URL and credentials are user/environment-specific. If the MCP tools fail or are not available, continue with local analysis only and note that Develocity insights are unavailable.
 
