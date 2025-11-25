@@ -1,0 +1,147 @@
+# =============================================================================
+# Example Agent Output: migration-agent.ts
+# =============================================================================
+# Command: npx ts-node migration-agent.ts /path/to/project --target=8.11
+# =============================================================================
+
+🔍 Starting Gradle migration analysis...
+
+📦 Current: Gradle 7.6.4, Java 17
+🎯 Target: Gradle 8.11
+
+🔎 Scanning for deprecated APIs...
+⚠️  Detecting breaking changes...
+🔧 Generating auto-fixes...
+📋 Creating migration plan...
+
+═══════════════════════════════════════════════════════════
+              GRADLE MIGRATION REPORT
+═══════════════════════════════════════════════════════════
+
+📦 Current Version: 7.6.4
+🎯 Target Version:  8.11
+⏱️  Estimated Effort: 2-4 hours
+
+Compatibility: 🟠 MAJOR-CHANGES
+
+📊 Summary:
+   Deprecations found: 8
+   Breaking changes:   3
+   Auto-fixable:       5
+
+⚠️  Deprecations:
+
+   🔧 archiveName → archiveFileName.set()
+      Location: build.gradle.kts:45
+      Removed in: 8.0
+
+   🔧 destinationDir → destinationDirectory.set()
+      Location: build.gradle.kts:46
+      Removed in: 8.0
+
+   🔧 archivesBaseName → base.archivesName.set()
+      Location: build.gradle.kts:12
+      Removed in: 8.0
+
+   📝 JavaPluginConvention → JavaPluginExtension
+      Location: buildSrc/src/main/kotlin/conventions.gradle.kts:23
+      Removed in: 8.0
+
+   🔧 tasks.create() → tasks.register()
+      Location: app/build.gradle.kts:34
+      Removed in: Warning only (deprecated since 4.9)
+
+   ... and 3 more
+
+🚨 Breaking Changes:
+
+   🔴 [BC001] Archive property removal
+      The archiveName, destinationDir, and archivesBaseName properties
+      have been removed in Gradle 8.0.
+      Solution: Use archiveFileName.set(), destinationDirectory.set(),
+                and base.archivesName.set() respectively.
+
+   🟠 [BC002] JavaPluginConvention removed
+      project.convention.getPlugin(JavaPluginConvention::class) no longer works.
+      Solution: Use project.extensions.getByType<JavaPluginExtension>()
+
+   🟠 [BC003] buildDir property deprecated
+      Direct access to project.buildDir is deprecated.
+      Solution: Use layout.buildDirectory instead.
+
+📋 Migration Phases:
+
+   1. Preparation 🟢
+      Back up and verify current build works
+      • Create branch
+      • Run full build
+      • Document current behavior
+
+   2. Fix Deprecations 🟠
+      Address deprecated API usage
+      • Run with --warning-mode=all
+      • Fix deprecation warnings
+      • Verify build
+
+   3. Update Wrapper 🟢
+      Update to Gradle 8.11
+      • ./gradlew wrapper --gradle-version 8.11
+      • Commit wrapper files
+
+   4. Fix Breaking Changes 🔴
+      Address any compilation errors
+      • Fix API changes
+      • Update plugin versions
+      • Resolve incompatibilities
+
+   5. Verification 🟢
+      Verify migrated build
+      • Clean build
+      • Run all tests
+      • Check build scans
+
+🔧 Available Auto-Fixes:
+
+   • Replace archiveName with archiveFileName.set()
+   • Replace destinationDir with destinationDirectory.set()
+   • Replace archivesBaseName with base.archivesName.set()
+   • Replace tasks.create with tasks.register
+   • Replace tasks.getByName with tasks.named
+   ... and 0 more
+
+   Run with --apply to apply safe fixes automatically.
+
+📝 Manual Steps Required:
+
+   1. Check Plugin Compatibility
+      Verify all plugins support the target Gradle version
+      $ ./gradlew buildEnvironment
+      ✓ Verify: All plugins resolve successfully
+
+   2. Update Kotlin Version
+      Ensure Kotlin plugin is compatible
+      ✓ Verify: Build completes without Kotlin errors
+
+   3. Fix JavaPluginConvention Usage
+      Replace convention with extension API
+      ✓ Verify: No convention API errors
+
+   4. Enable Configuration Cache
+      Test with configuration cache enabled
+      $ ./gradlew build --configuration-cache
+      ✓ Verify: Build succeeds with configuration cache
+
+═══════════════════════════════════════════════════════════
+
+Next Steps:
+  1. Run: npx ts-node migration-agent.ts . --apply
+     Applies 5 safe automatic fixes
+     
+  2. Run: npx ts-node migration-agent.ts . --update-wrapper
+     Updates Gradle wrapper to 8.11
+     
+  3. Manually fix remaining 3 issues
+  
+  4. Test: ./gradlew clean build test
+
+═══════════════════════════════════════════════════════════

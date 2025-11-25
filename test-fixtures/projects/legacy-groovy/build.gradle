@@ -1,0 +1,100 @@
+// Test Fixture: legacy-groovy
+// Purpose: Migration testing - Gradle 7.6 with deprecated patterns
+// Expected: 10+ deprecations detected
+
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'com.example'
+version = '1.0.0'
+
+// ❌ DEPRECATED: archivesBaseName (removed in Gradle 8)
+archivesBaseName = 'legacy-app'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // ❌ DEPRECATED: compile configuration (removed in Gradle 7)
+    // Using implementation but showing pattern
+    implementation 'com.google.guava:guava:30.1-jre'  // Old version too
+    implementation 'org.slf4j:slf4j-api:1.7.32'        // Old version
+    
+    testImplementation 'junit:junit:4.13.2'  // JUnit 4 instead of 5
+}
+
+application {
+    mainClassName = 'com.example.Main'  // Old property name
+}
+
+// ❌ DEPRECATED: Eager task creation
+task generateDocs {
+    doLast {
+        println 'Generating docs...'
+    }
+}
+
+// ❌ DEPRECATED: Another eager task
+task copyConfig(type: Copy) {
+    from 'src/main/resources'
+    into "$buildDir/config"  // Direct buildDir access
+}
+
+// ❌ DEPRECATED: archiveName property
+jar {
+    archiveName = 'my-legacy-app.jar'
+    destinationDir = file("$buildDir/libs")
+    
+    manifest {
+        attributes(
+            'Main-Class': 'com.example.Main',
+            'Implementation-Version': project.version
+        )
+    }
+}
+
+// ❌ DEPRECATED: destinationDir property
+task createDist(type: Zip) {
+    archiveName = 'legacy-dist.zip'
+    destinationDir = file("$buildDir/distributions")
+    from 'src/main/resources'
+}
+
+// ❌ DEPRECATED: getByName eager access
+tasks.getByName('test') {
+    // Old pattern
+}
+
+// ❌ Using project.copy directly in configuration
+task prepareDeploy {
+    doLast {
+        copy {
+            from 'config'
+            into "$buildDir/deploy"
+        }
+    }
+}
+
+// ❌ DEPRECATED: Convention property access patterns
+sourceCompatibility = '11'
+targetCompatibility = '11'
+
+// ❌ Direct property access pattern
+task printInfo {
+    doLast {
+        println "Build dir: $buildDir"
+        println "Project dir: $projectDir"
+        println "Version: $version"
+    }
+}
+
+// ❌ Old test configuration
+test {
+    // Using JUnit 4 runner
+}
+
+// ❌ Old-style task dependencies
+compileJava.dependsOn generateDocs

@@ -1,0 +1,4 @@
+// Test Fixture: legacy-groovy
+// Old-style settings file
+
+rootProject.name = 'legacy-groovy'

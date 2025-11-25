@@ -1,0 +1,114 @@
+# =============================================================================
+# Example Tool Output: build-health-check.java
+# =============================================================================
+# Command: jbang tools/build-health-check.java /path/to/project
+# =============================================================================
+
+═══════════════════════════════════════════════════════════
+           GRADLE BUILD HEALTH CHECK
+═══════════════════════════════════════════════════════════
+
+Project: /Users/dev/my-application
+Gradle:  8.5
+
+═══════════════════════════════════════════════════════════
+                    OVERALL SCORE
+═══════════════════════════════════════════════════════════
+
+  [████████████████████░░░░░░░░░░] 72/100
+
+  Status: ⚠️ NEEDS ATTENTION
+
+═══════════════════════════════════════════════════════════
+                  CATEGORY BREAKDOWN
+═══════════════════════════════════════════════════════════
+
+⚡ Performance Configuration      85/100  ✅
+   ├─ Parallel execution         ✅ enabled
+   ├─ Daemon enabled             ✅ enabled
+   ├─ File system watching       ✅ enabled
+   ├─ JVM memory configured      ✅ -Xmx4g
+   └─ Workers configured         ⚠️ using default
+
+🗄️  Caching Setup                 60/100  ⚠️
+   ├─ Build cache enabled        ✅ enabled
+   ├─ Configuration cache        ❌ disabled
+   └─ Remote cache configured    ❌ not configured
+
+🏗️  Build Structure               80/100  ✅
+   ├─ Gradle wrapper present     ✅ present
+   ├─ Version catalog            ✅ using libs.versions.toml
+   ├─ Convention plugins         ✅ buildSrc present
+   ├─ Kotlin DSL                 ✅ using .kts files
+   └─ gradle.properties exists   ✅ present
+
+📋 Task Quality                   55/100  ⚠️
+   ├─ Lazy registration ratio    ⚠️ 65% (target: 80%+)
+   └─ Config cache compatible    ❌ 12 issues found
+
+📦 Dependency Management          70/100  ⚠️
+   ├─ Centralized versions       ✅ version catalog
+   ├─ Dependency locking         ❌ not enabled
+   └─ Platform/BOM usage         ✅ using spring-boot-dependencies
+
+═══════════════════════════════════════════════════════════
+              TOP 5 RECOMMENDATIONS
+═══════════════════════════════════════════════════════════
+
+1. 🔴 HIGH: Enable Configuration Cache
+   Add to gradle.properties:
+   org.gradle.configuration-cache=true
+   
+   Impact: 40-90% faster incremental builds
+
+2. 🔴 HIGH: Fix Config Cache Compatibility Issues
+   Found 12 issues in 4 files:
+   - build.gradle.kts: 3 issues (project.copy in doLast)
+   - app/build.gradle.kts: 5 issues (Task.project access)
+   - core/build.gradle.kts: 4 issues (System.getProperty)
+   
+   Run: jbang task-analyzer.java /project --fix
+
+3. 🟡 MEDIUM: Increase Lazy Task Registration
+   Current: 65% of tasks use register()
+   Target: 80%+
+   
+   Replace tasks.create() with tasks.register()
+   Replace tasks.getByName() with tasks.named()
+
+4. 🟡 MEDIUM: Enable Dependency Locking
+   Add to build.gradle.kts:
+   dependencyLocking {
+       lockAllConfigurations()
+   }
+   
+   Then run: ./gradlew dependencies --write-locks
+
+5. 🟢 LOW: Configure Remote Build Cache
+   Add to settings.gradle.kts for team sharing:
+   buildCache {
+       remote<HttpBuildCache> {
+           url = uri("https://cache.company.com/")
+       }
+   }
+
+═══════════════════════════════════════════════════════════
+                    QUICK WINS
+═══════════════════════════════════════════════════════════
+
+Run these commands for immediate improvement:
+
+# Enable configuration cache (add to gradle.properties)
+echo "org.gradle.configuration-cache=true" >> gradle.properties
+
+# Find and fix task issues
+jbang task-analyzer.java . --fix
+
+# Verify build still works
+./gradlew build --configuration-cache
+
+═══════════════════════════════════════════════════════════
+
+Full report saved to: build/reports/health-check.json
+
+Time: 2.3s

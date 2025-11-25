@@ -1,0 +1,31 @@
+{
+  "_comment": "Expected output for spring-boot fixture",
+  "project": "spring-boot-demo",
+  "gradleVersion": "8.5",
+  "hasWrapper": true,
+  "kotlinDsl": true,
+  "versionCatalog": false,
+  
+  "framework": {
+    "springBoot": true,
+    "springBootVersion": "3.2.0"
+  },
+  
+  "healthCheck": {
+    "expectedScoreMin": 70,
+    "expectedScoreMax": 90,
+    "expectedStatus": "HEALTHY"
+  },
+  
+  "taskAnalysis": {
+    "expectedEagerCreates": 0,
+    "expectedConfigCacheIssues": 0
+  },
+  
+  "performanceSettings": {
+    "parallel": true,
+    "caching": true,
+    "configurationCache": true,
+    "vfsWatch": false
+  }
+}

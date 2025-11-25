@@ -1,0 +1,169 @@
+# =============================================================================
+# Example Tool Output: task-analyzer.java
+# =============================================================================
+# Command: jbang tools/task-analyzer.java /path/to/project
+# =============================================================================
+
+═══════════════════════════════════════════════════════════
+             GRADLE TASK ANALYZER
+═══════════════════════════════════════════════════════════
+
+Scanning: /Users/dev/my-application
+Files analyzed: 8
+
+═══════════════════════════════════════════════════════════
+                  ISSUES FOUND
+═══════════════════════════════════════════════════════════
+
+--- build.gradle.kts ---
+
+❌ CRITICAL [Line 45]: Config cache incompatible - project.copy in doLast
+   │
+   │  doLast {
+   │      project.copy {
+   │          from("src/main/resources")
+   │          into("$buildDir/config")
+   │      }
+   │  }
+   │
+   Fix: Inject FileSystemOperations service instead
+
+❌ CRITICAL [Line 67]: Config cache incompatible - project.exec in doLast  
+   │
+   │  doLast {
+   │      project.exec {
+   │          commandLine("./scripts/generate.sh")
+   │      }
+   │  }
+   │
+   Fix: Inject ExecOperations service instead
+
+⚠️ WARNING [Line 23]: Eager task creation
+   │
+   │  tasks.create("generateDocs") {
+   │
+   Fix: Replace with tasks.register("generateDocs")
+
+--- app/build.gradle.kts ---
+
+❌ CRITICAL [Line 34]: Task.project access at execution time
+   │
+   │  doLast {
+   │      val outputDir = project.buildDir
+   │
+   Fix: Capture value during configuration or use layout API
+
+⚠️ WARNING [Line 56]: System.getProperty usage
+   │
+   │  val dbUrl = System.getProperty("db.url")
+   │
+   Fix: Use providers.systemProperty("db.url")
+
+⚠️ WARNING [Line 78]: System.getenv usage
+   │
+   │  val apiKey = System.getenv("API_KEY")
+   │
+   Fix: Use providers.environmentVariable("API_KEY")
+
+--- core/build.gradle.kts ---
+
+⚠️ WARNING [Line 12]: Eager task reference
+   │
+   │  tasks.getByName("test") {
+   │
+   Fix: Replace with tasks.named("test")
+
+--- buildSrc/src/main/kotlin/conventions.gradle.kts ---
+
+✅ No issues found
+
+═══════════════════════════════════════════════════════════
+                    SUMMARY
+═══════════════════════════════════════════════════════════
+
+Pattern Counts:
+  ✅ Lazy registrations (tasks.register):  23
+  ❌ Eager creations (tasks.create):        3
+  ✅ Lazy references (tasks.named):        15
+  ⚠️ Eager references (tasks.getByName):   2
+
+Lazy Registration Score: 88%  (target: 90%+)
+
+Issue Severity:
+  ❌ Critical:  4
+  ⚠️ Warning:   4
+  ℹ️ Info:      0
+
+Overall Score: 67/100
+
+═══════════════════════════════════════════════════════════
+                 RECOMMENDATIONS
+═══════════════════════════════════════════════════════════
+
+Priority 1: Fix Configuration Cache Issues (Critical)
+─────────────────────────────────────────────────────
+4 issues blocking configuration cache adoption.
+
+For project.copy/exec in doLast, inject services:
+
+  abstract class MyTask : DefaultTask() {
+      @get:Inject
+      abstract val fsOps: FileSystemOperations
+      
+      @get:Inject  
+      abstract val execOps: ExecOperations
+      
+      @TaskAction
+      fun execute() {
+          fsOps.copy { from("src"); into("dest") }
+          execOps.exec { commandLine("echo", "done") }
+      }
+  }
+
+For project.buildDir access, use layout API:
+
+  val outputDir = layout.buildDirectory.dir("output")
+
+Priority 2: Use Provider API for System Properties
+─────────────────────────────────────────────────────
+Replace direct system access with providers:
+
+  // Before
+  val dbUrl = System.getProperty("db.url")
+  val apiKey = System.getenv("API_KEY")
+  
+  // After  
+  val dbUrl = providers.systemProperty("db.url")
+  val apiKey = providers.environmentVariable("API_KEY")
+
+Priority 3: Convert Remaining Eager Tasks
+─────────────────────────────────────────────────────
+Replace eager APIs with lazy equivalents:
+
+  // Before
+  tasks.create("myTask") { }
+  tasks.getByName("test") { }
+  
+  // After
+  tasks.register("myTask") { }
+  tasks.named("test") { }
+
+═══════════════════════════════════════════════════════════
+                   AUTO-FIX
+═══════════════════════════════════════════════════════════
+
+Run with --fix to apply safe automatic fixes:
+  jbang task-analyzer.java /path/to/project --fix
+
+Safe fixes available: 3
+  • Replace tasks.create → tasks.register (2 occurrences)
+  • Replace tasks.getByName → tasks.named (1 occurrence)
+
+Manual fixes required: 4
+  • Service injection for project.copy/exec
+  • Layout API for buildDir access
+
+═══════════════════════════════════════════════════════════
+
+JSON output available with --json flag
+Time: 1.8s

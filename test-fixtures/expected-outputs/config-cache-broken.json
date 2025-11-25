@@ -1,0 +1,39 @@
+{
+  "_comment": "Expected output for config-cache-broken fixture",
+  "project": "config-cache-broken",
+  "gradleVersion": "8.5",
+  "hasWrapper": true,
+  "kotlinDsl": true,
+  "versionCatalog": false,
+  
+  "healthCheck": {
+    "expectedScoreMin": 30,
+    "expectedScoreMax": 55,
+    "expectedStatus": "NEEDS_ATTENTION"
+  },
+  
+  "taskAnalysis": {
+    "expectedEagerCreates": 3,
+    "expectedEagerGetByName": 2,
+    "expectedConfigCacheIssues": {
+      "min": 12,
+      "max": 18
+    },
+    "issueTypes": [
+      "EAGER_CREATE",
+      "EAGER_GET_BY_NAME", 
+      "CONFIG_CACHE_PROJECT",
+      "CONFIG_CACHE_SYSPROP",
+      "CONFIG_CACHE_ENV",
+      "CONFIG_CACHE_COPY",
+      "CONFIG_CACHE_EXEC"
+    ]
+  },
+  
+  "performanceSettings": {
+    "parallel": true,
+    "caching": true,
+    "configurationCache": false,
+    "vfsWatch": false
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "name": "gradle-expert",
+  "version": "1.0.0",
+  "description": "Comprehensive Gradle development assistant with performance tuning, build optimization, task/plugin development, troubleshooting, and migration guidance for Gradle 6-9+",
+  "author": {
+    "name": "Johannes Bühler",
+    "url": "https://github.com/jonnybbb"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/jonnybbb/claude-gradle-plugin",
+  "repository": "https://github.com/jonnybbb/claude-gradle-plugin",
+  "keywords": [
+    "gradle",
+    "build-tool",
+    "java",
+    "kotlin",
+    "android",
+    "performance",
+    "optimization",
+    "configuration-cache",
+    "build-cache",
+    "task-development",
+    "plugin-development",
+    "troubleshooting",
+    "migration",
+    "devops",
+    "ci-cd"
+  ],
+  "marketplace": {
+    "categories": [
+      "build-tools",
+      "developer-tools",
+      "java",
+      "devops"
+    ],
+    "featured": false,
+    "icon": "assets/icon.png",
+    "screenshots": [
+      "assets/screenshots/doctor-output.png",
+      "assets/screenshots/performance-analysis.png",
+      "assets/screenshots/migration-guidance.png"
+    ],
+    "readme": "README.md",
+    "changelog": "CHANGELOG.md",
+    "minClaudeCodeVersion": "1.0.0",
+    "compatibility": {
+      "platforms": ["macos", "linux", "windows"],
+      "requirements": {
+        "java": ">=11",
+        "gradle": ">=6.0",
+        "jbang": ">=0.115.0",
+        "node": ">=18.0.0"
+      }
+    },
+    "features": [
+      "10 specialized Gradle skills",
+      "5 JBang analysis tools",
+      "2 orchestration agents",
+      "Gradle 6-9+ support",
+      "Configuration cache troubleshooting",
+      "Build cache optimization",
+      "Migration assistance (6/7 to 8/9+)",
+      "Performance profiling"
+    ],
+    "useCases": [
+      "Gradle build optimization",
+      "Build performance analysis",
+      "Gradle version migration",
+      "Custom task development",
+      "Plugin development",
+      "CI/CD pipeline optimization",
+      "Build troubleshooting"
+    ]
+  }
+}
