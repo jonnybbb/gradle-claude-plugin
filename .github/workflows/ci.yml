@@ -1,0 +1,183 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-plugin:
+    name: Validate Plugin Structure
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate plugin.json
+        run: |
+          if [ ! -f ".claude-plugin/plugin.json" ]; then
+            echo "Error: plugin.json not found"
+            exit 1
+          fi
+          # Validate JSON syntax
+          python3 -c "import json; json.load(open('.claude-plugin/plugin.json'))"
+          echo "plugin.json is valid JSON"
+
+      - name: Check required files exist
+        run: |
+          required_files=(
+            "README.md"
+            "LICENSE"
+            "CLAUDE.md"
+            ".claude-plugin/plugin.json"
+          )
+          for file in "${required_files[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "Error: Required file $file not found"
+              exit 1
+            fi
+          done
+          echo "All required files present"
+
+      - name: Validate skills have SKILL.md
+        run: |
+          for dir in skills/*/; do
+            if [ -d "$dir" ] && [ ! -f "${dir}SKILL.md" ]; then
+              echo "Error: Missing SKILL.md in $dir"
+              exit 1
+            fi
+          done
+          echo "All skills have SKILL.md"
+
+  jbang-tools:
+    name: Test JBang Tools
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '25'
+
+      - name: Setup JBang
+        uses: jbangdev/setup-jbang@main
+
+      - name: Verify JBang tools compile
+        run: |
+          for tool in tools/*.java; do
+            echo "Checking $tool..."
+            jbang --quiet build "$tool"
+          done
+
+      - name: Run quick-validate tool
+        run: |
+          # Create a minimal Gradle project for testing
+          mkdir -p test-project
+          cd test-project
+          cat > settings.gradle.kts << 'EOF'
+          rootProject.name = "test-project"
+          EOF
+          cat > build.gradle.kts << 'EOF'
+          plugins {
+              java
+          }
+          EOF
+          cd ..
+          jbang tools/quick-validate.java test-project || true
+
+  typescript-agents:
+    name: TypeScript Agents
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: agents
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: agents/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test
+
+  gradle-tests:
+    name: Gradle Tests (non-AI)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '25'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run tool tests
+        run: ./gradlew toolTests --no-daemon
+
+      - name: Run skill tests
+        run: ./gradlew skillTests --no-daemon
+
+      - name: Run hook tests
+        run: ./gradlew hookTests --no-daemon
+
+  markdown-lint:
+    name: Lint Markdown
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check markdown files exist
+        run: |
+          # Verify key markdown files are readable
+          for file in README.md CLAUDE.md CHANGELOG.md; do
+            if [ -f "$file" ]; then
+              head -1 "$file" > /dev/null
+              echo "$file is readable"
+            fi
+          done
+
+      - name: Check for broken internal links
+        run: |
+          # Simple check for obviously broken markdown links to local files
+          find . -name "*.md" -not -path "./.git/*" | while read -r file; do
+            # Check for links to .md files that don't exist
+            grep -oE '\[.+?\]\(([^)]+\.md)\)' "$file" 2>/dev/null | \
+            grep -oE '\([^)]+\.md\)' | tr -d '()' | while read -r link; do
+              # Skip URLs
+              if [[ "$link" != http* ]]; then
+                dir=$(dirname "$file")
+                target="$dir/$link"
+                if [ ! -f "$target" ] && [ ! -f "$link" ]; then
+                  echo "Warning: Possibly broken link in $file -> $link"
+                fi
+              fi
+            done
+          done
+          # Don't fail on warnings, just report
+          true

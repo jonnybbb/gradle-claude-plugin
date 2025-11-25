@@ -1,0 +1,85 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '25'
+
+      - name: Setup JBang
+        uses: jbangdev/setup-jbang@main
+
+      - name: Verify JBang tools compile
+        run: |
+          for tool in tools/*.java; do
+            echo "Building $tool..."
+            jbang --quiet build "$tool"
+          done
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: agents/package-lock.json
+
+      - name: Build TypeScript agents
+        working-directory: agents
+        run: |
+          npm ci
+          npm run build
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Verify version matches plugin.json
+        run: |
+          plugin_version=$(python3 -c "import json; print(json.load(open('.claude-plugin/plugin.json'))['version'])")
+          tag_version="${{ steps.version.outputs.version }}"
+          if [ "$plugin_version" != "$tag_version" ]; then
+            echo "Error: Tag version ($tag_version) doesn't match plugin.json version ($plugin_version)"
+            exit 1
+          fi
+
+      - name: Extract changelog for version
+        id: changelog
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          # Extract the section for this version from CHANGELOG.md
+          awk -v ver="$version" '
+            /^## \[/ {
+              if (found) exit
+              if (index($0, ver)) found=1
+              next
+            }
+            found { print }
+          ' CHANGELOG.md > release_notes.md
+
+          if [ ! -s release_notes.md ]; then
+            echo "Release $version" > release_notes.md
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: release_notes.md
+          draft: false
+          prerelease: ${{ contains(github.ref, '-') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
