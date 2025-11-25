@@ -187,12 +187,12 @@ class performance_fixer {
                 "Enable configuration cache",
                 "CONFIG_CACHE",
                 "HIGH",
-                false, // Not auto-fixable - may require code changes
+                false, // Not auto-fixable - run /fix-config-cache first to ensure compatibility
                 props.containsKey("org.gradle.configuration-cache")
                     ? "org.gradle.configuration-cache=" + props.getProperty("org.gradle.configuration-cache")
                     : "# (missing)",
                 "org.gradle.configuration-cache=true",
-                "Configuration cache caches the configuration phase result.",
+                "Configuration cache caches the configuration phase result. Run /fix-config-cache first to ensure code compatibility before enabling.",
                 "30-70% faster configuration phase"
             ));
         }

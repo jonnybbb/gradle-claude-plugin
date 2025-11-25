@@ -132,14 +132,16 @@ Applied optimizations:
   ✓ Enabled G1 garbage collector
   ✓ Set metaspace limit
 
-Skipped (require manual review):
-  ⚠ Configuration cache (may require code changes)
-  ⚠ Convention plugins (structural change)
+Skipped (require /fix-config-cache first):
+  ⚠ Configuration cache - run /fix-config-cache to ensure code compatibility
+
+Skipped (structural changes):
+  ⚠ Convention plugins (requires refactoring)
 
 Next steps:
   1. Run full test suite: ./gradlew check
-  2. Enable configuration cache with /fix-config-cache
-  3. Consider Gradle Enterprise for build insights
+  2. Run /fix-config-cache --dry-run to check config cache compatibility
+  3. After fixing issues, manually enable: org.gradle.configuration-cache=true
   4. See gradle-performance skill for advanced tuning
 
 ═══════════════════════════════════════════════════════════════
@@ -149,14 +151,16 @@ Next steps:
 
 ### gradle.properties Settings
 
-| Setting | Impact | Description |
-|---------|--------|-------------|
-| `org.gradle.parallel=true` | HIGH | Build subprojects in parallel |
-| `org.gradle.caching=true` | HIGH | Reuse task outputs from cache |
-| `org.gradle.configuration-cache=true` | HIGH | Cache configuration phase |
-| `org.gradle.vfs.watch=true` | MEDIUM | Watch filesystem for changes |
-| `-Xmx2g` | MEDIUM | Larger heap for complex builds |
-| `-XX:+UseG1GC` | LOW | Modern garbage collector |
+| Setting | Impact | Auto-apply | Description |
+|---------|--------|------------|-------------|
+| `org.gradle.parallel=true` | HIGH | Yes | Build subprojects in parallel |
+| `org.gradle.caching=true` | HIGH | Yes | Reuse task outputs from cache |
+| `org.gradle.configuration-cache=true` | HIGH | No* | Cache configuration phase |
+| `org.gradle.vfs.watch=true` | MEDIUM | Yes | Watch filesystem for changes |
+| `-Xmx2g` | MEDIUM | Yes | Larger heap for complex builds |
+| `-XX:+UseG1GC` | LOW | Yes | Modern garbage collector |
+
+*Configuration cache requires code compatibility. Run `/fix-config-cache` first.
 
 ### Build Script Patterns
 
