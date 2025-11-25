@@ -31,12 +31,15 @@ application {
 // ✅ All lazy task registration
 tasks.register("generateBuildInfo") {
     val outputFile = layout.buildDirectory.file("resources/main/build-info.txt")
+    val projectVersion = project.provider { project.version.toString() }
+
     outputs.file(outputFile)
-    
+    inputs.property("version", projectVersion)
+
     doLast {
         outputFile.get().asFile.apply {
             parentFile.mkdirs()
-            writeText("version=${project.version}")
+            writeText("version=${projectVersion.get()}")
         }
     }
 }
