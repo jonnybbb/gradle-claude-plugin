@@ -95,3 +95,10 @@ tasks.register<Test>("skillTests") {
         includeTags("skills")
     }
 }
+
+// Task to run hook tests
+tasks.register<Test>("hookTests") {
+    useJUnitPlatform {
+        includeTags("hooks")
+    }
+}

@@ -4,8 +4,22 @@
 #
 # This hook runs after Edit/Write operations on Gradle build files.
 # It performs quick validation and warns about introduced issues.
+#
+# To disable this hook, create .claude/gradle-plugin.local.md with:
+#   hooks:
+#     postToolUse: false
 
 set -euo pipefail
+
+# Source settings library
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/lib/settings.sh"
+
+# Check if this hook is enabled
+if ! is_hook_enabled "postToolUse"; then
+    echo '{"continue": true, "suppressOutput": true}'
+    exit 0
+fi
 
 # Read hook input from stdin
 input=$(cat)

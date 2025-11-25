@@ -57,6 +57,21 @@ The plugin watches your work and warns you proactively:
 - Deprecated patterns like `$buildDir` or `tasks.create`
 - Suggests `/fix-config-cache` when issues are detected
 
+### Disabling Hooks
+
+To disable automatic warnings, create `.claude/gradle-plugin.local.md` in your project:
+
+```markdown
+---
+hooks:
+  enabled: true        # Set to false to disable all hooks
+  sessionStart: true   # Warnings when opening project
+  postToolUse: true    # Warnings when editing build files
+---
+```
+
+See [hooks/settings.template.md](hooks/settings.template.md) for the full template.
+
 ## Develocity Integration
 
 If your team uses [Develocity](https://gradle.com/develocity/) (formerly Gradle Enterprise), the plugin can:

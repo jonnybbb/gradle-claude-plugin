@@ -4,8 +4,21 @@
 #
 # This hook runs when Claude Code session starts in a Gradle project.
 # It performs a quick health check and suggests relevant commands.
+#
+# To disable this hook, create .claude/gradle-plugin.local.md with:
+#   hooks:
+#     sessionStart: false
 
 set -euo pipefail
+
+# Source settings library
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/lib/settings.sh"
+
+# Check if this hook is enabled
+if ! is_hook_enabled "sessionStart"; then
+    exit 0
+fi
 
 # Check if this is a Gradle project
 is_gradle_project() {
