@@ -32,11 +32,14 @@ application {
 tasks.register("generateBuildInfo") {
     val outputFile = layout.buildDirectory.file("resources/main/build-info.txt")
     outputs.file(outputFile)
-    
+
+    // ✅ Capture project.version at configuration time to avoid config cache violation
+    val projectVersion = project.version.toString()
+
     doLast {
         outputFile.get().asFile.apply {
             parentFile.mkdirs()
-            writeText("version=${project.version}")
+            writeText("version=$projectVersion")
         }
     }
 }

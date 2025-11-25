@@ -46,7 +46,7 @@
     "compatibility": {
       "platforms": ["macos", "linux", "windows"],
       "requirements": {
-        "java": ">=11",
+        "java": ">=25",
         "gradle": ">=6.0",
         "jbang": ">=0.115.0",
         "node": ">=18.0.0"
