@@ -25,3 +25,4 @@ out/
 # Local plugin settings
 .claude/*.local.md
 /tests/local.env
+/.claude/settings.local.json
