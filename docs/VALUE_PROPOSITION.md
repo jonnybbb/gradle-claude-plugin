@@ -118,7 +118,7 @@ With context for why each change matters.
 
 ```bash
 # Add to Claude Code
-claude plugins install claude-gradle-plugin
+claude plugins install gradle-claude-plugin
 ```
 
 Or clone and symlink to `~/.claude/plugins/`.

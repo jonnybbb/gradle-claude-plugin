@@ -3,7 +3,7 @@
 # Setup Test Fixtures
 # =============================================================================
 # Prepares test fixtures for running tool tests.
-# Run from the gradle-expert root directory.
+# Run from the gradle-claude-plugin root directory.
 # =============================================================================
 
 set -e

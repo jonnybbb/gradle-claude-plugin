@@ -1,4 +1,4 @@
-# Gradle Expert Plugin for Claude Code
+# Gradle Claude Plugin
 
 A Claude Code plugin that provides Gradle expertise through curated skills, JBang analysis tools, and workflow agents.
 
@@ -138,8 +138,8 @@ Contributions welcome for remaining features.
 
 ```bash
 # Clone and symlink to Claude Code plugins
-git clone https://github.com/your-org/claude-gradle-plugin.git
-ln -s $(pwd)/claude-gradle-plugin ~/.claude/plugins/gradle-expert
+git clone https://github.com/jonnybbb/gradle-claude-plugin.git
+ln -s $(pwd)/gradle-claude-plugin ~/.claude/plugins/gradle-claude-plugin
 ```
 
 ### Usage

@@ -413,7 +413,7 @@ Create in `examples/`:
 ### Package Structure
 
 ```
-gradle-expert-v1.0.0/
+gradle-claude-plugin-v1.0.0/
 ├── plugin.json
 ├── README.md
 ├── skills/

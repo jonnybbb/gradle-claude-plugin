@@ -1,11 +1,11 @@
-# Gradle Expert - Project Structure Overview
+# Gradle Claude Plugin - Project Structure Overview
 
 Quick reference for the complete framework architecture.
 
 ## Directory Tree
 
 ```
-gradle-expert/
+gradle-claude-plugin/
 │
 ├── plugin.json                          # Plugin manifest - registry of all skills, tools, agents
 ├── README.md                            # Main documentation

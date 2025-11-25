@@ -1,1 +1,1 @@
-rootProject.name = "claude-gradle-plugin-tests"
+rootProject.name = "gradle-claude-plugin-tests"

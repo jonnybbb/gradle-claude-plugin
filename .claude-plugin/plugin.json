@@ -1,5 +1,5 @@
 {
-  "name": "gradle-expert",
+  "name": "gradle-claude-plugin",
   "version": "1.0.0",
   "description": "Comprehensive Gradle development assistant with performance tuning, build optimization, task/plugin development, troubleshooting, and migration guidance for Gradle 6-9+",
   "author": {
@@ -7,8 +7,8 @@
     "url": "https://github.com/jonnybbb"
   },
   "license": "MIT",
-  "homepage": "https://github.com/jonnybbb/claude-gradle-plugin",
-  "repository": "https://github.com/jonnybbb/claude-gradle-plugin",
+  "homepage": "https://github.com/jonnybbb/gradle-claude-plugin",
+  "repository": "https://github.com/jonnybbb/gradle-claude-plugin",
   "keywords": [
     "gradle",
     "build-tool",

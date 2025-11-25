@@ -1,12 +1,12 @@
 {
-  "name": "claude-gradle-plugin",
+  "name": "gradle-claude-plugin",
   "owner": {
     "name": "Johannes Bühler",
-    "url": "https://github.com/jonnybbb/claude-gradle-plugin"
+    "url": "https://github.com/jonnybbb/gradle-claude-plugin"
   },
   "plugins": [
     {
-      "name": "gradle-expert",
+      "name": "gradle-claude-plugin",
       "source": ".",
       "description": "Comprehensive Gradle development assistant with performance tuning, build optimization, task/plugin development, troubleshooting, and migration guidance for Gradle 6-9+"
     }

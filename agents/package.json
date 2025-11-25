@@ -1,5 +1,5 @@
 {
-  "name": "gradle-expert-agents",
+  "name": "gradle-claude-plugin-agents",
   "version": "1.0.0",
   "description": "Claude subagents for complex Gradle workflows",
   "type": "module",
