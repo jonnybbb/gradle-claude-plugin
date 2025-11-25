@@ -24,7 +24,9 @@
     "troubleshooting",
     "migration",
     "devops",
-    "ci-cd"
+    "ci-cd",
+    "openrewrite",
+    "refactoring"
   ],
   "marketplace": {
     "categories": [
@@ -54,13 +56,14 @@
     },
     "features": [
       "11 specialized Gradle skills",
-      "5 JBang analysis tools",
+      "6 JBang analysis tools",
       "2 orchestration agents",
       "Gradle 6-9+ support",
       "Configuration cache troubleshooting",
       "Build cache optimization",
       "Migration assistance (6/7 to 8/9+)",
-      "Performance profiling"
+      "Performance profiling",
+      "OpenRewrite integration for bulk refactoring"
     ],
     "useCases": [
       "Gradle best practices compliance",
@@ -70,7 +73,8 @@
       "Custom task development",
       "Plugin development",
       "CI/CD pipeline optimization",
-      "Build troubleshooting"
+      "Build troubleshooting",
+      "Large-scale automated refactoring"
     ]
   }
 }

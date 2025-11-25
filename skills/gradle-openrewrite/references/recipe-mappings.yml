@@ -1,0 +1,205 @@
+# Recipe Mappings for Gradle Issues
+# Maps detected issues to appropriate OpenRewrite recipes
+
+version: "1.0"
+
+mappings:
+  # Configuration Cache Issues
+  - id: eager-task-creation
+    detection:
+      patterns:
+        - "tasks\\.create\\("
+        - "tasks\\.getByName\\("
+      fileTypes: ["gradle", "gradle.kts"]
+    issue:
+      type: "config-cache"
+      description: "Eager task creation breaks configuration cache"
+    recipes:
+      - name: "org.openrewrite.gradle.MigrateToGradle8"
+        confidence: 0.7
+        note: "Covers most task registration patterns"
+    fallback: "Claude can handle edge cases with complex task configuration"
+
+  - id: build-dir-reference
+    detection:
+      patterns:
+        - "\\$buildDir"
+        - "project\\.buildDir"
+        - "getBuildDir\\(\\)"
+      fileTypes: ["gradle", "gradle.kts"]
+    issue:
+      type: "config-cache"
+      description: "Direct buildDir references are deprecated"
+    recipes:
+      - name: "org.openrewrite.gradle.MigrateToGradle8"
+        confidence: 0.8
+        note: "Migrates buildDir to layout.buildDirectory"
+
+  - id: system-property-access
+    detection:
+      patterns:
+        - "System\\.getProperty\\("
+        - "System\\.getenv\\("
+      fileTypes: ["gradle", "gradle.kts"]
+    issue:
+      type: "config-cache"
+      description: "Direct system property access breaks configuration cache"
+    recipes:
+      - name: "org.openrewrite.gradle.MigrateToGradle8"
+        confidence: 0.5
+        note: "Partial coverage - may need Claude for complex cases"
+    fallback: "Use providers.systemProperty() or providers.environmentVariable()"
+
+  # Plugin Application
+  - id: legacy-plugin-application
+    detection:
+      patterns:
+        - "apply plugin:"
+        - "apply\\(plugin"
+      fileTypes: ["gradle", "gradle.kts"]
+    issue:
+      type: "best-practice"
+      description: "Legacy plugin application syntax"
+    recipes:
+      - name: "org.openrewrite.gradle.plugins.MigrateToPluginsBlock"
+        confidence: 0.9
+        note: "High confidence for standard plugins"
+
+  # DSL Migration
+  - id: groovy-dsl
+    detection:
+      patterns:
+        - "\\.gradle$"
+      fileTypes: ["gradle"]
+      excludePatterns: ["\\.gradle\\.kts$"]
+    issue:
+      type: "best-practice"
+      description: "Groovy DSL should be migrated to Kotlin DSL"
+    recipes:
+      - name: "org.openrewrite.kotlin.gradle.MigrateToKotlinDsl"
+        confidence: 0.85
+        note: "Works well for standard build scripts"
+        additionalDeps:
+          - "org.openrewrite.recipe:rewrite-kotlin:LATEST"
+
+  # Dependency Management
+  - id: inline-dependencies
+    detection:
+      patterns:
+        - "implementation\\s*['\"]"
+        - "api\\s*['\"]"
+        - "testImplementation\\s*['\"]"
+      fileTypes: ["gradle", "gradle.kts"]
+      requiresAnalysis: true  # Need to check if version catalog exists
+    issue:
+      type: "best-practice"
+      description: "Dependencies should use version catalog"
+    recipes:
+      - name: "org.openrewrite.gradle.MigrateToVersionCatalog"
+        confidence: 0.8
+        note: "Creates libs.versions.toml if not present"
+
+  # Gradle Version
+  - id: outdated-gradle
+    detection:
+      gradleVersionLessThan: "8.0"
+    issue:
+      type: "version"
+      description: "Gradle version should be updated"
+    recipes:
+      - name: "org.openrewrite.gradle.UpdateGradleWrapper"
+        confidence: 0.95
+        options:
+          version: "8.14"
+
+  - id: gradle-7-to-8
+    detection:
+      gradleVersionRange: ["7.0", "8.0")
+    issue:
+      type: "migration"
+      description: "Gradle 7 to 8 migration"
+    recipes:
+      - name: "org.openrewrite.gradle.MigrateToGradle8"
+        confidence: 0.85
+      - name: "org.openrewrite.gradle.UpdateGradleWrapper"
+        confidence: 0.95
+        options:
+          version: "8.14"
+
+  # Deprecated APIs
+  - id: deprecated-configurations
+    detection:
+      patterns:
+        - "compile\\s*['\"]"
+        - "testCompile\\s*['\"]"
+        - "runtime\\s*['\"]"
+      fileTypes: ["gradle", "gradle.kts"]
+    issue:
+      type: "deprecated"
+      description: "Deprecated dependency configurations"
+    recipes:
+      - name: "org.openrewrite.gradle.MigrateToGradle7"
+        confidence: 0.9
+        note: "Migrates compile -> implementation, etc."
+
+  - id: project-convention
+    detection:
+      patterns:
+        - "project\\.convention"
+        - "getConvention\\(\\)"
+      fileTypes: ["gradle", "gradle.kts"]
+    issue:
+      type: "deprecated"
+      description: "Convention API is deprecated"
+    recipes:
+      - name: "org.openrewrite.gradle.MigrateToGradle8"
+        confidence: 0.6
+        note: "Partial coverage"
+    fallback: "Use extensions instead of conventions"
+
+  # Internal API Usage
+  - id: internal-api-usage
+    detection:
+      patterns:
+        - "org\\.gradle\\..*\\.internal\\."
+        - "Internal\\("
+      fileTypes: ["gradle.kts", "kt", "java"]
+    issue:
+      type: "best-practice"
+      severity: "warning"
+      description: "Internal API usage will break on upgrades"
+    recipes: []
+    fallback: "No recipe available - requires manual migration to public APIs"
+
+# Suggested recipe combinations for common scenarios
+scenarios:
+  full-gradle-8-migration:
+    name: "Full Gradle 8 Migration"
+    description: "Complete migration to Gradle 8 best practices"
+    recipes:
+      - "org.openrewrite.gradle.UpdateGradleWrapper"
+      - "org.openrewrite.gradle.MigrateToGradle8"
+      - "org.openrewrite.gradle.plugins.MigrateToPluginsBlock"
+
+  kotlin-dsl-migration:
+    name: "Kotlin DSL Migration"
+    description: "Convert entire project to Kotlin DSL"
+    recipes:
+      - "org.openrewrite.kotlin.gradle.MigrateToKotlinDsl"
+      - "org.openrewrite.gradle.plugins.MigrateToPluginsBlock"
+    additionalDeps:
+      - "org.openrewrite.recipe:rewrite-kotlin:LATEST"
+
+  dependency-modernization:
+    name: "Dependency Modernization"
+    description: "Modernize dependency declarations"
+    recipes:
+      - "org.openrewrite.gradle.MigrateToVersionCatalog"
+      - "org.openrewrite.gradle.RemoveRedundantDependencyVersions"
+
+  config-cache-compatibility:
+    name: "Configuration Cache Compatibility"
+    description: "Fix configuration cache issues"
+    recipes:
+      - "org.openrewrite.gradle.MigrateToGradle8"
+    note: "OpenRewrite covers common patterns; Claude handles edge cases"

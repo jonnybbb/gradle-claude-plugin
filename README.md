@@ -43,6 +43,32 @@ The plugin includes expertise on:
 
 Just ask naturally: "Why is my build slow?" or "How do I make this task cacheable?"
 
+## Consider OpenRewrite for Large-Scale Migrations
+
+For large codebases or teams requiring repeatable, auditable migrations, consider using [OpenRewrite](https://docs.openrewrite.org/) alongside this plugin:
+
+| Use Case | This Plugin | OpenRewrite |
+|----------|-------------|-------------|
+| Interactive exploration | Best | - |
+| Understanding issues | Best | - |
+| Small projects (< 10 modules) | Great | Good |
+| Large codebases (100+ modules) | Good | Best |
+| CI/CD automated migrations | - | Best |
+| Auditable, reproducible changes | - | Best |
+| Custom migration rules | - | Best |
+
+**Recommended workflow for large migrations:**
+
+1. Use `/doctor` and `/fix-config-cache --dry-run` to understand what needs fixing
+2. Apply [OpenRewrite Gradle recipes](https://docs.openrewrite.org/recipes/gradle) for bulk transformations:
+   ```bash
+   # Example: Migrate to Gradle 8
+   ./gradlew rewriteRun -Drewrite.activeRecipes=org.openrewrite.gradle.MigrateToGradle8
+   ```
+3. Use this plugin for edge cases, custom code, and verification
+
+OpenRewrite excels at deterministic, large-scale refactoring. This plugin excels at interactive guidance, analysis, and handling nuanced cases that require context.
+
 ## Automatic Warnings
 
 The plugin watches your work and warns you proactively:
@@ -84,13 +110,71 @@ If your team uses [Develocity](https://gradle.com/develocity/) (formerly Gradle 
 
 ## Installation
 
+### Option 1: Claude Marketplace (Recommended)
+
+Install directly from the Claude Code marketplace:
+
 ```bash
-# Clone and symlink to Claude Code plugins
-git clone https://github.com/jonnybbb/gradle-claude-plugin.git
-ln -s $(pwd)/gradle-claude-plugin ~/.claude/plugins/gradle-claude-plugin
+claude plugin install gradle-claude-plugin
 ```
 
-**Requirements**: Java 25+, JBang 0.115.0+
+Or search for "gradle-claude-plugin" in the Claude Code marketplace UI.
+
+### Option 2: Global Manual Installation (All Projects)
+
+Install once to make the plugin available in all your Claude Code sessions:
+
+```bash
+# Clone the repository
+git clone https://github.com/jonnybbb/gradle-claude-plugin.git ~/gradle-claude-plugin
+
+# Create Claude plugins directory if it doesn't exist
+mkdir -p ~/.claude/plugins
+
+# Symlink to Claude Code plugins
+ln -s ~/gradle-claude-plugin ~/.claude/plugins/gradle-claude-plugin
+```
+
+### Option 3: Project-Specific Installation
+
+Add the plugin to a specific project only:
+
+```bash
+# In your project root
+mkdir -p .claude/plugins
+
+# Clone as a submodule (recommended for teams)
+git submodule add https://github.com/jonnybbb/gradle-claude-plugin.git .claude/plugins/gradle-claude-plugin
+
+# Or symlink to a local clone
+ln -s /path/to/gradle-claude-plugin .claude/plugins/gradle-claude-plugin
+```
+
+### Option 4: Direct Clone into Project
+
+```bash
+# In your project root
+mkdir -p .claude/plugins
+git clone https://github.com/jonnybbb/gradle-claude-plugin.git .claude/plugins/gradle-claude-plugin
+```
+
+Add `.claude/plugins/gradle-claude-plugin` to your `.gitignore` if you don't want to commit it.
+
+### Verify Installation
+
+Restart Claude Code (or start a new session), then run:
+
+```bash
+/doctor
+```
+
+If the plugin is loaded correctly, you'll see the Gradle health check output.
+
+### Requirements
+
+- **Java 25+** — Required for JBang tools
+- **JBang 0.115.0+** — Install via `curl -Ls https://sh.jbang.dev | bash` or `brew install jbang`
+- **Gradle 6.0+** — In the projects you want to analyze
 
 ## Who Is This For?
 

@@ -1,6 +1,6 @@
 ---
 description: Upgrade Gradle project to a newer version with automatic fixes
-argument-hint: "<target-version> [--auto] [--dry-run]"
+argument-hint: "<target-version> [--auto] [--dry-run] [--engine=openrewrite]"
 allowed-tools: Read, Edit, Glob, Grep, Bash, AskUserQuestion
 ---
 
@@ -14,7 +14,41 @@ Parse the command arguments:
 - `<target-version>`: Target Gradle version (e.g., 9.0, 8.11)
 - `--auto`: Automatically apply all HIGH confidence fixes without prompting
 - `--dry-run`: Show what would be fixed without making changes
+- `--engine=openrewrite`: Use OpenRewrite for bulk transformations (opt-in)
 - (default): Interactive mode - review each fix before applying
+
+## Engine Selection
+
+**Default (Claude)**: Interactive, context-aware fixes with explanation
+**OpenRewrite**: Deterministic, large-scale bulk transformations
+
+### OpenRewrite Mode
+
+If `--engine=openrewrite` is specified, use OpenRewrite recipes for migration:
+
+```bash
+# For Gradle 8 migration
+jbang tools/openrewrite_runner.java . --recipe=org.openrewrite.gradle.MigrateToGradle8,org.openrewrite.gradle.UpdateGradleWrapper --dry-run
+
+# For Gradle 7 migration (from 6.x)
+jbang tools/openrewrite_runner.java . --recipe=org.openrewrite.gradle.MigrateToGradle7,org.openrewrite.gradle.UpdateGradleWrapper --dry-run
+```
+
+**Recommended workflow for large projects:**
+
+1. Run OpenRewrite for bulk API migrations
+2. Update Gradle wrapper
+3. Run Claude-based fixes for edge cases
+4. Verify build compiles
+
+```bash
+# Step 1: OpenRewrite bulk fixes
+/upgrade 8.14 --engine=openrewrite --dry-run
+/upgrade 8.14 --engine=openrewrite
+
+# Step 2: Claude for remaining issues
+/upgrade 8.14 --auto
+```
 
 ## Workflow Steps
 

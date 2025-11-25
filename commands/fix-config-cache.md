@@ -1,6 +1,6 @@
 ---
 description: Detect and fix configuration cache issues automatically
-argument-hint: "[--auto] [--dry-run] [--debug]"
+argument-hint: "[--auto] [--dry-run] [--debug] [--engine=openrewrite]"
 allowed-tools: Read, Edit, Glob, Grep, Bash, AskUserQuestion
 ---
 
@@ -14,7 +14,40 @@ Parse the command arguments:
 - `--auto`: Automatically apply all HIGH confidence fixes without prompting
 - `--dry-run`: Show what would be fixed without making changes
 - `--debug`: Enable Gradle's debug mode for detailed serialization traces
+- `--engine=openrewrite`: Use OpenRewrite for bulk transformations (opt-in)
 - (default): Interactive mode - review each fix before applying
+
+## Engine Selection
+
+**Default (Claude)**: Interactive, context-aware fixes with explanation
+**OpenRewrite**: Deterministic, large-scale bulk transformations
+
+Use OpenRewrite when:
+- Project has 100+ modules or many build files
+- Need reproducible, auditable changes
+- CI/CD automation is required
+
+### OpenRewrite Mode
+
+If `--engine=openrewrite` is specified:
+
+```bash
+# Dry run first
+jbang tools/openrewrite_runner.java . --recipe=org.openrewrite.gradle.MigrateToGradle8 --dry-run
+
+# Apply if changes look good
+jbang tools/openrewrite_runner.java . --recipe=org.openrewrite.gradle.MigrateToGradle8
+```
+
+Note: OpenRewrite covers common patterns but may not fix all issues. After running OpenRewrite, remaining issues will need Claude-based fixes:
+
+```bash
+# Run OpenRewrite for bulk fixes
+/fix-config-cache --engine=openrewrite
+
+# Then run Claude for edge cases
+/fix-config-cache --auto
+```
 
 ## Workflow Steps
 
