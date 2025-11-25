@@ -353,7 +353,13 @@ tools/
 ├── build-health-check.java     # existing
 ├── config-cache-fixer.java     # Phase 1 ✓ DONE
 ├── migration-fixer.java        # Phase 4 ✓ DONE
-└── performance-fixer.java      # Phase 5 ✓ DONE
+├── performance-fixer.java      # Phase 5 ✓ DONE
+└── quick-validate.java         # Phase 6 ✓ DONE
+
+hooks/
+├── hooks.json                  # Phase 6 ✓ DONE
+├── session-start.sh            # Phase 6 ✓ DONE
+└── post-edit-build-file.sh     # Phase 6 ✓ DONE
 
 agents/
 ├── doctor.md                   # existing
@@ -394,7 +400,11 @@ commands/
   - Created `tools/performance-fixer.java`
   - Detects gradle.properties, JVM args, and build script issues
   - Updated `commands/optimize.md` with --apply, --benchmark flags
-- [ ] **Phase 6**: Proactive Hooks - NOT STARTED
+- [x] **Phase 6**: Proactive Hooks - COMPLETE
+  - Created `hooks/hooks.json` with SessionStart and PostToolUse hooks
+  - Created `hooks/session-start.sh` for Gradle project detection
+  - Created `hooks/post-edit-build-file.sh` for build file validation
+  - Created `tools/quick-validate.java` for fast validation
 
 ---
 

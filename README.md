@@ -88,13 +88,31 @@ The `performance-fixer.java` tool identifies performance optimizations:
 | JVM Args | `-Xmx2g -XX:+UseG1GC` | MEDIUM |
 | Task Avoidance | `tasks.all` → `tasks.configureEach` | MEDIUM |
 
-See [ROADMAP.md](ROADMAP.md) for the full automation roadmap (Phases 1-5 complete).
+See [ROADMAP.md](ROADMAP.md) for the full automation roadmap (all phases complete).
+
+## Proactive Hooks (Phase 6)
+
+The plugin automatically detects Gradle projects and validates build file changes:
+
+### SessionStart Hook
+
+When you open a Gradle project, the plugin:
+- Detects if parallel execution and build cache are enabled
+- Checks for eager task creation patterns
+- Warns about outdated Gradle versions (< 8.x)
+- Suggests relevant commands (`/doctor`, `/optimize`)
+
+### PostToolUse Hook
+
+After editing build files (`build.gradle`, `settings.gradle`, etc.), the plugin:
+- Validates for configuration cache compatibility issues
+- Warns about deprecated patterns (`$buildDir`, `tasks.create`)
+- Suggests `/fix-config-cache` for automatic fixes
 
 ## Remaining Limitations
 
 - **Integrate with Gradle Enterprise** — No build scan data integration
 - **Remember project context** — Each session starts fresh
-- **Proactive hooks** — Planned (Phase 6)
 
 Contributions welcome for remaining features.
 
@@ -151,7 +169,7 @@ jbang tools/performance-profiler.java /path/to/project
 | `gradle-troubleshooting` | Common errors, debugging techniques |
 | `gradle-doctor` | Holistic project health assessment |
 
-## Tools (8)
+## Tools (9)
 
 All tools use Gradle Tooling API for accurate introspection:
 
@@ -165,6 +183,7 @@ All tools use Gradle Tooling API for accurate introspection:
 | `task-analyzer.java` | Task inputs/outputs, cacheability |
 | `performance-profiler.java` | Build timing, bottlenecks |
 | `build-health-check.java` | Overall project health |
+| `quick-validate.java` | Fast build file validation (for hooks) |
 
 ## Test Fixtures
 
