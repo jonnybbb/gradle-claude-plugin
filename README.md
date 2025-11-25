@@ -24,6 +24,15 @@ Automatically fixes 19+ patterns including `System.getProperty` → `providers.s
 ```
 Handles deprecated APIs, task configuration changes, and property migrations between Gradle 7→8→9.
 
+### Run Large-Scale Migrations with OpenRewrite
+```bash
+/migrate 9.0                  # Full migration with OpenRewrite + Claude
+/migrate 9.0 --dry-run        # Preview all changes first
+/openrewrite suggest          # Get recipe recommendations for your project
+/openrewrite run <recipe>     # Run a specific OpenRewrite recipe
+```
+For large codebases, combines OpenRewrite's deterministic bulk transformations with Claude's context-aware fixes for edge cases.
+
 ### Speed Up Your Build
 ```bash
 /optimize-performance --auto  # Apply performance improvements
@@ -43,31 +52,39 @@ The plugin includes expertise on:
 
 Just ask naturally: "Why is my build slow?" or "How do I make this task cacheable?"
 
-## Consider OpenRewrite for Large-Scale Migrations
+## OpenRewrite Integration
 
-For large codebases or teams requiring repeatable, auditable migrations, consider using [OpenRewrite](https://docs.openrewrite.org/) alongside this plugin:
+This plugin includes built-in [OpenRewrite](https://docs.openrewrite.org/) integration for large-scale migrations. Use `/migrate` for the best of both worlds:
 
-| Use Case | This Plugin | OpenRewrite |
-|----------|-------------|-------------|
-| Interactive exploration | Best | - |
-| Understanding issues | Best | - |
-| Small projects (< 10 modules) | Great | Good |
-| Large codebases (100+ modules) | Good | Best |
-| CI/CD automated migrations | - | Best |
-| Auditable, reproducible changes | - | Best |
-| Custom migration rules | - | Best |
+| Use Case | Recommended Approach |
+|----------|---------------------|
+| Small projects (< 10 modules) | `/fix-config-cache --auto` or `/upgrade --auto` |
+| Large codebases (100+ modules) | `/migrate` (uses OpenRewrite + Claude) |
+| CI/CD automated migrations | `/openrewrite run <recipe>` |
+| Understanding issues first | `/doctor` then `/openrewrite suggest` |
 
-**Recommended workflow for large migrations:**
+**How `/migrate` works:**
 
-1. Use `/doctor` and `/fix-config-cache --dry-run` to understand what needs fixing
-2. Apply [OpenRewrite Gradle recipes](https://docs.openrewrite.org/recipes/gradle) for bulk transformations:
-   ```bash
-   # Example: Migrate to Gradle 8
-   ./gradlew rewriteRun -Drewrite.activeRecipes=org.openrewrite.gradle.MigrateToGradle8
-   ```
-3. Use this plugin for edge cases, custom code, and verification
+1. Analyzes project complexity (SMALL/MEDIUM/LARGE)
+2. Recommends strategy: Claude-primary, OpenRewrite-primary, or Hybrid
+3. Runs OpenRewrite recipes for bulk transformations
+4. Uses Claude for edge cases OpenRewrite can't handle
+5. Verifies build compiles and tests pass
 
-OpenRewrite excels at deterministic, large-scale refactoring. This plugin excels at interactive guidance, analysis, and handling nuanced cases that require context.
+```bash
+# Full migration workflow
+/migrate 9.0 --dry-run    # Preview everything first
+/migrate 9.0              # Execute the migration
+```
+
+**Direct OpenRewrite access:**
+
+```bash
+/openrewrite suggest                    # Recommend recipes for your project
+/openrewrite list gradle                # List available Gradle recipes
+/openrewrite run MigrateToGradle8       # Run a specific recipe
+/openrewrite dry-run MigrateToGradle8   # Preview changes
+```
 
 ## Automatic Warnings
 
@@ -200,6 +217,9 @@ jbang tools/cache-validator.java /path/to/project
 
 # Profile build performance
 jbang tools/performance-profiler.java /path/to/project
+
+# Run OpenRewrite recipes via Tooling API
+jbang tools/openrewrite_runner.java /path/to/project --analyze --json
 ```
 
 Skills and recommendations are tested against real Gradle projects with known issues to ensure accuracy.
