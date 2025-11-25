@@ -109,9 +109,19 @@ After editing build files (`build.gradle`, `settings.gradle`, etc.), the plugin:
 - Warns about deprecated patterns (`$buildDir`, `tasks.create`)
 - Suggests `/fix-config-cache` for automatic fixes
 
+## Develocity Integration (Optional)
+
+The plugin supports [Develocity](https://gradle.com/develocity/) (formerly Gradle Enterprise) via MCP for build history analysis:
+
+- Query build success rates and failure patterns
+- Analyze cache hit rates and performance trends
+- Identify flaky tests across builds
+- The `/doctor` command automatically queries Develocity if configured
+
+**Setup**: Configure the Develocity MCP server - see [skills/develocity/references/setup.md](skills/develocity/references/setup.md)
+
 ## Remaining Limitations
 
-- **Integrate with Gradle Enterprise** — No build scan data integration
 - **Remember project context** — Each session starts fresh
 
 Contributions welcome for remaining features.
@@ -154,7 +164,7 @@ jbang tools/gradle-analyzer.java /path/to/project --json
 jbang tools/performance-profiler.java /path/to/project
 ```
 
-## Skills (10)
+## Skills (11)
 
 | Skill | Use Case |
 |-------|----------|
@@ -168,6 +178,7 @@ jbang tools/performance-profiler.java /path/to/project
 | `gradle-structure` | Multi-project layouts, composite builds |
 | `gradle-troubleshooting` | Common errors, debugging techniques |
 | `gradle-doctor` | Holistic project health assessment |
+| `develocity` | Build Scan queries, flaky tests, cache analysis |
 
 ## Tools (9)
 

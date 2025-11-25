@@ -147,3 +147,11 @@ If MCP tools fail or are unavailable:
 - Note that Develocity is not configured
 - Continue with local analysis if applicable
 - Suggest user configure Develocity MCP server for build insights
+- Direct them to [references/setup.md](references/setup.md) for configuration instructions
+
+## Setup
+
+See [references/setup.md](references/setup.md) for:
+- How to get a Develocity access key
+- MCP server configuration (project or user level)
+- Troubleshooting connection issues
