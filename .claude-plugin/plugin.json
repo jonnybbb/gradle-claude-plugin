@@ -53,7 +53,7 @@
       }
     },
     "features": [
-      "10 specialized Gradle skills",
+      "11 specialized Gradle skills",
       "5 JBang analysis tools",
       "2 orchestration agents",
       "Gradle 6-9+ support",
@@ -63,6 +63,7 @@
       "Performance profiling"
     ],
     "useCases": [
+      "Gradle best practices compliance",
       "Gradle build optimization",
       "Build performance analysis",
       "Gradle version migration",
