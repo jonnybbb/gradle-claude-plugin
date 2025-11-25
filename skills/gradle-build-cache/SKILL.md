@@ -59,26 +59,64 @@ abstract class MyTask : DefaultTask() {
 
 ## Diagnosing Cache Issues
 
+### Command Line Debugging
+
 ```bash
-# Check cache status
+# Check cache status - look for FROM-CACHE
 ./gradlew build --build-cache | grep "FROM-CACHE"
 
-# Why task executed?
-./gradlew build --build-cache --info | grep "not up-to-date"
+# Why task executed? Use --info for details
+./gradlew build --build-cache --info | grep -E "(executed|not up-to-date|FROM-CACHE)"
 
-# Use build scan
+# Full debug logging for cache operations
+./gradlew build --build-cache --debug 2>&1 | grep -i cache
+```
+
+### Build Scans (Develocity)
+
+Build Scans provide the best cache debugging experience:
+
+```bash
 ./gradlew build --build-cache --scan
 ```
+
+In the Build Scan:
+1. Go to **Performance → Build Cache**
+2. View cache hit rate and time savings
+3. Click any task to see:
+   - Complete cache key
+   - All inputs with their hashes
+   - Why cache was missed
+
+**Compare builds** to diagnose cross-machine cache misses:
+1. Generate scans on both machines
+2. Click "Compare builds" in Build Scan
+3. Navigate to problem task
+4. See input differences highlighted
+
+### Develocity MCP Server
+
+If you have the Develocity MCP server configured, query cache data:
+- `mcp__develocity__getBuilds` - Find builds with low cache hit rates
+- `mcp__develocity__getBuild` - Get detailed task cache information
+
+See [references/debugging.md](references/debugging.md) for comprehensive debugging guide.
 
 ## Quick Reference
 
 | Problem | Solution |
 |---------|----------|
-| Task not cached | Add @CacheableTask |
-| Cache miss across machines | Use @PathSensitive(RELATIVE) |
+| Task not cached | Add `@CacheableTask` annotation |
+| Cache miss across machines | Use `@PathSensitive(RELATIVE)` |
 | Non-deterministic output | Remove timestamps/random values |
-| Undeclared input | Add @Input annotation |
+| Undeclared input | Add `@Input` annotation |
 | "Caching disabled" | Check for missing outputs |
+| Line ending differences | Add `@NormalizeLineEndings` |
+| Java version mismatch | Pin toolchain version |
+| File encoding issues | Set `-Dfile.encoding=UTF-8` |
+| Overlapping outputs | Use separate output directories |
+| Classpath order changes | Use `@Classpath` or `@CompileClasspath` |
+| Volatile inputs | Use providers for deferred evaluation |
 
 ## Version Notes
 
@@ -88,6 +126,14 @@ abstract class MyTask : DefaultTask() {
 
 ## Related Files
 
+- [references/debugging.md](references/debugging.md) - Debugging cache misses, Build Scan analysis
 - [references/remote-setup.md](references/remote-setup.md) - Remote cache configuration
 - [references/optimization.md](references/optimization.md) - Cache hit rate optimization
 - [references/ci-patterns.md](references/ci-patterns.md) - CI/CD integration
+
+## Official Documentation
+
+- [Build Cache Reference](https://docs.gradle.org/current/userguide/build_cache.html)
+- [Common Caching Problems](https://docs.gradle.org/current/userguide/common_caching_problems.html)
+- [Build Cache Debugging](https://docs.gradle.org/current/userguide/build_cache_debugging.html)
+- [Build Scan Cache Guide](https://docs.gradle.com/develocity/build-scans/#build_cache)

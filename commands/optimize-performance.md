@@ -117,6 +117,38 @@ Run a build to verify optimizations work:
 ./gradlew build 2>&1
 ```
 
+### Step 5.5: Verify Build Cache (if enabled)
+
+Verify cache is working correctly:
+
+```bash
+# First build - populates cache
+./gradlew clean build --build-cache
+
+# Second build - should use cache
+./gradlew clean build --build-cache | grep "FROM-CACHE"
+```
+
+If cache misses occur, suggest debugging:
+
+```bash
+# Check why tasks executed
+./gradlew build --build-cache --info | grep -E "(executed|FROM-CACHE)"
+
+# Generate Build Scan for detailed analysis
+./gradlew build --build-cache --scan
+```
+
+Build Scan shows:
+- Cache hit rate percentage
+- Task-level cache status
+- Input differences causing cache misses
+- Time saved from cache
+
+If the user has **Develocity MCP server** configured, query cache data:
+- `mcp__develocity__getBuilds` - Find builds with cache issues
+- `mcp__develocity__getBuild` - Get detailed cache analysis
+
 ### Step 6: Final Summary
 
 ```
@@ -199,3 +231,5 @@ Next steps:
 - `/upgrade` - Upgrade to newer Gradle version
 - `/doctor` - Full build health check
 - `gradle-performance` skill - Detailed performance guidance
+- `gradle-build-cache` skill - Build cache troubleshooting and optimization
+- `gradle-build-cache/references/debugging.md` - Cache miss debugging guide
