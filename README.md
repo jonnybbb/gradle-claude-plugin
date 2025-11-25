@@ -46,9 +46,13 @@ The plugin now includes **auto-fix capabilities** for common Gradle issues:
 # Migrate to newer Gradle version
 /migrate-gradle 9.0 --auto
 
+# Optimize build performance
+/optimize --apply
+
 # Preview changes without applying
 /fix-config-cache --dry-run
 /migrate-gradle 9.0 --dry-run
+/optimize --dry-run
 ```
 
 ### Configuration Cache Fixes
@@ -73,13 +77,24 @@ The `migration-fixer.java` tool handles Gradle version migrations (7→8, 8→9)
 | API Changes | `mainClassName` → `mainClass` | HIGH (auto) |
 | Convention Deprecations | Top-level `sourceCompatibility` → `java { }` block | MEDIUM (manual) |
 
-See [ROADMAP.md](ROADMAP.md) for the full automation roadmap.
+### Performance Fixes
+
+The `performance-fixer.java` tool identifies performance optimizations:
+
+| Category | Examples | Impact |
+|----------|----------|--------|
+| Parallel | `org.gradle.parallel=true` | HIGH |
+| Caching | `org.gradle.caching=true` | HIGH |
+| JVM Args | `-Xmx2g -XX:+UseG1GC` | MEDIUM |
+| Task Avoidance | `tasks.all` → `tasks.configureEach` | MEDIUM |
+
+See [ROADMAP.md](ROADMAP.md) for the full automation roadmap (Phases 1-5 complete).
 
 ## Remaining Limitations
 
 - **Integrate with Gradle Enterprise** — No build scan data integration
 - **Remember project context** — Each session starts fresh
-- **Performance auto-fix** — Planned (Phase 5)
+- **Proactive hooks** — Planned (Phase 6)
 
 Contributions welcome for remaining features.
 
@@ -136,7 +151,7 @@ jbang tools/performance-profiler.java /path/to/project
 | `gradle-troubleshooting` | Common errors, debugging techniques |
 | `gradle-doctor` | Holistic project health assessment |
 
-## Tools (7)
+## Tools (8)
 
 All tools use Gradle Tooling API for accurate introspection:
 
@@ -146,6 +161,7 @@ All tools use Gradle Tooling API for accurate introspection:
 | `cache-validator.java` | Configuration cache compatibility |
 | `config-cache-fixer.java` | Generate config cache fix plans |
 | `migration-fixer.java` | Generate migration fix plans (7→8, 8→9) |
+| `performance-fixer.java` | Generate performance optimization plans |
 | `task-analyzer.java` | Task inputs/outputs, cacheability |
 | `performance-profiler.java` | Build timing, bottlenecks |
 | `build-health-check.java` | Overall project health |
