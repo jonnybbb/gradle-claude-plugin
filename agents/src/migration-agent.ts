@@ -11,7 +11,10 @@
  * - migration-planner: Creates prioritized migration plan
  * - auto-fixer: Applies safe automated fixes
  * 
- * Reference: https://platform.claude.com/docs/en/agent-sdk/subagents
+ * Note: These TypeScript agents are standalone scripts using the Anthropic SDK directly.
+ * They can be run independently or integrated into larger workflows.
+ *
+ * @see https://docs.anthropic.com/en/api/getting-started
  */
 
 import Anthropic from '@anthropic-ai/sdk';
@@ -21,6 +24,9 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 
 const execAsync = promisify(exec);
+
+// Model configuration - use environment variable or default to latest Sonnet
+const DEFAULT_MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5-20250929';
 
 // =============================================================================
 // Types
@@ -262,7 +268,7 @@ Return as JSON array:
 Return ONLY the JSON array, no other text.`;
 
     const response = await this.client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: DEFAULT_MODEL,
       max_tokens: 4000,
       messages: [{ role: 'user', content: prompt }],
     });
@@ -317,7 +323,7 @@ Return as JSON array:
 Return ONLY the JSON array. If no breaking changes found, return [].`;
 
     const response = await this.client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: DEFAULT_MODEL,
       max_tokens: 4000,
       messages: [{ role: 'user', content: prompt }],
     });
@@ -416,7 +422,7 @@ Return as JSON:
 Return ONLY the JSON object.`;
 
     const response = await this.client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: DEFAULT_MODEL,
       max_tokens: 3000,
       messages: [{ role: 'user', content: prompt }],
     });
