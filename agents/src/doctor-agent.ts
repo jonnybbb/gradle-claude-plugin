@@ -10,14 +10,21 @@
  * - dependency-audit: Checks for dependency conflicts and vulnerabilities
  * - build-structure-review: Reviews project structure and organization
  * 
- * Reference: https://platform.claude.com/docs/en/agent-sdk/subagents
+ * Note: These TypeScript agents are standalone scripts using the Anthropic SDK directly.
+ * They can be run independently or integrated into larger workflows.
+ *
+ * @see https://docs.anthropic.com/en/api/getting-started
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+
+// Model configuration - use environment variable or default to latest Sonnet
+const DEFAULT_MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5-20250929';
 
 const execAsync = promisify(exec);
 
@@ -120,7 +127,7 @@ Focus on:
 Provide a concise summary and specific actionable recommendations.`;
 
     const response = await this.client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: DEFAULT_MODEL,
       max_tokens: 2000,
       messages: [{ role: 'user', content: prompt }],
     });
@@ -151,7 +158,7 @@ Focus on:
 Provide a concise summary and specific recommendations.`;
 
     const response = await this.client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: DEFAULT_MODEL,
       max_tokens: 2000,
       messages: [{ role: 'user', content: prompt }],
     });
@@ -192,7 +199,7 @@ Focus on:
 Provide a concise summary and recommendations.`;
 
     const response = await this.client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: DEFAULT_MODEL,
       max_tokens: 2000,
       messages: [{ role: 'user', content: prompt }],
     });
@@ -223,7 +230,7 @@ Focus on:
 Provide a concise summary and recommendations.`;
 
     const response = await this.client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: DEFAULT_MODEL,
       max_tokens: 2000,
       messages: [{ role: 'user', content: prompt }],
     });
@@ -253,7 +260,7 @@ Structure: ${JSON.stringify(report.sections.structure)}
 Format as JSON with: overall, recommendations[], quickFixes[]`;
 
     const response = await this.client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: DEFAULT_MODEL,
       max_tokens: 3000,
       messages: [{ role: 'user', content: synthesisPrompt }],
     });
