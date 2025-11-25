@@ -39,7 +39,7 @@ dependencies {
     testImplementation("com.anthropic:anthropic-java:2.11.1")
 
     // Gradle Tooling API for tool tests
-    testImplementation("org.gradle:gradle-tooling-api:8.11")
+    testImplementation("org.gradle:gradle-tooling-api:9.2.1")
 
     // JSON handling
     testImplementation("com.google.code.gson:gson:2.10.1")
