@@ -1,6 +1,6 @@
 ---
 description: Detect and fix configuration cache issues automatically
-argument-hint: "[--auto] [--dry-run]"
+argument-hint: "[--auto] [--dry-run] [--debug]"
 allowed-tools: Read, Edit, Glob, Grep, Bash, AskUserQuestion
 ---
 
@@ -13,6 +13,7 @@ You are running the configuration cache fix workflow. This command analyzes the 
 Parse the command arguments:
 - `--auto`: Automatically apply all HIGH confidence fixes without prompting
 - `--dry-run`: Show what would be fixed without making changes
+- `--debug`: Enable Gradle's debug mode for detailed serialization traces
 - (default): Interactive mode - review each fix before applying
 
 ## Workflow Steps
@@ -93,6 +94,39 @@ Report the result:
 - If successful: Configuration cache is now working!
 - If failed: Show the error and suggest next steps
 
+### Step 4.5: Review HTML Report (if issues remain)
+
+If problems remain, guide user to the HTML report:
+
+```bash
+# Open the configuration cache report
+open build/reports/configuration-cache/*/configuration-cache-report.html  # macOS
+xdg-open build/reports/configuration-cache/*/configuration-cache-report.html  # Linux
+```
+
+The report provides:
+- Full stack traces for each problem
+- Exact file and line numbers
+- Links to Gradle documentation
+- Configuration inputs causing cache invalidation
+
+### Step 4.6: Build Scan Deep Dive (optional)
+
+For complex issues, suggest using a build scan:
+
+```bash
+./gradlew build --configuration-cache --scan
+```
+
+Build scans show:
+- Configuration cache problems with full context
+- What files/properties caused cache invalidation
+- Performance impact analysis
+
+If the user has the **Develocity MCP server** configured, you can query build scan data:
+- `mcp__develocity__getBuilds` - Find builds with config cache problems
+- `mcp__develocity__getBuild` - Get detailed build information
+
 ### Step 5: Summary Report
 
 Provide final summary:
@@ -110,8 +144,13 @@ Verification: ✓ Build successful with configuration cache
 
 Next steps:
   • Review MEDIUM confidence issues manually
+  • Open HTML report: build/reports/configuration-cache/*/configuration-cache-report.html
   • Run /doctor for full health check
-  • See gradle-config-cache skill for detailed guidance
+  • Use --scan for build scan debugging
+
+Debugging resources:
+  • gradle-config-cache skill - Detailed configuration cache guidance
+  • references/debugging.md - HTML report, Build Scans, debug mode
 
 ═══════════════════════════════════════════════════════════════
 ```
@@ -127,6 +166,9 @@ Next steps:
 
 # Dry run - see what would change
 /fix-config-cache --dry-run
+
+# Debug mode - get detailed serialization traces for complex issues
+/fix-config-cache --debug
 ```
 
 ## Tool Requirements

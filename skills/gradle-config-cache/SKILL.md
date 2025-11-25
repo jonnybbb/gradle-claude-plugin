@@ -50,14 +50,47 @@ Or use command line:
 When issues are detected, Gradle generates an HTML report:
 
 ```
-build/reports/configuration-cache/<task>/configuration-cache-report.html
+build/reports/configuration-cache/<hash>/configuration-cache-report.html
 ```
 
-The report shows:
+The exact path is shown in console output. The report shows:
 - Problems grouped by message and task
-- Exact file and line number
-- Build configuration inputs
+- Exact file and line number with stack traces
+- Build configuration inputs (files, system properties, env vars)
 - Links to documentation
+
+**Open the report:**
+```bash
+# macOS
+open build/reports/configuration-cache/*/configuration-cache-report.html
+
+# Linux
+xdg-open build/reports/configuration-cache/*/configuration-cache-report.html
+```
+
+### Enable Debug Mode
+
+For complex issues, enable debug mode for detailed serialization traces:
+
+```bash
+./gradlew build --configuration-cache -Dorg.gradle.configuration-cache.debug=true
+```
+
+### Use Build Scans (Develocity)
+
+Build Scans provide additional debugging capabilities:
+
+```bash
+./gradlew build --configuration-cache --scan
+```
+
+Build Scans show:
+- Configuration cache hit/miss status
+- All problems with full stack traces
+- Configuration inputs (what caused invalidation)
+- Time saved by cache reuse
+
+**If using Develocity MCP server**, you can query build scan data for configuration cache problems programmatically.
 
 ## Common Problems & Fixes
 
@@ -686,14 +719,19 @@ Gradle automatically cleans unused entries after 7 days.
 - Use `/gradle-troubleshooting` for other build issues
 
 **Reference documentation:**
+- [references/debugging.md](references/debugging.md) - HTML report, Build Scans, debug mode
 - [references/patterns.md](references/patterns.md) - All fix patterns with examples
 - [references/migration.md](references/migration.md) - Step-by-step migration guide
+- [references/common-problems.md](references/common-problems.md) - Detailed problem solutions
 - [references/plugins.md](references/plugins.md) - Plugin compatibility list
 
 **Official Gradle documentation:**
 - Configuration Cache: https://docs.gradle.org/current/userguide/configuration_cache.html
 - Requirements: https://docs.gradle.org/current/userguide/configuration_cache_requirements.html
 - Debugging: https://docs.gradle.org/current/userguide/configuration_cache_debugging.html
+
+**Develocity/Build Scans:**
+- Build Scan Configuration Cache: https://docs.gradle.com/develocity/build-scans/#configuration_cache
 
 ## When to Use This Skill
 
