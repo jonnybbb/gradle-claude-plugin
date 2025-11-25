@@ -1,0 +1,65 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "description": "Group all non-major Gradle wrapper updates",
+      "matchManagers": ["gradle-wrapper"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "Gradle wrapper"
+    },
+    {
+      "description": "Group all non-major npm updates",
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "npm dependencies"
+    },
+    {
+      "description": "Group JUnit ecosystem updates",
+      "matchPackagePatterns": ["^org\\.junit"],
+      "groupName": "JUnit"
+    },
+    {
+      "description": "Group Spring Boot ecosystem updates",
+      "matchPackagePatterns": ["spring-boot", "spring-dependency-management"],
+      "groupName": "Spring Boot"
+    },
+    {
+      "description": "IGNORE legacy-groovy fixture - intentionally uses Gradle 7.6.4 and old dependencies for migration testing",
+      "matchPaths": ["tests/fixtures/projects/legacy-groovy/**"],
+      "enabled": false
+    }
+  ],
+  "gradle-wrapper": {
+    "fileMatch": [
+      "(^|/)gradle/wrapper/gradle-wrapper\\.properties$"
+    ]
+  },
+  "gradle": {
+    "fileMatch": [
+      "(^|/)build\\.gradle(\\.kts)?$",
+      "(^|/)settings\\.gradle(\\.kts)?$",
+      "(^|/)gradle/libs\\.versions\\.toml$"
+    ]
+  },
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/build/**",
+    "**/dist/**",
+    "tests/fixtures/projects/legacy-groovy/**"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update JBang dependencies in Java files",
+      "fileMatch": ["^tools/.*\\.java$"],
+      "matchStrings": [
+        "//DEPS (?<depName>[^:]+:[^:]+):(?<currentValue>\\d+\\.\\d+\\.\\d+)"
+      ],
+      "datasourceTemplate": "maven"
+    }
+  ]
+}
