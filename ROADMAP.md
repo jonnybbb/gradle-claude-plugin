@@ -13,7 +13,7 @@ This roadmap transforms the plugin from passive knowledge to active automation.
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    WORKFLOW COMMANDS                         │
-│         /fix-config-cache  /migrate-gradle  /optimize        │
+│     /fix-config-cache  /upgrade  /optimize-performance       │
 ├─────────────────────────────────────────────────────────────┤
 │                    FIX APPLIER AGENT                         │
 │     Interactive review → User approval → Edit application    │
@@ -219,10 +219,10 @@ This roadmap transforms the plugin from passive knowledge to active automation.
    | Various task properties | Lazy equivalents |
    | Old plugin DSL | Plugin marker artifacts |
 
-2. **`commands/migrate-gradle.md`**:
+2. **`commands/upgrade.md`**:
    ```
-   /migrate-gradle 9.0           # Migrate to Gradle 9.0
-   /migrate-gradle 8.11 --auto   # Auto-apply safe fixes
+   /upgrade 9.0           # Upgrade to Gradle 9.0
+   /upgrade 8.11 --auto   # Auto-apply safe fixes
    ```
 
 3. **Workflow**:
@@ -265,11 +265,11 @@ This roadmap transforms the plugin from passive knowledge to active automation.
    - Missing `@CacheableTask` annotations
    - Inefficient dependency declarations
 
-2. **`commands/optimize.md`**:
+2. **`commands/optimize-performance.md`**:
    ```
-   /optimize                  # Analyze and suggest
-   /optimize --apply          # Apply safe optimizations
-   /optimize --benchmark      # Run before/after benchmark
+   /optimize-performance                  # Analyze and suggest
+   /optimize-performance --auto           # Apply safe optimizations
+   /optimize-performance --benchmark      # Run before/after benchmark
    ```
 
 ### Testing
@@ -368,10 +368,9 @@ agents/
 
 commands/
 ├── doctor.md                   # existing
-├── migrate.md                  # existing
 ├── fix-config-cache.md         # Phase 3 ✓ DONE
-├── migrate-gradle.md           # Phase 4 ✓ DONE
-└── optimize.md                 # Phase 5 ✓ DONE (updated)
+├── upgrade.md                  # Phase 4 ✓ DONE (renamed from migrate-gradle)
+└── optimize-performance.md     # Phase 5 ✓ DONE (renamed from optimize)
 ```
 
 ---
@@ -395,11 +394,11 @@ commands/
   - Created `tools/migration-fixer.java`
   - Detects 22 deprecations in legacy-groovy fixture
   - Supports 7→8 and 8→9 migration paths
-  - Created `commands/migrate-gradle.md`
+  - Created `commands/upgrade.md` (renamed from migrate-gradle)
 - [x] **Phase 5**: Performance Fixer - COMPLETE
   - Created `tools/performance-fixer.java`
   - Detects gradle.properties, JVM args, and build script issues
-  - Updated `commands/optimize.md` with --apply, --benchmark flags
+  - Created `commands/optimize-performance.md` with --auto, --benchmark flags
 - [x] **Phase 6**: Proactive Hooks - COMPLETE
   - Created `hooks/hooks.json` with SessionStart and PostToolUse hooks
   - Created `hooks/session-start.sh` for Gradle project detection

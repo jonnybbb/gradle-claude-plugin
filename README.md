@@ -43,16 +43,16 @@ The plugin now includes **auto-fix capabilities** for common Gradle issues:
 # Detect and fix config cache issues
 /fix-config-cache --auto
 
-# Migrate to newer Gradle version
-/migrate-gradle 9.0 --auto
+# Upgrade to newer Gradle version
+/upgrade 9.0 --auto
 
 # Optimize build performance
-/optimize --apply
+/optimize-performance --auto
 
 # Preview changes without applying
 /fix-config-cache --dry-run
-/migrate-gradle 9.0 --dry-run
-/optimize --dry-run
+/upgrade 9.0 --dry-run
+/optimize-performance --dry-run
 ```
 
 ### Configuration Cache Fixes
@@ -100,7 +100,7 @@ When you open a Gradle project, the plugin:
 - Detects if parallel execution and build cache are enabled
 - Checks for eager task creation patterns
 - Warns about outdated Gradle versions (< 8.x)
-- Suggests relevant commands (`/doctor`, `/optimize`)
+- Suggests relevant commands (`/doctor`, `/optimize-performance`)
 
 ### PostToolUse Hook
 

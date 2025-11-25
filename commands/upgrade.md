@@ -1,12 +1,12 @@
 ---
-description: Migrate Gradle project to a newer version with automatic fixes
+description: Upgrade Gradle project to a newer version with automatic fixes
 argument-hint: "<target-version> [--auto] [--dry-run]"
 allowed-tools: Read, Edit, Glob, Grep, Bash, AskUserQuestion
 ---
 
-# Gradle Migration Workflow
+# Gradle Upgrade Workflow
 
-You are running the Gradle migration workflow. This command analyzes the project for deprecated APIs and helps migrate to a newer Gradle version.
+You are running the Gradle upgrade workflow. This command analyzes the project for deprecated APIs and helps upgrade to a newer Gradle version.
 
 ## Arguments
 
@@ -183,14 +183,14 @@ Next steps:
 ## Example Usage
 
 ```bash
-# Migrate to Gradle 9.0 (interactive)
-/migrate-gradle 9.0
+# Upgrade to Gradle 9.0 (interactive)
+/upgrade 9.0
 
 # Auto-apply safe fixes to 8.11
-/migrate-gradle 8.11 --auto
+/upgrade 8.11 --auto
 
-# Preview migration to 9.0
-/migrate-gradle 9.0 --dry-run
+# Preview upgrade to 9.0
+/upgrade 9.0 --dry-run
 ```
 
 ## Tool Requirements
@@ -202,5 +202,6 @@ Next steps:
 ## Related
 
 - `/fix-config-cache` - Fix configuration cache issues
+- `/optimize-performance` - Optimize build performance
 - `/doctor` - Full build health check
 - `gradle-migration` skill - Detailed migration guidance

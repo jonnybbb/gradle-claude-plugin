@@ -59,8 +59,9 @@ Tools use Gradle Tooling API for accurate introspection—not string parsing.
 Commands orchestrate multi-step operations:
 
 - `/doctor` - Comprehensive project health check
-- `/migrate` - Guided version migration with API mapping
-- `/optimize` - Performance audit with prioritized fixes
+- `/upgrade` - Guided version upgrade with API mapping
+- `/fix-config-cache` - Fix configuration cache compatibility issues
+- `/optimize-performance` - Performance audit with prioritized fixes
 - `/create-task` - Scaffolds properly-annotated custom tasks
 
 ### 4. Autonomous Agents

@@ -139,5 +139,6 @@ This command requires:
 ## Related
 
 - `/doctor` - Full build health check
-- `/optimize` - Performance optimization
+- `/optimize-performance` - Performance optimization
+- `/upgrade` - Upgrade to newer Gradle version
 - `gradle-config-cache` skill - Detailed configuration cache guidance

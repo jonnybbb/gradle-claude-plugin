@@ -1,6 +1,6 @@
 ---
 description: Optimize Gradle build performance with automatic fixes
-argument-hint: "[--apply] [--benchmark] [--dry-run]"
+argument-hint: "[--auto] [--benchmark] [--dry-run]"
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion
 ---
 
@@ -11,7 +11,7 @@ You are running the performance optimization workflow. This command analyzes the
 ## Arguments
 
 Parse the command arguments:
-- `--apply`: Automatically apply all auto-fixable optimizations
+- `--auto`: Automatically apply all auto-fixable optimizations
 - `--benchmark`: Include before/after benchmark commands
 - `--dry-run`: Show what would be optimized without making changes
 - (default): Interactive mode - review each optimization
@@ -171,16 +171,16 @@ Next steps:
 
 ```bash
 # Analyze and suggest (interactive)
-/optimize
+/optimize-performance
 
 # Auto-apply safe optimizations
-/optimize --apply
+/optimize-performance --auto
 
 # Preview without changes
-/optimize --dry-run
+/optimize-performance --dry-run
 
 # Include benchmarks
-/optimize --apply --benchmark
+/optimize-performance --auto --benchmark
 ```
 
 ## Tool Requirements
@@ -192,6 +192,6 @@ Next steps:
 ## Related
 
 - `/fix-config-cache` - Fix configuration cache issues
-- `/migrate-gradle` - Migrate to newer Gradle version
+- `/upgrade` - Upgrade to newer Gradle version
 - `/doctor` - Full build health check
 - `gradle-performance` skill - Detailed performance guidance
