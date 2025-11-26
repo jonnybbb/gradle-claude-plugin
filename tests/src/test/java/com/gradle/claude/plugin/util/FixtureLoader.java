@@ -72,7 +72,8 @@ public class FixtureLoader {
         List<KnownIssue> issues = new ArrayList<>();
 
         // Pattern: // ❌ ISSUE N: description
-        Pattern issuePattern = Pattern.compile("// ❌ ISSUE (\\d+): (.+)");
+        // Made flexible for whitespace variations: "// ❌  ISSUE 1:" or "//  ❌ ISSUE 1 :" etc.
+        Pattern issuePattern = Pattern.compile("//\\s*❌\\s*ISSUE\\s*(\\d+)\\s*:\\s*(.+)");
         Matcher matcher = issuePattern.matcher(buildContent);
 
         while (matcher.find()) {

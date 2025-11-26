@@ -312,7 +312,9 @@ class performance_fixer {
         // Check for tasks.withType without configureEach
         // Groovy: tasks.withType(JavaCompile) { -> tasks.withType(JavaCompile).configureEach {
         // Kotlin: tasks.withType<JavaCompile> { -> tasks.withType<JavaCompile>().configureEach {
-        Pattern withTypeEager = Pattern.compile("tasks\\.withType\\s*([<(][^)>]+[>)])\\s*\\{");
+        // Note: Pattern must handle nested generics like Map<String, String>
+        // Using >+ to match multiple closing brackets for nested generics
+        Pattern withTypeEager = Pattern.compile("tasks\\.withType\\s*(<[^{]+>+|\\([^)]+\\))\\s*\\{");
         matcher = withTypeEager.matcher(content);
         while (matcher.find()) {
             int lineNum = getLineNumber(content, matcher.start());
