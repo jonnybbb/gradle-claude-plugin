@@ -1,0 +1,18 @@
+Gradle Claude Plugin
+Copyright 2024 Johannes Bühler
+
+This product includes software developed by Johannes Bühler.
+
+This product uses the following third-party libraries:
+
+- Gradle Tooling API (https://docs.gradle.org/current/userguide/third_party_integration.html)
+  Licensed under Apache License 2.0
+
+- OpenRewrite (https://docs.openrewrite.org/)
+  Licensed under Apache License 2.0
+
+- Picocli (https://picocli.info/)
+  Licensed under Apache License 2.0
+
+- Gson (https://github.com/google/gson)
+  Licensed under Apache License 2.0
