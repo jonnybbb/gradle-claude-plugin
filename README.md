@@ -4,32 +4,21 @@ Get expert Gradle help directly in Claude Code. Fix configuration cache issues, 
 
 ## Installation
 
-### Option 1: Claude Marketplace (Recommended)
+### Option 1: From GitHub (Recommended)
 
-Install directly from the Claude Code marketplace:
+Install directly from the GitHub repository:
 
-```bash
-claude plugin install gradle-claude-plugin
+```
+/plugin install jonnybbb/gradle-claude-plugin
 ```
 
-Or search for "gradle-claude-plugin" in the Claude Code marketplace UI.
-
-### Option 2: Global Manual Installation (All Projects)
-
-Install once to make the plugin available in all your Claude Code sessions:
-
-```bash
-# Clone the repository
-git clone https://github.com/jonnybbb/gradle-claude-plugin.git ~/gradle-claude-plugin
-
-# Create Claude plugins directory if it doesn't exist
-mkdir -p ~/.claude/plugins
-
-# Symlink to Claude Code plugins
-ln -s ~/gradle-claude-plugin ~/.claude/plugins/gradle-claude-plugin
+Or use the interactive menu:
 ```
+/plugin
+```
+Then select "Add Plugin" and enter `jonnybbb/gradle-claude-plugin`.
 
-### Option 3: Project-Specific Installation
+### Option 2: Project-Specific Installation
 
 Add the plugin to a specific project only:
 
@@ -40,25 +29,25 @@ mkdir -p .claude/plugins
 # Clone as a submodule (recommended for teams)
 git submodule add https://github.com/jonnybbb/gradle-claude-plugin.git .claude/plugins/gradle-claude-plugin
 
-# Or symlink to a local clone
-ln -s /path/to/gradle-claude-plugin .claude/plugins/gradle-claude-plugin
-```
-
-### Option 4: Direct Clone into Project
-
-```bash
-# In your project root
-mkdir -p .claude/plugins
+# Or clone directly
 git clone https://github.com/jonnybbb/gradle-claude-plugin.git .claude/plugins/gradle-claude-plugin
 ```
 
 Add `.claude/plugins/gradle-claude-plugin` to your `.gitignore` if you don't want to commit it.
 
+### Option 3: Local Development
+
+For local development or testing:
+
+```
+/plugin marketplace add ./path/to/gradle-claude-plugin
+```
+
 ### Verify Installation
 
-Restart Claude Code (or start a new session), then run:
+After installation, run:
 
-```bash
+```
 /doctor
 ```
 
@@ -193,7 +182,19 @@ If your team uses [Develocity](https://gradle.com/develocity/) (formerly Gradle 
 - Identify flaky tests across builds
 - Include Develocity data in `/doctor` reports
 
-**Setup**: See [Develocity setup guide](skills/develocity/references/setup.md)
+**Quick Setup** (optional) — add to `.claude/settings.local.json`:
+```json
+{
+  "env": {
+    "DEVELOCITY_URL": "https://dv.yourcompany.com",
+    "DEVELOCITY_ACCESS_KEY": "your-access-key"
+  }
+}
+```
+
+The MCP server activates automatically when configured. No error occurs if unconfigured.
+
+**Full Setup Guide**: See [Develocity setup guide](skills/develocity/references/setup.md)
 
 ## Automatic Warnings
 

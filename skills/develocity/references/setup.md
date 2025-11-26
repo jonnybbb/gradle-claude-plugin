@@ -4,7 +4,7 @@ This guide explains how to configure the Develocity MCP server to enable Build S
 
 ## Prerequisites
 
-- Access to a Develocity instance (e.g., `https://ge.example.com`)
+- Access to a Develocity instance (e.g., `https://dv.example.com`)
 - A Develocity access key with read permissions
 - Claude Code with MCP support
 
@@ -15,9 +15,39 @@ This guide explains how to configure the Develocity MCP server to enable Build S
 3. Create a new access key with appropriate permissions
 4. Copy the key (you won't see it again)
 
-## Step 2: Configure MCP Server
+## Step 2: Configure Environment Variables
 
-Add the Develocity MCP server to your Claude Code settings.
+The gradle-claude-plugin includes an optional Develocity MCP server that activates when you set these environment variables:
+
+### Option A: Project Settings File (Recommended)
+
+Create `.claude/settings.local.json` in your project root:
+
+```json
+{
+  "env": {
+    "DEVELOCITY_URL": "https://dv.example.com",
+    "DEVELOCITY_ACCESS_KEY": "your-access-key-here"
+  }
+}
+```
+
+**Note**: Add `.claude/settings.local.json` to your `.gitignore` to avoid committing credentials.
+
+### Option B: Shell Environment Variables
+
+Add to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.):
+
+```bash
+export DEVELOCITY_URL="https://dv.example.com"
+export DEVELOCITY_ACCESS_KEY="your-access-key-here"
+```
+
+That's it! The plugin will automatically connect to your Develocity instance.
+
+## Alternative: Manual MCP Configuration
+
+If you prefer manual configuration or need custom settings:
 
 ### Option A: Project-level Configuration
 
@@ -27,11 +57,15 @@ Create or edit `.mcp.json` in your project root:
 {
   "mcpServers": {
     "develocity": {
-      "type": "sse",
-      "url": "https://ge.example.com/mcp/sse",
-      "headers": {
-        "Authorization": "Bearer YOUR_ACCESS_KEY"
-      }
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://dv.example.com/mcp",
+        "--transport",
+        "streamablehttp",
+        "--header",
+        "Authorization: Bearer ${DEVELOCITY_ACCESS_KEY}"
+      ]
     }
   }
 }
@@ -45,38 +79,21 @@ Add to `~/.claude/settings.json`:
 {
   "mcpServers": {
     "develocity": {
-      "type": "sse",
-      "url": "https://ge.example.com/mcp/sse",
-      "headers": {
-        "Authorization": "Bearer YOUR_ACCESS_KEY"
-      }
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://dv.example.com/mcp",
+        "--transport",
+        "streamablehttp",
+        "--header",
+        "Authorization: Bearer ${DEVELOCITY_ACCESS_KEY}"
+      ]
     }
   }
 }
 ```
 
-### Option C: Environment Variable for Key
-
-For better security, use an environment variable:
-
-```json
-{
-  "mcpServers": {
-    "develocity": {
-      "type": "sse",
-      "url": "https://ge.example.com/mcp/sse",
-      "headers": {
-        "Authorization": "Bearer ${DEVELOCITY_ACCESS_KEY}"
-      }
-    }
-  }
-}
-```
-
-Then set the environment variable:
-```bash
-export DEVELOCITY_ACCESS_KEY="your-key-here"
-```
+**Note**: Requires `mcp-remote` package. Install globally with `npm install -g mcp-remote` or let npx fetch it on demand.
 
 ## Step 3: Verify Configuration
 

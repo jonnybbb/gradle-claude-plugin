@@ -1,14 +1,200 @@
 {
-  "name": "gradle-claude-plugin",
+  "name": "gradle-claude-plugin-marketplace",
+  "metadata": {
+    "description": "Marketplace for Gradle Claude Plugin - Expert Gradle assistance for Claude Code",
+    "version": "1.0.0"
+  },
   "owner": {
     "name": "Johannes Bühler",
-    "url": "https://github.com/jonnybbb/gradle-claude-plugin"
+    "url": "https://github.com/jonnybbb"
   },
   "plugins": [
     {
       "name": "gradle-claude-plugin",
       "source": ".",
-      "description": "Comprehensive Gradle development assistant with performance tuning, build optimization, task/plugin development, troubleshooting, and migration guidance for Gradle 6-9+"
+      "metadata": {
+        "description": "Expert Gradle assistance for Claude Code. Fix configuration cache issues, optimize builds, migrate versions, and develop tasks/plugins with commands that analyze your actual project using the Gradle Tooling API.",
+        "version": "1.0.0",
+        "author": "Johannes Bühler",
+        "homepage": "https://github.com/jonnybbb/gradle-claude-plugin",
+        "repository": "https://github.com/jonnybbb/gradle-claude-plugin",
+        "license": "Apache-2.0",
+        "keywords": [
+          "gradle",
+          "build-tool",
+          "java",
+          "kotlin",
+          "android",
+          "performance",
+          "optimization",
+          "configuration-cache",
+          "build-cache",
+          "task-development",
+          "plugin-development",
+          "troubleshooting",
+          "migration",
+          "openrewrite"
+        ]
+      },
+      "commands": [
+        {
+          "name": "doctor",
+          "description": "Comprehensive health check of your Gradle project"
+        },
+        {
+          "name": "fix-config-cache",
+          "description": "Detect and fix configuration cache compatibility issues"
+        },
+        {
+          "name": "upgrade",
+          "description": "Migrate between Gradle versions (7→8→9)"
+        },
+        {
+          "name": "migrate",
+          "description": "Large-scale migration with OpenRewrite + Claude"
+        },
+        {
+          "name": "optimize-performance",
+          "description": "Apply build performance improvements"
+        },
+        {
+          "name": "openrewrite",
+          "description": "Run OpenRewrite recipes for bulk refactoring"
+        },
+        {
+          "name": "check-best-practices",
+          "description": "Validate Gradle best practices compliance"
+        },
+        {
+          "name": "create-task",
+          "description": "Scaffold a new custom Gradle task"
+        },
+        {
+          "name": "create-plugin",
+          "description": "Scaffold a new Gradle plugin project"
+        }
+      ],
+      "agents": [
+        {
+          "name": "doctor",
+          "description": "Analyzes Gradle project health and provides recommendations"
+        },
+        {
+          "name": "migration",
+          "description": "Handles Gradle version migration workflows"
+        },
+        {
+          "name": "migration-orchestrator",
+          "description": "Orchestrates complex multi-step migrations"
+        },
+        {
+          "name": "fix-applier",
+          "description": "Applies fixes for detected issues"
+        }
+      ],
+      "skills": [
+        {
+          "name": "gradle-config-cache",
+          "description": "Configuration cache troubleshooting and fixes"
+        },
+        {
+          "name": "gradle-build-cache",
+          "description": "Build cache optimization and debugging"
+        },
+        {
+          "name": "gradle-performance",
+          "description": "Build performance analysis and tuning"
+        },
+        {
+          "name": "gradle-migration",
+          "description": "Version migration guidance (Gradle 6-9+)"
+        },
+        {
+          "name": "gradle-task-development",
+          "description": "Custom task development best practices"
+        },
+        {
+          "name": "gradle-plugin-development",
+          "description": "Plugin development patterns and testing"
+        },
+        {
+          "name": "gradle-dependencies",
+          "description": "Dependency management and version catalogs"
+        },
+        {
+          "name": "gradle-structure",
+          "description": "Multi-project builds and composite builds"
+        },
+        {
+          "name": "gradle-troubleshooting",
+          "description": "Common errors and debugging techniques"
+        },
+        {
+          "name": "gradle-doctor",
+          "description": "Project health diagnostics"
+        },
+        {
+          "name": "gradle-best-practices",
+          "description": "Modern Gradle patterns and conventions"
+        },
+        {
+          "name": "gradle-openrewrite",
+          "description": "OpenRewrite integration for automated refactoring"
+        },
+        {
+          "name": "develocity",
+          "description": "Develocity (Gradle Enterprise) integration"
+        }
+      ],
+      "mcpServers": [
+        {
+          "name": "develocity",
+          "description": "Develocity Build Scan integration (requires DEVELOCITY_URL and DEVELOCITY_ACCESS_KEY)",
+          "optional": true
+        }
+      ],
+      "tools": [
+        {
+          "name": "gradle-analyzer",
+          "description": "Analyze Gradle project structure via Tooling API"
+        },
+        {
+          "name": "cache-validator",
+          "description": "Validate configuration cache compatibility"
+        },
+        {
+          "name": "config-cache-fixer",
+          "description": "Apply configuration cache fixes"
+        },
+        {
+          "name": "performance-profiler",
+          "description": "Profile build performance"
+        },
+        {
+          "name": "performance-fixer",
+          "description": "Apply performance optimizations"
+        },
+        {
+          "name": "task-analyzer",
+          "description": "Analyze task implementations"
+        },
+        {
+          "name": "build-health-check",
+          "description": "Comprehensive build health analysis"
+        },
+        {
+          "name": "migration-fixer",
+          "description": "Apply migration fixes"
+        },
+        {
+          "name": "quick-validate",
+          "description": "Quick validation of Gradle project"
+        },
+        {
+          "name": "openrewrite_runner",
+          "description": "Execute OpenRewrite recipes"
+        }
+      ]
     }
   ]
 }
