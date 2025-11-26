@@ -28,10 +28,10 @@ If `--engine=openrewrite` is specified, use OpenRewrite recipes for migration:
 
 ```bash
 # For Gradle 8 migration
-jbang tools/openrewrite_runner.java . --recipe=org.openrewrite.gradle.MigrateToGradle8,org.openrewrite.gradle.UpdateGradleWrapper --dry-run
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/openrewrite_runner.java . --recipe=org.openrewrite.gradle.MigrateToGradle8,org.openrewrite.gradle.UpdateGradleWrapper --dry-run
 
 # For Gradle 7 migration (from 6.x)
-jbang tools/openrewrite_runner.java . --recipe=org.openrewrite.gradle.MigrateToGradle7,org.openrewrite.gradle.UpdateGradleWrapper --dry-run
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/openrewrite_runner.java . --recipe=org.openrewrite.gradle.MigrateToGradle7,org.openrewrite.gradle.UpdateGradleWrapper --dry-run
 ```
 
 **Recommended workflow for large projects:**
@@ -57,7 +57,7 @@ jbang tools/openrewrite_runner.java . --recipe=org.openrewrite.gradle.MigrateToG
 Run the migration-fixer tool to analyze the project:
 
 ```bash
-jbang tools/migration-fixer.java . --target <VERSION> --json
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/migration-fixer.java . --target <VERSION> --json
 ```
 
 Parse the JSON output to understand:

@@ -14,20 +14,20 @@ You are running the Gradle doctor command. Perform a comprehensive health check 
 Run the build health check tool:
 
 ```bash
-jbang tools/build-health-check.java . --json
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/build-health-check.java . --json
 ```
 
 Additionally run these tools for deeper analysis:
 
 ```bash
 # Configuration cache compatibility
-jbang tools/cache-validator.java . --json
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/cache-validator.java . --json
 
 # Performance analysis
-jbang tools/performance-fixer.java . --json
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/performance-fixer.java . --json
 
 # Task analysis
-jbang tools/task-analyzer.java . --json
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/task-analyzer.java . --json
 ```
 
 ### Step 1.5: Query Develocity (if available)

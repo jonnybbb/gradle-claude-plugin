@@ -33,10 +33,10 @@ If `--engine=openrewrite` is specified:
 
 ```bash
 # Dry run first
-jbang tools/openrewrite_runner.java . --recipe=org.openrewrite.gradle.MigrateToGradle8 --dry-run
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/openrewrite_runner.java . --recipe=org.openrewrite.gradle.MigrateToGradle8 --dry-run
 
 # Apply if changes look good
-jbang tools/openrewrite_runner.java . --recipe=org.openrewrite.gradle.MigrateToGradle8
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/openrewrite_runner.java . --recipe=org.openrewrite.gradle.MigrateToGradle8
 ```
 
 Note: OpenRewrite covers common patterns but may not fix all issues. After running OpenRewrite, remaining issues will need Claude-based fixes:
@@ -56,7 +56,7 @@ Note: OpenRewrite covers common patterns but may not fix all issues. After runni
 Run the config-cache-fixer tool to identify all issues:
 
 ```bash
-jbang tools/config-cache-fixer.java . --json
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/config-cache-fixer.java . --json
 ```
 
 Parse the JSON output to get the complete fix plan.

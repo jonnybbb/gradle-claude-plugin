@@ -23,13 +23,13 @@ Parse the command arguments:
 Run the performance-fixer tool:
 
 ```bash
-jbang tools/performance-fixer.java . --json
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/performance-fixer.java . --json
 ```
 
 Optionally run performance-profiler for actual metrics:
 
 ```bash
-jbang tools/performance-profiler.java . build --json
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/performance-profiler.java . build --json
 ```
 
 ### Step 2: Display Optimization Summary
