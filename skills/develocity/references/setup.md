@@ -124,10 +124,8 @@ Once configured, these tools become available:
 
 See the [develocity skill](../SKILL.md) for query examples.
 
-## Gradle Enterprise vs Develocity
+## Develocity MCP Server compatibility
 
-Develocity is the new name for Gradle Enterprise. The MCP server works with both:
-- Gradle Enterprise 2023.x and earlier
-- Develocity 2024.x and later
+The Develocity MCP server is available since Develocity 2025.3 and later
 
-The URL path `/mcp/sse` is the same for both.
+The URL path is now `/mcp`.
