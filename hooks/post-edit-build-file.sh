@@ -49,15 +49,20 @@ validate_build_file() {
     local content
     content=$(cat "$path")
 
-    # Check for configuration cache issues
-    if [[ "$path" == *".gradle"* ]] || [[ "$path" == *".gradle.kts"* ]]; then
+    # Check for configuration cache issues (only for Gradle script files, not .gradle/ cache directory)
+    local filename
+    filename=$(basename "$path")
+    if [[ "$filename" == *.gradle ]] || [[ "$filename" == *.gradle.kts ]]; then
+        # Note: Use POSIX [[:space:]] and [[:alnum:]] instead of \s and \w for portability
+        # BSD/macOS grep -E doesn't support \s and \w (those are PCRE features)
+
         # System.getProperty at configuration time
-        if echo "$content" | grep -qE "System\.(getProperty|getenv)\s*\("; then
+        if echo "$content" | grep -qE "System\.(getProperty|getenv)[[:space:]]*\("; then
             warnings+=("System.getProperty/getenv at configuration time (config cache incompatible)")
         fi
 
         # Eager task creation
-        if echo "$content" | grep -qE "tasks\.create\s*\(|task\s+\w+\s*\(|task\s+\w+\s*\{"; then
+        if echo "$content" | grep -qE "tasks\.create[[:space:]]*\(|task[[:space:]]+[[:alnum:]_]+[[:space:]]*\(|task[[:space:]]+[[:alnum:]_]+[[:space:]]*\{"; then
             warnings+=("eager task creation (use tasks.register instead)")
         fi
 
@@ -67,7 +72,7 @@ validate_build_file() {
         fi
 
         # tasks.all anti-pattern
-        if echo "$content" | grep -qE "tasks\.all\s*\{"; then
+        if echo "$content" | grep -qE "tasks\.all[[:space:]]*\{"; then
             warnings+=("tasks.all {} (use tasks.configureEach {} for lazy configuration)")
         fi
     fi

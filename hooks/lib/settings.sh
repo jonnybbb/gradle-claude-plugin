@@ -22,16 +22,17 @@ get_yaml_value() {
     frontmatter=$(echo "$content" | sed -n '/^---$/,/^---$/p' | sed '1d;$d')
 
     # Parse nested keys (supports hooks.enabled, hooks.sessionStart, etc.)
+    # Note: Use POSIX [[:space:]] instead of \s for portability (BSD/macOS sed doesn't support \s)
     local value=""
     case "$key" in
         hooks.enabled)
-            value=$(echo "$frontmatter" | grep -A10 "^hooks:" | grep "enabled:" | head -1 | sed 's/.*enabled:\s*//' | tr -d ' ')
+            value=$(echo "$frontmatter" | grep -A10 "^hooks:" | grep "enabled:" | head -1 | sed 's/.*enabled:[[:space:]]*//' | tr -d ' ')
             ;;
         hooks.sessionStart)
-            value=$(echo "$frontmatter" | grep -A10 "^hooks:" | grep "sessionStart:" | head -1 | sed 's/.*sessionStart:\s*//' | tr -d ' ')
+            value=$(echo "$frontmatter" | grep -A10 "^hooks:" | grep "sessionStart:" | head -1 | sed 's/.*sessionStart:[[:space:]]*//' | tr -d ' ')
             ;;
         hooks.postToolUse)
-            value=$(echo "$frontmatter" | grep -A10 "^hooks:" | grep "postToolUse:" | head -1 | sed 's/.*postToolUse:\s*//' | tr -d ' ')
+            value=$(echo "$frontmatter" | grep -A10 "^hooks:" | grep "postToolUse:" | head -1 | sed 's/.*postToolUse:[[:space:]]*//' | tr -d ' ')
             ;;
     esac
 

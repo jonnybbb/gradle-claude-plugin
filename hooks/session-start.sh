@@ -48,10 +48,12 @@ quick_health_check() {
     fi
 
     # Check for deprecated patterns in build files
+    # Note: Use -E for extended regex (ERE) to support \s and \w, or use POSIX classes
     for build_file in "$dir/build.gradle" "$dir/build.gradle.kts"; do
         if [[ -f "$build_file" ]]; then
-            if grep -q "task\s\+\w\+\s*(" "$build_file" 2>/dev/null || \
-               grep -q "task\s\+\w\+\s*{" "$build_file" 2>/dev/null; then
+            # Match: task taskName( or task taskName {  (Groovy eager task syntax)
+            if grep -Eq "task[[:space:]]+[[:alnum:]_]+[[:space:]]*\(" "$build_file" 2>/dev/null || \
+               grep -Eq "task[[:space:]]+[[:alnum:]_]+[[:space:]]*\{" "$build_file" 2>/dev/null; then
                 issues+=("eager task creation detected")
                 break
             fi
