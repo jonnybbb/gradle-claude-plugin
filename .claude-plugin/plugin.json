@@ -1,5 +1,5 @@
 {
-  "name": "gradle-claude-plugin",
+  "name": "gradle",
   "version": "1.0.0",
   "description": "Comprehensive Gradle development assistant with performance tuning, build optimization, task/plugin development, troubleshooting, and migration guidance for Gradle 6-9+",
   "author": {
