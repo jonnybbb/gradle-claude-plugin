@@ -1,7 +1,7 @@
 {
-  "name": "gradle-claude-plugin",
+  "name": "gradle-marketplace",
   "metadata": {
-    "description": "Marketplace for Gradle Claude Plugin - Expert Gradle assistance for Claude Code",
+    "description": "Marketplace for Gradle Plugin - Expert Gradle assistance for Claude Code",
     "version": "1.0.0"
   },
   "owner": {
@@ -10,7 +10,7 @@
   },
   "plugins": [
     {
-      "name": "gradle-claude-plugin",
+      "name": "gradle",
       "source": "./"
     }
   ]
