@@ -27,56 +27,5 @@
     "ci-cd",
     "openrewrite",
     "refactoring"
-  ],
-  "marketplace": {
-    "categories": [
-      "build-tools",
-      "developer-tools",
-      "java",
-      "devops"
-    ],
-    "featured": false,
-    "icon": "assets/icon.png",
-    "screenshots": [
-      "assets/screenshots/doctor-output.png",
-      "assets/screenshots/performance-analysis.png",
-      "assets/screenshots/migration-guidance.png"
-    ],
-    "readme": "README.md",
-    "changelog": "CHANGELOG.md",
-    "minClaudeCodeVersion": "1.0.0",
-    "compatibility": {
-      "platforms": ["macos", "linux", "windows"],
-      "requirements": {
-        "java": ">=25",
-        "gradle": ">=6.0",
-        "jbang": ">=0.115.0",
-        "node": ">=18.0.0"
-      }
-    },
-    "features": [
-      "13 specialized Gradle skills",
-      "9 slash commands",
-      "4 orchestration agents",
-      "10 JBang analysis tools",
-      "Develocity integration for Build Scan queries (requires manual MCP setup)",
-      "Gradle 6-9+ support",
-      "Configuration cache troubleshooting",
-      "Build cache optimization",
-      "Migration assistance (6/7 to 8/9+)",
-      "Performance profiling",
-      "OpenRewrite integration for bulk refactoring"
-    ],
-    "useCases": [
-      "Gradle best practices compliance",
-      "Gradle build optimization",
-      "Build performance analysis",
-      "Gradle version migration",
-      "Custom task development",
-      "Plugin development",
-      "CI/CD pipeline optimization",
-      "Build troubleshooting",
-      "Large-scale automated refactoring"
-    ]
-  }
+  ]
 }

@@ -1,5 +1,5 @@
 {
-  "name": "gradle-claude-plugin-marketplace",
+  "name": "gradle-claude-plugin",
   "metadata": {
     "description": "Marketplace for Gradle Claude Plugin - Expert Gradle assistance for Claude Code",
     "version": "1.0.0"
