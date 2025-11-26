@@ -182,17 +182,22 @@ If your team uses [Develocity](https://gradle.com/develocity/) (formerly Gradle 
 - Identify flaky tests across builds
 - Include Develocity data in `/doctor` reports
 
-**Quick Setup** (optional) — add to `.claude/settings.local.json`:
+**Setup** (optional):
+
+1. Add the Develocity MCP server to your project:
+```bash
+claude mcp add --transport http develocity https://dv.yourcompany.com/mcp \
+  --header "Authorization: Bearer YOUR_ACCESS_KEY"
+```
+
+2. Grant the plugin permission to use it by adding to `.claude/settings.local.json`:
 ```json
 {
-  "env": {
-    "DEVELOCITY_URL": "https://dv.yourcompany.com",
-    "DEVELOCITY_ACCESS_KEY": "your-access-key"
+  "permissions": {
+    "allow": ["mcp__develocity__*"]
   }
 }
 ```
-
-The MCP server activates automatically when configured. No error occurs if unconfigured.
 
 **Full Setup Guide**: See [Develocity setup guide](skills/develocity/references/setup.md)
 

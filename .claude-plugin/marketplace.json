@@ -146,13 +146,6 @@
           "description": "Develocity (Gradle Enterprise) integration"
         }
       ],
-      "mcpServers": [
-        {
-          "name": "develocity",
-          "description": "Develocity Build Scan integration (requires DEVELOCITY_URL and DEVELOCITY_ACCESS_KEY)",
-          "optional": true
-        }
-      ],
       "tools": [
         {
           "name": "gradle-analyzer",

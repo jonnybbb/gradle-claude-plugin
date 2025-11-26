@@ -7,21 +7,6 @@
     "url": "https://github.com/jonnybbb"
   },
   "license": "Apache-2.0",
-  "mcpServers": {
-    "develocity": {
-      "command": "npx",
-      "args": [
-        "mcp-remote",
-        "${DEVELOCITY_URL}/mcp",
-        "--transport",
-        "streamablehttp",
-        "--header",
-        "Authorization: Bearer ${DEVELOCITY_ACCESS_KEY}"
-      ],
-      "optional": true,
-      "description": "Develocity Build Scan integration. Set DEVELOCITY_URL and DEVELOCITY_ACCESS_KEY environment variables to enable."
-    }
-  },
   "homepage": "https://github.com/jonnybbb/gradle-claude-plugin",
   "repository": "https://github.com/jonnybbb/gradle-claude-plugin",
   "keywords": [
@@ -74,7 +59,7 @@
       "9 slash commands",
       "4 orchestration agents",
       "10 JBang analysis tools",
-      "Optional Develocity MCP server for Build Scan queries",
+      "Develocity integration for Build Scan queries (requires manual MCP setup)",
       "Gradle 6-9+ support",
       "Configuration cache troubleshooting",
       "Build cache optimization",

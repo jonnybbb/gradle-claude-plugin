@@ -15,43 +15,36 @@ This guide explains how to configure the Develocity MCP server to enable Build S
 3. Create a new access key with appropriate permissions
 4. Copy the key (you won't see it again)
 
-## Step 2: Configure Environment Variables
+## Step 2: Add the Develocity MCP Server
 
-The gradle-claude-plugin includes an optional Develocity MCP server that activates when you set these environment variables:
+Use the Claude CLI to add the Develocity MCP server to your project:
 
-### Option A: Project Settings File (Recommended)
+```bash
+claude mcp add --transport http develocity https://dv.example.com/mcp \
+  --header "Authorization: Bearer YOUR_ACCESS_KEY"
+```
 
-Create `.claude/settings.local.json` in your project root:
+Replace:
+- `https://dv.example.com` with your Develocity instance URL
+- `YOUR_ACCESS_KEY` with the access key from Step 1
+
+## Step 3: Grant Plugin Permissions
+
+The gradle-claude-plugin needs permission to use the Develocity MCP tools. Add to `.claude/settings.local.json` in your project:
 
 ```json
 {
-  "env": {
-    "DEVELOCITY_URL": "https://dv.example.com",
-    "DEVELOCITY_ACCESS_KEY": "your-access-key-here"
+  "permissions": {
+    "allow": ["mcp__develocity__*"]
   }
 }
 ```
 
 **Note**: Add `.claude/settings.local.json` to your `.gitignore` to avoid committing credentials.
 
-### Option B: Shell Environment Variables
-
-Add to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.):
-
-```bash
-export DEVELOCITY_URL="https://dv.example.com"
-export DEVELOCITY_ACCESS_KEY="your-access-key-here"
-```
-
-That's it! The plugin will automatically connect to your Develocity instance.
-
 ## Alternative: Manual MCP Configuration
 
-If you prefer manual configuration or need custom settings:
-
-### Option A: Project-level Configuration
-
-Create or edit `.mcp.json` in your project root:
+If you prefer manual configuration, create or edit `.mcp.json` in your project root:
 
 ```json
 {
@@ -64,29 +57,7 @@ Create or edit `.mcp.json` in your project root:
         "--transport",
         "streamablehttp",
         "--header",
-        "Authorization: Bearer ${DEVELOCITY_ACCESS_KEY}"
-      ]
-    }
-  }
-}
-```
-
-### Option B: User-level Configuration
-
-Add to `~/.claude/settings.json`:
-
-```json
-{
-  "mcpServers": {
-    "develocity": {
-      "command": "npx",
-      "args": [
-        "mcp-remote",
-        "https://dv.example.com/mcp",
-        "--transport",
-        "streamablehttp",
-        "--header",
-        "Authorization: Bearer ${DEVELOCITY_ACCESS_KEY}"
+        "Authorization: Bearer YOUR_ACCESS_KEY"
       ]
     }
   }
@@ -95,7 +66,7 @@ Add to `~/.claude/settings.json`:
 
 **Note**: Requires `mcp-remote` package. Install globally with `npm install -g mcp-remote` or let npx fetch it on demand.
 
-## Step 3: Verify Configuration
+## Step 4: Verify Configuration
 
 After restarting Claude Code, test the connection:
 
