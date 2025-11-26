@@ -26,19 +26,19 @@ Based on the subcommand, run the appropriate JBang tool command:
 
 ```bash
 # For 'run'
-jbang tools/openrewrite_runner.java /path/to/project --recipe=<recipe-name>
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/openrewrite_runner.java /path/to/project --recipe=<recipe-name>
 
 # For 'dry-run'
-jbang tools/openrewrite_runner.java /path/to/project --recipe=<recipe-name> --dry-run
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/openrewrite_runner.java /path/to/project --recipe=<recipe-name> --dry-run
 
 # For 'list'
-jbang tools/openrewrite_runner.java /path/to/project --list=<filter>
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/openrewrite_runner.java /path/to/project --list=<filter>
 
 # For 'suggest'
-jbang tools/openrewrite_runner.java /path/to/project --suggest
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/openrewrite_runner.java /path/to/project --suggest
 
 # For 'generate-recipe'
-jbang tools/openrewrite_runner.java /path/to/project --generate-recipe
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/openrewrite_runner.java /path/to/project --generate-recipe
 ```
 
 ### Generate Custom Recipe (Phase 3)

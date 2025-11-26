@@ -129,8 +129,8 @@ For detailed analysis, refer users to specialized skills:
 ## External Tools
 
 If available, you can use the JBang tools in the `tools/` directory:
-- `jbang tools/gradle-analyzer.java <project-dir>` - Project analysis
-- `jbang tools/cache-validator.java <project-dir>` - Cache validation
-- `jbang tools/performance-profiler.java <project-dir>` - Performance profiling
+- `jbang ${CLAUDE_PLUGIN_ROOT}/tools/gradle-analyzer.java <project-dir>` - Project analysis
+- `jbang ${CLAUDE_PLUGIN_ROOT}/tools/cache-validator.java <project-dir>` - Cache validation
+- `jbang ${CLAUDE_PLUGIN_ROOT}/tools/performance-profiler.java <project-dir>` - Performance profiling
 
 These require JBang to be installed.

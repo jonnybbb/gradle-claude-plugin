@@ -60,7 +60,7 @@ First, gather comprehensive project information:
 
 ```bash
 # Get project structure
-jbang tools/gradle-analyzer.java . --json
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/gradle-analyzer.java . --json
 
 # Get Gradle version
 grep distributionUrl gradle/wrapper/gradle-wrapper.properties
@@ -97,10 +97,10 @@ Scan for all migration issues:
 
 ```bash
 # Suggest recipes based on project analysis
-jbang tools/openrewrite_runner.java . --suggest --json
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/openrewrite_runner.java . --suggest --json
 
 # Generate custom recipe for edge cases
-jbang tools/openrewrite_runner.java . --generate-recipe --json
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/openrewrite_runner.java . --generate-recipe --json
 ```
 
 Categorize findings:
@@ -217,10 +217,10 @@ fi
 
 ```bash
 # Always dry-run first
-jbang tools/openrewrite_runner.java . --recipe=[recipe] --dry-run
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/openrewrite_runner.java . --recipe=[recipe] --dry-run
 
 # If user confirms, apply
-jbang tools/openrewrite_runner.java . --recipe=[recipe]
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/openrewrite_runner.java . --recipe=[recipe]
 
 # Verify
 ./gradlew help --configuration-cache 2>&1 | head -20

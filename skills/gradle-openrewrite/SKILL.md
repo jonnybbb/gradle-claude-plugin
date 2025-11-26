@@ -71,7 +71,7 @@ For comprehensive migration planning:
 
 ```bash
 # Analyze project complexity and get migration recommendations
-jbang tools/openrewrite_runner.java . --analyze
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/openrewrite_runner.java . --analyze
 
 # Full migration with intelligent engine selection
 /migrate 9.0

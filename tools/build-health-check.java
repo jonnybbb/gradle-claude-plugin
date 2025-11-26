@@ -7,6 +7,7 @@
 
 import org.gradle.tooling.*;
 import org.gradle.tooling.model.*;
+import org.gradle.tooling.model.build.*;
 import com.google.gson.*;
 import java.io.*;
 import java.nio.file.*;

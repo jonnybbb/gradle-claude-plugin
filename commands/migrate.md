@@ -50,10 +50,10 @@ Based on project size:
 
 ```bash
 # Get suggestions
-jbang tools/openrewrite_runner.java . --suggest --json
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/openrewrite_runner.java . --suggest --json
 
 # Generate custom recipe for edge cases
-jbang tools/openrewrite_runner.java . --generate-recipe
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/openrewrite_runner.java . --generate-recipe
 ```
 
 Display the plan to the user:
@@ -91,30 +91,30 @@ git stash push -m "pre-migration-checkpoint"
 
 #### 4.2 Update Wrapper
 ```bash
-jbang tools/openrewrite_runner.java . \
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/openrewrite_runner.java . \
   --recipe=org.openrewrite.gradle.UpdateGradleWrapper \
   --dry-run
 
 # If looks good:
-jbang tools/openrewrite_runner.java . \
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/openrewrite_runner.java . \
   --recipe=org.openrewrite.gradle.UpdateGradleWrapper
 ```
 
 #### 4.3 Run Bulk Migrations
 ```bash
 # For Gradle 8 migration
-jbang tools/openrewrite_runner.java . \
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/openrewrite_runner.java . \
   --recipe=org.openrewrite.gradle.MigrateToGradle8
 
 # For Gradle 9 migration (when available)
-# jbang tools/openrewrite_runner.java . \
+# jbang ${CLAUDE_PLUGIN_ROOT}/tools/openrewrite_runner.java . \
 #   --recipe=org.openrewrite.gradle.MigrateToGradle9
 ```
 
 #### 4.4 Apply Custom Recipe
 ```bash
 # If .rewrite/generated-migrations.yml exists:
-jbang tools/openrewrite_runner.java . \
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/openrewrite_runner.java . \
   --recipe=com.generated.ProjectMigrations
 ```
 
@@ -164,20 +164,20 @@ When `--full` is specified, also include:
 
 1. **Kotlin DSL Migration**
    ```bash
-   jbang tools/openrewrite_runner.java . \
+   jbang ${CLAUDE_PLUGIN_ROOT}/tools/openrewrite_runner.java . \
      --recipe=org.openrewrite.kotlin.gradle.MigrateToKotlinDsl \
      --additional-deps=org.openrewrite.recipe:rewrite-kotlin:LATEST
    ```
 
 2. **Plugins Block Migration**
    ```bash
-   jbang tools/openrewrite_runner.java . \
+   jbang ${CLAUDE_PLUGIN_ROOT}/tools/openrewrite_runner.java . \
      --recipe=org.openrewrite.gradle.plugins.MigrateToPluginsBlock
    ```
 
 3. **Version Catalog Migration**
    ```bash
-   jbang tools/openrewrite_runner.java . \
+   jbang ${CLAUDE_PLUGIN_ROOT}/tools/openrewrite_runner.java . \
      --recipe=org.openrewrite.gradle.MigrateToVersionCatalog
    ```
 

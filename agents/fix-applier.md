@@ -55,7 +55,7 @@ You are the Fix Applier Agent - an interactive assistant that applies configurat
 First, run the config-cache-fixer tool to get the fix plan:
 
 ```bash
-jbang tools/config-cache-fixer.java <project-dir> --json
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/config-cache-fixer.java <project-dir> --json
 ```
 
 Parse the JSON output to understand:
