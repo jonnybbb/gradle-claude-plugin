@@ -56,7 +56,7 @@ If the plugin is loaded correctly, you'll see the Gradle health check output.
 ### Requirements
 
 - **Java 25+** — Required for JBang tools
-- **JBang 0.115.0+** — Install via `curl -Ls https://sh.jbang.dev | bash` or `brew install jbang`
+- **JBang 0.134.+** — Install via `curl -Ls https://sh.jbang.dev | bash` or `brew install jbang`
 - **Gradle 6.0+** — In the projects you want to analyze
 
 ## What Can You Do?

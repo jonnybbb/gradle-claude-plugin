@@ -226,8 +226,9 @@ class performance_fixer {
 
     private static int analyzeJvmArgs(String jvmArgs, List<Fix> fixes, int fixId) {
         // Check heap size
+        // Match heap sizes >= 2G (single digit 2-9 or multi-digit like 10, 16, etc.)
         if (!jvmArgs.contains("-Xmx") || jvmArgs.matches(".*-Xmx[0-9]+[mM].*") &&
-            !jvmArgs.matches(".*-Xmx[2-9][gG].*")) {
+            !jvmArgs.matches(".*-Xmx([2-9]|[1-9]\\d+)[gG].*")) {
             String currentHeap = extractArg(jvmArgs, "-Xmx");
             if (currentHeap == null || parseMemory(currentHeap) < 2048) {
                 fixes.add(new Fix(
@@ -309,17 +310,25 @@ class performance_fixer {
         }
 
         // Check for tasks.withType without configureEach
-        Pattern withTypeEager = Pattern.compile("tasks\\.withType\\s*[<(][^)>]+[>)]\\s*\\{");
+        // Groovy: tasks.withType(JavaCompile) { -> tasks.withType(JavaCompile).configureEach {
+        // Kotlin: tasks.withType<JavaCompile> { -> tasks.withType<JavaCompile>().configureEach {
+        Pattern withTypeEager = Pattern.compile("tasks\\.withType\\s*([<(][^)>]+[>)])\\s*\\{");
         matcher = withTypeEager.matcher(content);
         while (matcher.find()) {
             int lineNum = getLineNumber(content, matcher.start());
             String original = matcher.group(0);
+            String typeArg = matcher.group(1);
             // Only flag if not already using configureEach pattern
             if (!content.substring(Math.max(0, matcher.start() - 20), matcher.start())
                     .contains("configureEach")) {
-                String replacement = isKotlin
-                    ? original.replace("withType", "withType").replace("{", ".configureEach {")
-                    : original.replace("{", ".configureEach {");
+                String replacement;
+                if (isKotlin && typeArg.startsWith("<")) {
+                    // Kotlin: tasks.withType<JavaCompile> { -> tasks.withType<JavaCompile>().configureEach {
+                    replacement = "tasks.withType" + typeArg + "().configureEach {";
+                } else {
+                    // Groovy: tasks.withType(JavaCompile) { -> tasks.withType(JavaCompile).configureEach {
+                    replacement = "tasks.withType" + typeArg + ".configureEach {";
+                }
 
                 fixes.add(new Fix(
                     "PERF-" + String.format("%03d", fixId++),

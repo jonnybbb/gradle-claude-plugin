@@ -356,12 +356,14 @@ class build_health_check {
         int projectInDoLast = 0;
         
         // Analyze build files
+        Path gradleCacheDir = projectDir.toPath().resolve(".gradle");
         List<Path> buildFiles = Files.walk(projectDir.toPath())
             .filter(p -> {
                 String name = p.getFileName().toString();
-                return (name.equals("build.gradle") || name.equals("build.gradle.kts")) &&
-                       !p.toString().contains(".gradle") &&
-                       !p.toString().contains("build/");
+                boolean isBuildFile = name.equals("build.gradle") || name.equals("build.gradle.kts");
+                boolean isInGradleCache = p.startsWith(gradleCacheDir);
+                boolean isInBuildDir = p.toString().contains(File.separator + "build" + File.separator);
+                return isBuildFile && !isInGradleCache && !isInBuildDir;
             })
             .collect(Collectors.toList());
         
@@ -455,12 +457,19 @@ class build_health_check {
         // Check for platform/BOM usage in build files
         maxPoints += 30;
         boolean usesPlatform = false;
-        List<Path> buildFiles = Files.walk(projectDir.toPath())
-            .filter(p -> p.getFileName().toString().matches("build\\.gradle(\\.kts)?"))
+        Path depGradleCacheDir = projectDir.toPath().resolve(".gradle");
+        List<Path> depBuildFiles = Files.walk(projectDir.toPath())
+            .filter(p -> {
+                String name = p.getFileName().toString();
+                boolean isBuildFile = name.equals("build.gradle") || name.equals("build.gradle.kts");
+                boolean isInGradleCache = p.startsWith(depGradleCacheDir);
+                boolean isInBuildDir = p.toString().contains(File.separator + "build" + File.separator);
+                return isBuildFile && !isInGradleCache && !isInBuildDir;
+            })
             .limit(5)
             .collect(Collectors.toList());
         
-        for (Path file : buildFiles) {
+        for (Path file : depBuildFiles) {
             String content = Files.readString(file);
             if (content.contains("platform(") || content.contains("enforcedPlatform(")) {
                 usesPlatform = true;

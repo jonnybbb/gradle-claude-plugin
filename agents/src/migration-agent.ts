@@ -468,13 +468,17 @@ Return ONLY the JSON object.`;
       if (match) javaVersion = match[1];
     } catch {}
 
-    // Check for Kotlin
+    // Check for Kotlin - look for plugin declarations like:
+    // kotlin("jvm") version "1.9.22" or id("org.jetbrains.kotlin.jvm") version "1.9.22"
     try {
       const buildScript = await fs.readFile(
         path.join(this.config.projectDir, 'build.gradle.kts'),
         'utf-8'
       );
-      const match = buildScript.match(/kotlin.*version.*["'](\d+\.\d+\.\d+)["']/i);
+      // More specific pattern to avoid false positives from greedy .*
+      const match = buildScript.match(
+        /(?:kotlin\s*\([^)]+\)|id\s*\(\s*["']org\.jetbrains\.kotlin\.[^"']+["']\s*\))\s*version\s*["'](\d+\.\d+\.\d+)["']/i
+      );
       if (match) kotlinVersion = match[1];
     } catch {}
 

@@ -1,5 +1,6 @@
 package com.gradle.claude.plugin.tools;
 
+import com.google.gson.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIf;
 
@@ -23,6 +24,7 @@ class ToolOutputTest {
     private static final Path PLUGIN_ROOT = Path.of("..").toAbsolutePath().normalize();
     private static final Path TOOLS_DIR = PLUGIN_ROOT.resolve("tools");
     private static final Path FIXTURES_DIR = PLUGIN_ROOT.resolve("tests/fixtures/projects");
+    private static final Gson gson = new Gson();
 
     private static boolean jbangAvailable;
 
@@ -126,6 +128,98 @@ class ToolOutputTest {
         assertThat(output.toLowerCase())
             .as("Should identify Java tasks")
             .containsAnyOf("task", "compile", "test", "build", "jar");
+    }
+
+    @Test
+    @EnabledIf("isJbangAvailable")
+    @DisplayName("task-analyzer should find build files (not filter them out)")
+    void taskAnalyzerShouldFindBuildFiles() throws Exception {
+        String output = runTool("task-analyzer.java", "simple-java", "--json");
+        String jsonOutput = filterJbangOutput(output);
+        JsonObject json = gson.fromJson(jsonOutput, JsonObject.class);
+
+        int totalFiles = json.get("totalFiles").getAsInt();
+        assertThat(totalFiles)
+            .as("Should analyze at least one build file (was filtering out build.gradle due to .gradle check)")
+            .isGreaterThan(0);
+    }
+
+    @Test
+    @EnabledIf("isJbangAvailable")
+    @DisplayName("task-analyzer should detect lazy patterns in simple-java")
+    void taskAnalyzerShouldDetectLazyPatterns() throws Exception {
+        String output = runTool("task-analyzer.java", "simple-java", "--json");
+        String jsonOutput = filterJbangOutput(output);
+        JsonObject json = gson.fromJson(jsonOutput, JsonObject.class);
+
+        int lazyRegistrations = json.get("lazyTaskRegistrations").getAsInt();
+        int lazyAccess = json.get("lazyTaskAccess").getAsInt();
+
+        // simple-java has: 1x tasks.register, 3x tasks.named
+        assertThat(lazyRegistrations)
+            .as("Should detect tasks.register calls")
+            .isGreaterThanOrEqualTo(1);
+        assertThat(lazyAccess)
+            .as("Should detect tasks.named calls")
+            .isGreaterThanOrEqualTo(3);
+    }
+
+    @Test
+    @EnabledIf("isJbangAvailable")
+    @DisplayName("task-analyzer should detect issues in config-cache-broken")
+    void taskAnalyzerShouldDetectIssuesInBrokenFixture() throws Exception {
+        String output = runTool("task-analyzer.java", "config-cache-broken", "--json");
+        String jsonOutput = filterJbangOutput(output);
+        JsonObject json = gson.fromJson(jsonOutput, JsonObject.class);
+
+        int totalFiles = json.get("totalFiles").getAsInt();
+        int eagerCreates = json.get("eagerTaskCreations").getAsInt();
+        int configCacheIssues = json.get("configCacheIssues").getAsInt();
+
+        assertThat(totalFiles)
+            .as("Should analyze build files")
+            .isGreaterThan(0);
+        assertThat(eagerCreates)
+            .as("Should detect eager task creations (tasks.create)")
+            .isGreaterThanOrEqualTo(3);
+        assertThat(configCacheIssues)
+            .as("Should detect config cache issues")
+            .isGreaterThanOrEqualTo(5);
+    }
+
+    @Test
+    @EnabledIf("isJbangAvailable")
+    @DisplayName("build-health-check should find build files")
+    void buildHealthCheckShouldFindBuildFiles() throws Exception {
+        String output = runTool("build-health-check.java", "simple-java", "--json");
+        String jsonOutput = filterJbangOutput(output);
+        JsonObject json = gson.fromJson(jsonOutput, JsonObject.class);
+
+        // Verify the tool actually analyzed something
+        assertThat(json.has("overallScore")).isTrue();
+        int score = json.get("overallScore").getAsInt();
+        assertThat(score)
+            .as("Healthy project should have good score")
+            .isGreaterThanOrEqualTo(70);
+    }
+
+    @Test
+    @EnabledIf("isJbangAvailable")
+    @DisplayName("build-health-check should detect issues in broken fixture")
+    void buildHealthCheckShouldDetectIssuesInBrokenFixture() throws Exception {
+        String output = runTool("build-health-check.java", "config-cache-broken", "--json");
+        String jsonOutput = filterJbangOutput(output);
+        JsonObject json = gson.fromJson(jsonOutput, JsonObject.class);
+
+        int score = json.get("overallScore").getAsInt();
+        String status = json.get("status").getAsString();
+
+        assertThat(score)
+            .as("Broken project should have lower score")
+            .isLessThan(70);
+        assertThat(status)
+            .as("Should not be marked as HEALTHY")
+            .isNotEqualTo("HEALTHY");
     }
 
     @Test

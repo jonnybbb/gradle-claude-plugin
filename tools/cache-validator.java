@@ -29,9 +29,11 @@ class cache_validator {
     private static boolean autoFix = false;
     
     // Common configuration cache problem patterns
-    private static final Pattern PROJECT_AT_EXECUTION = 
-        Pattern.compile("project\\.[a-zA-Z]+");
-    private static final Pattern SYSTEM_PROPERTY_DIRECT = 
+    // Match problematic project access: project.property, project.file, project.exec, etc.
+    // Excludes commonly safe patterns like project.logger, project.name (captured at config time)
+    private static final Pattern PROJECT_AT_EXECUTION =
+        Pattern.compile("project\\.(file|copy|delete|exec|javaexec|sync|properties|extensions|tasks|configurations)\\b");
+    private static final Pattern SYSTEM_PROPERTY_DIRECT =
         Pattern.compile("System\\.getProperty\\(");
     
     public static void main(String[] args) {
@@ -147,13 +149,9 @@ class cache_validator {
     private static void scanFile(File file, ValidationResult result) throws IOException {
         String content = Files.readString(file.toPath());
         List<String> lines = Files.readAllLines(file.toPath());
-        
-        // Check for project access in doLast/doFirst
-        Pattern doLastPattern = Pattern.compile("doLast\\s*\\{([^}]+)\\}", Pattern.DOTALL);
-        Matcher doLastMatcher = doLastPattern.matcher(content);
-        
-        while (doLastMatcher.find()) {
-            String taskBody = doLastMatcher.group(1);
+
+        // Check for project access in doLast/doFirst with proper brace balancing
+        for (String taskBody : findDoBlocks(content)) {
             if (PROJECT_AT_EXECUTION.matcher(taskBody).find()) {
                 result.issues.add(new Issue(
                     IssueSeverity.ERROR,
@@ -162,7 +160,7 @@ class cache_validator {
                     "fix_project_access"
                 ));
             }
-            
+
             if (SYSTEM_PROPERTY_DIRECT.matcher(taskBody).find()) {
                 result.issues.add(new Issue(
                     IssueSeverity.ERROR,
@@ -197,7 +195,35 @@ class cache_validator {
         
         result.filesScanned++;
     }
-    
+
+    /**
+     * Finds all doLast/doFirst blocks with proper brace balancing.
+     * Returns the content of each block (excluding outer braces).
+     */
+    private static List<String> findDoBlocks(String content) {
+        List<String> results = new ArrayList<>();
+        Pattern startPattern = Pattern.compile("(doLast|doFirst)\\s*\\{");
+        Matcher startMatcher = startPattern.matcher(content);
+
+        while (startMatcher.find()) {
+            int braceStart = startMatcher.end() - 1;
+            int depth = 1;
+            int i = braceStart + 1;
+
+            while (i < content.length() && depth > 0) {
+                char c = content.charAt(i);
+                if (c == '{') depth++;
+                else if (c == '}') depth--;
+                i++;
+            }
+
+            if (depth == 0) {
+                results.add(content.substring(braceStart + 1, i - 1));
+            }
+        }
+        return results;
+    }
+
     private static void applyFixes(File projectDir, ValidationResult result) {
         for (Issue issue : result.issues) {
             if (issue.fixId != null) {

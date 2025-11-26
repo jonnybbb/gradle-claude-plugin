@@ -385,13 +385,12 @@ class config_cache_fixer {
 
     private static int findProjectServiceInDoLast(String content, String[] lines, String file,
             List<Fix> fixes, int fixId, boolean isKotlin) {
-        // Find doLast/doFirst blocks
-        Pattern blockPattern = Pattern.compile("(doLast|doFirst)\\s*\\{([^}]+)\\}", Pattern.DOTALL);
-        Matcher blockMatcher = blockPattern.matcher(content);
+        // Find doLast/doFirst blocks with proper brace balancing
+        List<BlockMatch> blocks = findDoBlocks(content);
 
-        while (blockMatcher.find()) {
-            String blockContent = blockMatcher.group(2);
-            int blockStart = blockMatcher.start();
+        for (BlockMatch block : blocks) {
+            String blockContent = block.content();
+            int blockStart = block.startPosition();
 
             // Check for project.copy
             if (blockContent.contains("project.copy")) {
@@ -401,7 +400,7 @@ class config_cache_fixer {
                     file,
                     lineNum,
                     1,
-                    "project.copy in " + blockMatcher.group(1) + " block",
+                    "project.copy in " + block.blockType() + " block",
                     "SERVICE_INJECTION",
                     "MEDIUM",
                     false,
@@ -421,7 +420,7 @@ class config_cache_fixer {
                     file,
                     lineNum,
                     1,
-                    "project.exec in " + blockMatcher.group(1) + " block",
+                    "project.exec in " + block.blockType() + " block",
                     "SERVICE_INJECTION",
                     "MEDIUM",
                     false,
@@ -441,7 +440,7 @@ class config_cache_fixer {
                     file,
                     lineNum,
                     1,
-                    "project.javaexec in " + blockMatcher.group(1) + " block",
+                    "project.javaexec in " + block.blockType() + " block",
                     "SERVICE_INJECTION",
                     "MEDIUM",
                     false,
@@ -461,7 +460,7 @@ class config_cache_fixer {
                     file,
                     lineNum,
                     1,
-                    "project.delete in " + blockMatcher.group(1) + " block",
+                    "project.delete in " + block.blockType() + " block",
                     "SERVICE_INJECTION",
                     "MEDIUM",
                     false,
@@ -481,7 +480,7 @@ class config_cache_fixer {
                     file,
                     lineNum,
                     1,
-                    "project.file in " + blockMatcher.group(1) + " block",
+                    "project.file in " + block.blockType() + " block",
                     "PROJECT_ACCESS",
                     "MEDIUM",
                     false,
@@ -499,12 +498,12 @@ class config_cache_fixer {
 
     private static int findProjectAccessInDoLast(String content, String[] lines, String file,
             List<Fix> fixes, int fixId, boolean isKotlin) {
-        Pattern blockPattern = Pattern.compile("(doLast|doFirst)\\s*\\{([^}]+)\\}", Pattern.DOTALL);
-        Matcher blockMatcher = blockPattern.matcher(content);
+        // Find doLast/doFirst blocks with proper brace balancing
+        List<BlockMatch> blocks = findDoBlocks(content);
 
-        while (blockMatcher.find()) {
-            String blockContent = blockMatcher.group(2);
-            int blockStart = blockMatcher.start();
+        for (BlockMatch block : blocks) {
+            String blockContent = block.content();
+            int blockStart = block.startPosition();
 
             // Check for general project access (not already caught)
             // Look for "project." followed by property access
@@ -589,6 +588,38 @@ class config_cache_fixer {
         }
         return line;
     }
+
+    /**
+     * Finds all doLast/doFirst blocks with proper brace balancing.
+     * Returns a list of matches with group(1)=blockType, group(2)=content, and start position.
+     */
+    private static List<BlockMatch> findDoBlocks(String content) {
+        List<BlockMatch> results = new ArrayList<>();
+        Pattern startPattern = Pattern.compile("(doLast|doFirst)\\s*\\{");
+        Matcher startMatcher = startPattern.matcher(content);
+
+        while (startMatcher.find()) {
+            String blockType = startMatcher.group(1);
+            int braceStart = startMatcher.end() - 1; // Position of opening brace
+            int depth = 1;
+            int i = braceStart + 1;
+
+            while (i < content.length() && depth > 0) {
+                char c = content.charAt(i);
+                if (c == '{') depth++;
+                else if (c == '}') depth--;
+                i++;
+            }
+
+            if (depth == 0) {
+                String blockContent = content.substring(braceStart + 1, i - 1);
+                results.add(new BlockMatch(blockType, blockContent, startMatcher.start()));
+            }
+        }
+        return results;
+    }
+
+    private record BlockMatch(String blockType, String content, int startPosition) {}
 
     private static int findColumn(String line, String match) {
         int idx = line.indexOf(match);

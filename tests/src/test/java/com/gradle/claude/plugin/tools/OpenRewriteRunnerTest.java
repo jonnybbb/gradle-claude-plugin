@@ -321,6 +321,105 @@ class OpenRewriteRunnerTest {
             .isTrue();
     }
 
+    // ==================== CLI Flag Coverage Tests ====================
+
+    @Test
+    @DisplayName("Should not have unused CLI flags (static analysis)")
+    void shouldNotHaveUnusedCliFlags() throws Exception {
+        // Read the tool source code
+        String sourceCode = Files.readString(TOOL_PATH);
+
+        // Find all @Option declarations
+        java.util.regex.Pattern optionPattern = java.util.regex.Pattern.compile(
+            "@Option\\s*\\([^)]*names\\s*=\\s*\\{?[^}]*\"--([^\"]+)\"");
+        java.util.regex.Matcher matcher = optionPattern.matcher(sourceCode);
+
+        java.util.List<String> declaredFlags = new java.util.ArrayList<>();
+        while (matcher.find()) {
+            declaredFlags.add(matcher.group(1));
+        }
+
+        // Check each flag is actually used somewhere in the code (beyond declaration)
+        for (String flag : declaredFlags) {
+            // Convert flag name to variable name (e.g., "dry-run" -> "dryRun")
+            String varName = toCamelCase(flag);
+
+            // Count occurrences of the variable name
+            int occurrences = countOccurrences(sourceCode, varName);
+
+            // Should appear more than just in the declaration (at least 2: declaration + use)
+            assertThat(occurrences)
+                .as("Flag --%s (variable %s) should be used, not just declared", flag, varName)
+                .isGreaterThanOrEqualTo(2);
+        }
+    }
+
+    private String toCamelCase(String flag) {
+        StringBuilder result = new StringBuilder();
+        boolean capitalizeNext = false;
+        for (char c : flag.toCharArray()) {
+            if (c == '-') {
+                capitalizeNext = true;
+            } else {
+                result.append(capitalizeNext ? Character.toUpperCase(c) : c);
+                capitalizeNext = false;
+            }
+        }
+        return result.toString();
+    }
+
+    private int countOccurrences(String text, String word) {
+        int count = 0;
+        int index = 0;
+        while ((index = text.indexOf(word, index)) != -1) {
+            count++;
+            index += word.length();
+        }
+        return count;
+    }
+
+    @Test
+    @EnabledIf("jbangAvailable")
+    @DisplayName("All documented flags should work without error")
+    void allDocumentedFlagsShouldWork() throws Exception {
+        Path projectPath = FIXTURES_ROOT.resolve("simple-java");
+
+        // Test --help flag
+        ProcessResult helpResult = runToolRaw("--help");
+        assertThat(helpResult.exitCode).isEqualTo(0);
+        assertThat(helpResult.stdout).contains("--recipe", "--dry-run", "--list", "--suggest", "--analyze");
+
+        // Test --json flag with various commands
+        ProcessResult listJsonResult = runTool(projectPath, "--list=", "--json");
+        assertThat(listJsonResult.stdout.trim()).startsWith("["); // JSON array
+
+        ProcessResult suggestJsonResult = runTool(projectPath, "--suggest", "--json");
+        assertThat(suggestJsonResult.stdout.trim()).startsWith("{"); // JSON object
+
+        ProcessResult analyzeJsonResult = runTool(projectPath, "--analyze", "--json");
+        assertThat(analyzeJsonResult.stdout.trim()).startsWith("{"); // JSON object
+    }
+
+    private ProcessResult runToolRaw(String... args) throws Exception {
+        String[] command = new String[args.length + 2];
+        command[0] = "jbang";
+        command[1] = TOOL_PATH.toString();
+        System.arraycopy(args, 0, command, 2, args.length);
+
+        ProcessBuilder pb = new ProcessBuilder(command)
+            .redirectErrorStream(false);
+
+        Process process = pb.start();
+
+        String stdout = new String(process.getInputStream().readAllBytes());
+        String stderr = new String(process.getErrorStream().readAllBytes());
+
+        boolean finished = process.waitFor(30, TimeUnit.SECONDS);
+        assertThat(finished).as("Process should complete within timeout").isTrue();
+
+        return new ProcessResult(process.exitValue(), stdout, stderr);
+    }
+
     // ==================== Helper Methods ====================
 
     private ProcessResult runTool(Path projectPath, String... args) throws Exception {

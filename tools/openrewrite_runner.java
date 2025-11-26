@@ -74,9 +74,6 @@ public class openrewrite_runner implements Callable<Integer> {
     @Option(names = {"--additional-deps"}, description = "Additional recipe dependencies (comma-separated)")
     private String additionalDeps;
 
-    @Option(names = {"--recipe-options"}, description = "Recipe options as key=value pairs")
-    private Map<String, String> recipeOptions = new HashMap<>();
-
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
     public static void main(String[] args) {

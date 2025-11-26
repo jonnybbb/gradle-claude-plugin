@@ -140,31 +140,49 @@ test_health_check() {
 test_task_analyzer() {
     local project=$1
     local expected_file="$EXPECTED_DIR/$project.json"
-    
+
     log_test "task-analyzer.java on $project"
-    
+
     local output=$(jbang "$TOOLS_DIR/task-analyzer.java" "$FIXTURES_DIR/$project" --json 2>/dev/null)
-    
+
     # Validate JSON output
     if ! echo "$output" | jq . > /dev/null 2>&1; then
         log_fail "Invalid JSON output for $project"
         return
     fi
-    
-    # Check eager creates count
-    local eager_creates=$(echo "$output" | jq -r '.patterns.eagerCreates // 0')
+
+    # CRITICAL: Check that build files were actually analyzed (catches .gradle filter bug)
+    local total_files=$(echo "$output" | jq -r '.totalFiles // 0')
+    if [[ "$total_files" -eq 0 ]]; then
+        log_fail "No build files analyzed - likely a filter bug"
+        return
+    fi
+    log_pass "Analyzed $total_files build file(s)"
+
+    # Check eager creates count (correct JSON path: .eagerTaskCreations, not .patterns.eagerCreates)
+    local eager_creates=$(echo "$output" | jq -r '.eagerTaskCreations // 0')
     local expected_eager=$(jq -r '.taskAnalysis.expectedEagerCreates // 0' "$expected_file")
-    
+
     if [[ "$eager_creates" == "$expected_eager" ]]; then
         log_pass "Eager creates: $eager_creates"
     else
         log_fail "Eager creates: expected $expected_eager, got $eager_creates"
     fi
-    
+
+    # Check lazy registrations (tasks.register)
+    local lazy_registrations=$(echo "$output" | jq -r '.lazyTaskRegistrations // 0')
+    local expected_lazy=$(jq -r '.taskAnalysis.expectedLazyRegisters // 0' "$expected_file")
+
+    if [[ "$lazy_registrations" -ge "$expected_lazy" ]]; then
+        log_pass "Lazy registrations: $lazy_registrations (expected >= $expected_lazy)"
+    else
+        log_fail "Lazy registrations: expected >= $expected_lazy, got $lazy_registrations"
+    fi
+
     # Check config cache issues (if applicable)
     local cc_issues=$(echo "$output" | jq -r '.configCacheIssues // 0')
     local expected_cc=$(jq -r '.taskAnalysis.expectedConfigCacheIssues // 0' "$expected_file")
-    
+
     # Handle range expectations
     if [[ $(jq -r '.taskAnalysis.expectedConfigCacheIssues | type' "$expected_file") == "object" ]]; then
         local min=$(jq -r '.taskAnalysis.expectedConfigCacheIssues.min' "$expected_file")

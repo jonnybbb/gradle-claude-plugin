@@ -35,16 +35,17 @@ class task_analyzer {
         "tasks\\.create\\s*[<(]", Pattern.MULTILINE);
     private static final Pattern EAGER_GET_BY_NAME = Pattern.compile(
         "tasks\\.getByName\\s*[<(]", Pattern.MULTILINE);
-    private static final Pattern PROJECT_IN_DOLAST = Pattern.compile(
-        "(doLast|doFirst)\\s*\\{[^}]*\\bproject\\.", Pattern.MULTILINE | Pattern.DOTALL);
+    // Inner patterns for doLast/doFirst block content checking (used with findDoBlockIssues)
+    private static final Pattern PROJECT_ACCESS_INNER = Pattern.compile(
+        "\\bproject\\.");
+    private static final Pattern PROJECT_COPY_INNER = Pattern.compile(
+        "project\\.copy\\s*\\{");
+    private static final Pattern PROJECT_EXEC_INNER = Pattern.compile(
+        "project\\.exec\\s*\\{");
     private static final Pattern SYSTEM_GETPROPERTY = Pattern.compile(
         "System\\.getProperty\\s*\\(", Pattern.MULTILINE);
     private static final Pattern SYSTEM_GETENV = Pattern.compile(
         "System\\.getenv\\s*\\(", Pattern.MULTILINE);
-    private static final Pattern PROJECT_COPY = Pattern.compile(
-        "(doLast|doFirst)\\s*\\{[^}]*project\\.copy\\s*\\{", Pattern.MULTILINE | Pattern.DOTALL);
-    private static final Pattern PROJECT_EXEC = Pattern.compile(
-        "(doLast|doFirst)\\s*\\{[^}]*project\\.exec\\s*\\{", Pattern.MULTILINE | Pattern.DOTALL);
     private static final Pattern CONFIG_RESOLUTION = Pattern.compile(
         "configurations\\.[a-zA-Z]+\\.files(?!\\s*\\{)", Pattern.MULTILINE);
     private static final Pattern TASK_REGISTER = Pattern.compile(
@@ -100,12 +101,14 @@ class task_analyzer {
         result.fileResults = new ArrayList<>();
         
         // Find all build files
+        Path gradleCacheDir = projectDir.toPath().resolve(".gradle");
         List<Path> buildFiles = Files.walk(projectDir.toPath())
             .filter(p -> {
                 String name = p.getFileName().toString();
-                return (name.equals("build.gradle") || name.equals("build.gradle.kts")) &&
-                       !p.toString().contains(".gradle") &&
-                       !p.toString().contains("build/");
+                boolean isBuildFile = name.equals("build.gradle") || name.equals("build.gradle.kts");
+                boolean isInGradleCache = p.startsWith(gradleCacheDir);
+                boolean isInBuildDir = p.toString().contains(File.separator + "build" + File.separator);
+                return isBuildFile && !isInGradleCache && !isInBuildDir;
             })
             .collect(Collectors.toList());
         
@@ -147,11 +150,14 @@ class task_analyzer {
             .filter(i -> i.type.contains("CONFIG_CACHE")).count();
         result.lazyTaskRegistrations = result.fileResults.stream()
             .mapToInt(f -> f.lazyRegistrations).sum();
-        
-        // Health score (0-100)
-        int totalPatterns = result.eagerTaskCreations + result.lazyTaskRegistrations;
+        result.lazyTaskAccess = result.fileResults.stream()
+            .mapToInt(f -> f.lazyAccess).sum();
+
+        // Health score (0-100) - includes both lazy registration (tasks.register) and lazy access (tasks.named)
+        int totalLazyUsage = result.lazyTaskRegistrations + result.lazyTaskAccess;
+        int totalPatterns = result.eagerTaskCreations + totalLazyUsage;
         if (totalPatterns > 0) {
-            result.lazyRegistrationScore = (result.lazyTaskRegistrations * 100) / totalPatterns;
+            result.lazyRegistrationScore = (totalLazyUsage * 100) / totalPatterns;
         } else {
             result.lazyRegistrationScore = 100;
         }
@@ -181,8 +187,8 @@ class task_analyzer {
             "Eager task access with tasks.getByName()",
             "Replace with tasks.named() for lazy access");
         
-        // Check for configuration cache issues
-        findPatternIssues(result, content, lines, PROJECT_IN_DOLAST,
+        // Check for configuration cache issues (with proper brace balancing)
+        findDoBlockIssues(result, content, lines, PROJECT_ACCESS_INNER,
             "CONFIG_CACHE_PROJECT", "CRITICAL",
             "Project access in doLast/doFirst block",
             "Capture project values during configuration phase");
@@ -197,12 +203,12 @@ class task_analyzer {
             "System.getenv() may cause config cache issues",
             "Use providers.environmentVariable() instead");
         
-        findPatternIssues(result, content, lines, PROJECT_COPY,
+        findDoBlockIssues(result, content, lines, PROJECT_COPY_INNER,
             "CONFIG_CACHE_COPY", "CRITICAL",
             "project.copy in doLast/doFirst block",
             "Inject FileSystemOperations service instead");
-        
-        findPatternIssues(result, content, lines, PROJECT_EXEC,
+
+        findDoBlockIssues(result, content, lines, PROJECT_EXEC_INNER,
             "CONFIG_CACHE_EXEC", "CRITICAL",
             "project.exec in doLast/doFirst block",
             "Inject ExecOperations service instead");
@@ -253,7 +259,56 @@ class task_analyzer {
             result.issues.add(issue);
         }
     }
-    
+
+    /**
+     * Finds issues within doLast/doFirst blocks with proper brace balancing.
+     * Searches for innerPattern within each block's content.
+     */
+    private static void findDoBlockIssues(FileResult result, String content, String[] lines,
+            Pattern innerPattern, String type, String severity, String message, String fix) {
+        Pattern startPattern = Pattern.compile("(doLast|doFirst)\\s*\\{");
+        Matcher startMatcher = startPattern.matcher(content);
+
+        while (startMatcher.find()) {
+            int braceStart = startMatcher.end() - 1;
+            int depth = 1;
+            int i = braceStart + 1;
+
+            while (i < content.length() && depth > 0) {
+                char c = content.charAt(i);
+                if (c == '{') depth++;
+                else if (c == '}') depth--;
+                i++;
+            }
+
+            if (depth == 0) {
+                String blockContent = content.substring(braceStart + 1, i - 1);
+                if (innerPattern.matcher(blockContent).find()) {
+                    Issue issue = new Issue();
+                    issue.type = type;
+                    issue.severity = severity;
+                    issue.message = message;
+                    issue.fix = fix;
+                    issue.file = result.path;
+
+                    // Find line number from block start
+                    int pos = startMatcher.start();
+                    int lineNum = 1;
+                    for (int j = 0; j < pos && j < content.length(); j++) {
+                        if (content.charAt(j) == '\n') lineNum++;
+                    }
+                    issue.line = lineNum;
+
+                    if (lineNum > 0 && lineNum <= lines.length) {
+                        issue.context = lines[lineNum - 1].trim();
+                    }
+
+                    result.issues.add(issue);
+                }
+            }
+        }
+    }
+
     private static int calculateOverallScore(AnalysisResult result) {
         int score = 100;
         
@@ -313,7 +368,7 @@ class task_analyzer {
         System.out.println();
         
         System.out.println("Score: " + result.overallScore + "/100");
-        System.out.println("  Lazy registration: " + result.lazyRegistrationScore + "%");
+        System.out.println("  Lazy task API usage: " + result.lazyRegistrationScore + "%");
         System.out.println();
         
         System.out.println("Issues Found: " + result.totalIssues);
@@ -324,7 +379,8 @@ class task_analyzer {
         
         System.out.println("Patterns:");
         System.out.println("  Eager task creations:  " + result.eagerTaskCreations);
-        System.out.println("  Lazy registrations:    " + result.lazyTaskRegistrations);
+        System.out.println("  Lazy registrations:    " + result.lazyTaskRegistrations + " (tasks.register)");
+        System.out.println("  Lazy access:           " + result.lazyTaskAccess + " (tasks.named)");
         System.out.println("  Config cache issues:   " + result.configCacheIssues);
         System.out.println();
         
@@ -370,6 +426,7 @@ class task_analyzer {
         int infoIssues;
         int eagerTaskCreations;
         int lazyTaskRegistrations;
+        int lazyTaskAccess;
         int configCacheIssues;
         int lazyRegistrationScore;
         int overallScore;
