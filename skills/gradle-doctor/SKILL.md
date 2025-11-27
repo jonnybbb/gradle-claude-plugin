@@ -14,21 +14,14 @@ For common issues detected, see [references/issues.md](references/issues.md).
 
 ## Commands
 
-### `/doctor [options]`
+### `/doctor`
 
 ```bash
-# Basic health check
+# Run comprehensive health check
 /doctor
-
-# Quick scan (essential checks only)
-/doctor --quick
-
-# Deep analysis with auto-fix
-/doctor --deep --fix
-
-# Generate detailed report
-/doctor --report
 ```
+
+Performs multi-phase analysis using JBang tools and provides prioritized recommendations.
 
 ## Quick Start
 
@@ -44,9 +37,10 @@ Run `/doctor` to get:
 
 | Tool | Purpose |
 |------|---------|
-| gradle-analyzer.java | Project metadata extraction |
+| build-health-check.java | Overall health scoring and recommendations |
 | cache-validator.java | Cache configuration validation |
-| performance-profiler.java | Build performance analysis |
+| performance-fixer.java | Performance analysis and fixes |
+| task-analyzer.java | Task quality and cacheability analysis |
 
 ## Health Categories
 

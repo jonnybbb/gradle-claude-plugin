@@ -55,7 +55,22 @@ class build_health_check {
             System.err.println("Error: Project directory does not exist: " + projectDir);
             System.exit(1);
         }
-        
+
+        // Validate this is a Gradle project
+        boolean isGradleProject = new File(projectDir, "settings.gradle").exists() ||
+                                  new File(projectDir, "settings.gradle.kts").exists() ||
+                                  new File(projectDir, "build.gradle").exists() ||
+                                  new File(projectDir, "build.gradle.kts").exists();
+        if (!isGradleProject) {
+            String error = "Error: Not a Gradle project (no settings.gradle or build.gradle found): " + projectDir;
+            if (jsonOutput) {
+                System.out.println(gson.toJson(Map.of("error", error)));
+            } else {
+                System.err.println(error);
+            }
+            System.exit(1);
+        }
+
         try {
             HealthReport report = checkHealth(projectDir);
             

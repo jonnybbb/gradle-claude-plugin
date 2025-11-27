@@ -10,6 +10,7 @@ import com.google.gson.*;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
+import java.util.LinkedHashMap;
 import java.util.regex.*;
 
 /**
@@ -21,12 +22,13 @@ import java.util.regex.*;
  * - Task cacheability issues
  * - Common anti-patterns
  * 
- * Usage: cache-validator.java <project-dir> [--fix]
+ * Usage: cache-validator.java <project-dir> [--json] [--fix]
  */
 class cache_validator {
-    
+
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private static boolean autoFix = false;
+    private static boolean jsonOutput = false;
     
     // Common configuration cache problem patterns
     // Match problematic project access: project.property, project.file, project.exec, etc.
@@ -40,14 +42,18 @@ class cache_validator {
         System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
         
         if (args.length < 1) {
-            System.err.println("Usage: cache-validator.java <project-dir> [--fix]");
+            System.err.println("Usage: cache-validator.java <project-dir> [--json] [--fix]");
             System.err.println("  project-dir: Path to Gradle project root");
+            System.err.println("  --json: Output results as JSON");
             System.err.println("  --fix: Attempt to automatically fix issues");
             System.exit(1);
         }
-        
+
         File projectDir = new File(args[0]);
-        autoFix = args.length > 1 && "--fix".equals(args[1]);
+        for (int i = 1; i < args.length; i++) {
+            if ("--json".equals(args[i])) jsonOutput = true;
+            if ("--fix".equals(args[i])) autoFix = true;
+        }
         
         if (!projectDir.exists() || !projectDir.isDirectory()) {
             System.err.println("Error: Project directory does not exist: " + projectDir);
@@ -56,18 +62,28 @@ class cache_validator {
         
         try {
             ValidationResult result = validateProject(projectDir);
-            printReport(result);
-            
-            if (autoFix && !result.issues.isEmpty()) {
-                System.out.println("\n=== Applying Fixes ===");
-                applyFixes(projectDir, result);
+            result.projectDir = projectDir.getAbsolutePath();
+
+            if (jsonOutput) {
+                printJsonReport(result);
+            } else {
+                printReport(result);
+
+                if (autoFix && !result.issues.isEmpty()) {
+                    System.out.println("\n=== Applying Fixes ===");
+                    applyFixes(projectDir, result);
+                }
             }
-            
+
             System.exit(result.issues.isEmpty() ? 0 : 1);
-            
+
         } catch (Exception e) {
-            System.err.println("Error validating project: " + e.getMessage());
-            e.printStackTrace();
+            if (jsonOutput) {
+                System.out.println(gson.toJson(Map.of("error", e.getMessage())));
+            } else {
+                System.err.println("Error validating project: " + e.getMessage());
+                e.printStackTrace();
+            }
             System.exit(1);
         }
     }
@@ -317,6 +333,34 @@ class cache_validator {
         }
     }
     
+    private static void printJsonReport(ValidationResult result) {
+        Map<String, Object> json = new LinkedHashMap<>();
+        json.put("projectDir", result.projectDir);
+        json.put("filesScanned", result.filesScanned);
+
+        Map<String, Object> config = new LinkedHashMap<>();
+        config.put("buildCacheEnabled", result.buildCacheEnabled);
+        config.put("configCacheEnabled", result.configCacheEnabled);
+        config.put("parallelEnabled", result.parallelEnabled);
+        config.put("buildCacheExists", result.buildCacheExists);
+        json.put("configuration", config);
+
+        json.put("totalIssues", result.issues.size());
+
+        List<Map<String, Object>> issueList = new ArrayList<>();
+        for (Issue issue : result.issues) {
+            Map<String, Object> issueMap = new LinkedHashMap<>();
+            issueMap.put("severity", issue.severity.name());
+            issueMap.put("description", issue.description);
+            issueMap.put("recommendation", issue.recommendation);
+            issueMap.put("fixId", issue.fixId);
+            issueList.add(issueMap);
+        }
+        json.put("issues", issueList);
+
+        System.out.println(gson.toJson(json));
+    }
+
     enum IssueSeverity {
         ERROR, WARNING, INFO
     }
@@ -336,6 +380,7 @@ class cache_validator {
     }
     
     static class ValidationResult {
+        String projectDir;
         boolean buildCacheEnabled;
         boolean configCacheEnabled;
         boolean parallelEnabled;

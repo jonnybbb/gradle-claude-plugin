@@ -385,7 +385,11 @@ public class openrewrite_runner implements Callable<Integer> {
 
         if (isVersionLessThan(analysis.gradleVersion, "8.0")) {
             steps.add(new MigrationStep(2, "Update Gradle wrapper", "OPENREWRITE", "< 1 min"));
-            steps.add(new MigrationStep(3, "Migrate deprecated APIs (Gradle 8)", "OPENREWRITE", "2-5 min"));
+            steps.add(new MigrationStep(3, "Migrate deprecated APIs (Gradle 7→8)", "OPENREWRITE", "2-5 min"));
+            steps.add(new MigrationStep(4, "Migrate deprecated APIs (Gradle 8→9)", "OPENREWRITE", "2-5 min"));
+        } else if (isVersionLessThan(analysis.gradleVersion, "9.0")) {
+            steps.add(new MigrationStep(2, "Update Gradle wrapper", "OPENREWRITE", "< 1 min"));
+            steps.add(new MigrationStep(3, "Migrate deprecated APIs (Gradle 8→9)", "OPENREWRITE", "2-5 min"));
         }
 
         if (analysis.issues.containsKey("legacy_apply_plugin")) {
@@ -504,13 +508,32 @@ public class openrewrite_runner implements Callable<Integer> {
             if (isVersionLessThan(result.gradleVersion, "8.0")) {
                 result.suggestions.add(new Suggestion(
                         "org.openrewrite.gradle.UpdateGradleWrapper",
-                        "Update Gradle wrapper to 8.14",
+                        "Update Gradle wrapper to 9.2.1",
                         0.95,
-                        "version=8.14"
+                        "version=9.2.1"
                 ));
                 result.suggestions.add(new Suggestion(
                         "org.openrewrite.gradle.MigrateToGradle8",
                         "Migrate deprecated APIs to Gradle 8",
+                        0.85,
+                        null
+                ));
+                result.suggestions.add(new Suggestion(
+                        "org.openrewrite.gradle.MigrateToGradle9",
+                        "Migrate deprecated APIs to Gradle 9",
+                        0.85,
+                        null
+                ));
+            } else if (isVersionLessThan(result.gradleVersion, "9.0")) {
+                result.suggestions.add(new Suggestion(
+                        "org.openrewrite.gradle.UpdateGradleWrapper",
+                        "Update Gradle wrapper to 9.2.1",
+                        0.95,
+                        "version=9.2.1"
+                ));
+                result.suggestions.add(new Suggestion(
+                        "org.openrewrite.gradle.MigrateToGradle9",
+                        "Migrate deprecated APIs to Gradle 9",
                         0.85,
                         null
                 ));
@@ -577,9 +600,14 @@ public class openrewrite_runner implements Callable<Integer> {
         }
 
         if (tasksCreateCount > 0 || buildDirCount > 0) {
+            // Suggest appropriate migration based on current version
+            String recipe = isVersionLessThan(result.gradleVersion, "8.0")
+                    ? "org.openrewrite.gradle.MigrateToGradle8"
+                    : "org.openrewrite.gradle.MigrateToGradle9";
+            String targetVersion = isVersionLessThan(result.gradleVersion, "8.0") ? "8" : "9";
             result.suggestions.add(new Suggestion(
-                    "org.openrewrite.gradle.MigrateToGradle8",
-                    "Fix " + (tasksCreateCount + buildDirCount) + " deprecated patterns",
+                    recipe,
+                    "Fix " + (tasksCreateCount + buildDirCount) + " deprecated patterns (Gradle " + targetVersion + ")",
                     0.75,
                     null
             ));
@@ -882,6 +910,7 @@ public class openrewrite_runner implements Callable<Integer> {
         // Add standard recipes that complement the custom ones
         yaml.append("\n  # Standard recipes to run alongside custom transformations\n");
         yaml.append("  - org.openrewrite.gradle.MigrateToGradle8\n");
+        yaml.append("  - org.openrewrite.gradle.MigrateToGradle9\n");
 
         return yaml.toString();
     }
@@ -1033,6 +1062,11 @@ public class openrewrite_runner implements Callable<Integer> {
         List<RecipeInfo> recipes = new ArrayList<>();
 
         // Migration recipes
+        recipes.add(new RecipeInfo(
+                "org.openrewrite.gradle.MigrateToGradle9",
+                "Migrate deprecated APIs from Gradle 8 to Gradle 9",
+                List.of()
+        ));
         recipes.add(new RecipeInfo(
                 "org.openrewrite.gradle.MigrateToGradle8",
                 "Migrate deprecated APIs from Gradle 7 to Gradle 8",

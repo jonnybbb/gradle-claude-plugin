@@ -2,20 +2,19 @@
 
 ## Tool Invocation
 
-### gradle-analyzer.java
+### build-health-check.java
 ```bash
-jbang tools/gradle-analyzer.java <project-dir> [--json]
+jbang tools/build-health-check.java <project-dir> [--json]
 ```
 
 Outputs:
-- Project structure (modules, subprojects)
-- Gradle/Java versions
-- Plugin list
-- Task count
+- Overall health score
+- Category breakdown (Performance, Caching, Structure, Task Quality, Dependencies)
+- Top recommendations
 
 ### cache-validator.java
 ```bash
-jbang tools/cache-validator.java <project-dir> [--fix]
+jbang tools/cache-validator.java <project-dir> [--json] [--fix]
 ```
 
 Checks:
@@ -23,15 +22,25 @@ Checks:
 - Configuration cache compatibility
 - Cache hit potential
 
-### performance-profiler.java
+### performance-fixer.java
 ```bash
-jbang tools/performance-profiler.java <project-dir> [--report]
+jbang tools/performance-fixer.java <project-dir> [--json] [--auto]
 ```
 
 Outputs:
-- Configuration vs execution time ratio
-- Slowest tasks
-- Parallelization opportunities
+- Performance optimizations with impact ratings
+- Auto-fixable issues
+- Expected improvement estimates
+
+### task-analyzer.java
+```bash
+jbang tools/task-analyzer.java <project-dir> [--json]
+```
+
+Outputs:
+- Task registration patterns (eager vs lazy)
+- Configuration cache compatibility issues
+- Lazy registration score
 
 ## Skill Delegation
 
