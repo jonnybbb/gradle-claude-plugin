@@ -33,9 +33,9 @@ class SkillStructureTest {
     }
 
     @Test
-    @DisplayName("Plugin should have exactly 13 skills")
+    @DisplayName("Plugin should have exactly 14 skills")
     void shouldHaveExpectedSkillCount() {
-        assertThat(allSkills).hasSize(13);
+        assertThat(allSkills).hasSize(14);
     }
 
     static Stream<Skill> allSkillsProvider() {
@@ -136,7 +136,8 @@ class SkillStructureTest {
             "gradle-plugin-development",
             "gradle-openrewrite",
             "gradle-best-practices",
-            "develocity"
+            "develocity",
+            "develocity-analytics"
         );
 
         List<String> actualNames = allSkills.stream()

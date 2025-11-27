@@ -1,6 +1,6 @@
 ---
 name: develocity-analytics
-description: Analyze build trends and aggregate metrics across many builds using Develocity Reporting Kit (DRV) SQL analytics. Use when users ask about "build trends", "cache hit rate over time", "slowest tasks", "optimization opportunities", "build health", "aggregate metrics", "across builds", "dashboard", "failure rate", "what projects have", or want to analyze patterns across builds rather than inspect a single build. Also triggers on "why are builds slow", "cache performance", "test acceleration potential", "deprecations across projects".
+description: This skill should be used when the user asks about "build trends", "cache hit rate over time", "slowest tasks", "optimization opportunities", "build health", "aggregate metrics", "across builds", "dashboard", "failure rate", "what projects have", "why are builds slow", "cache performance", "test acceleration potential", or "deprecations across projects". Use for analyzing patterns across many builds via Develocity Reporting Kit (DRV) SQL analytics rather than inspecting individual Build Scans.
 ---
 
 # Develocity Analytics (DRV)
