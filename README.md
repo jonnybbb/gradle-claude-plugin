@@ -109,6 +109,121 @@ The plugin includes expertise on:
 
 Just ask naturally: "Why is my build slow?" or "How do I make this task cacheable?"
 
+## Real-World Use Cases
+
+### "Our CI builds take 12 minutes. Help!"
+
+You're staring at a build that's been getting slower every sprint. No one knows why.
+
+```
+> /doctor
+```
+
+The plugin analyzes your project and finds: parallel execution disabled, no build cache, eager task creation in 3 plugins, and JVM heap set too low. You run `/optimize-performance --auto` and watch your build drop to 4 minutes.
+
+**What you get:** A prioritized list of fixes with expected impact, not just generic "enable caching" advice.
+
+---
+
+### "Configuration cache errors everywhere after enabling it"
+
+Your team wants the 30-80% speedup from configuration cache. You enable it and get 47 errors across your multi-module project.
+
+```
+> /fix-config-cache --dry-run
+```
+
+The plugin categorizes every issue: 23 `System.getProperty` calls, 12 `Task.project` accesses, 8 `tasks.create` patterns, and 4 custom plugin problems. It shows exactly what each fix looks like before you approve.
+
+```
+> /fix-config-cache --auto
+```
+
+47 errors → 0. Build time drops from 45s to 12s on incremental builds.
+
+**What you get:** Pattern-aware transformations that understand Kotlin DSL vs Groovy, not regex-based find-and-replace.
+
+---
+
+### "We need to upgrade from Gradle 7 to 9 for the new Java version"
+
+Your 200-module monorepo is stuck on Gradle 7.6. Management wants Java 21. You have 3 days.
+
+```
+> /migrate 9.0 --dry-run
+```
+
+The plugin:
+1. Analyzes your project complexity (LARGE: 200 modules, 15 custom plugins)
+2. Recommends OpenRewrite for bulk transformations
+3. Identifies 340 deprecated API usages and 28 breaking changes
+4. Shows you exactly what will change before anything happens
+
+```
+> /migrate 9.0
+```
+
+OpenRewrite handles the bulk transformations. Claude fixes the edge cases your custom plugins introduce. The build compiles. Tests pass.
+
+**What you get:** A migration that would take weeks done in hours, with verification at each step.
+
+---
+
+### "Why did this task run? It should have been cached!"
+
+You're debugging a flaky cache miss in CI. The task runs on some machines but not others.
+
+```
+You: Why does :app:processResources keep running?
+```
+
+The plugin analyzes your task's inputs and outputs, checks for absolute paths, non-deterministic inputs, or missing `@PathSensitive` annotations. It finds that a timestamp gets embedded in a generated file, invalidating the cache on every build.
+
+**What you get:** Root cause analysis, not just "check your inputs."
+
+---
+
+### "I need to write a custom Gradle task that's cacheable"
+
+You're implementing a code generator. You want it fast, cacheable, and configuration-cache compatible.
+
+```
+> /create-task GenerateApi --type worker-api
+```
+
+The plugin scaffolds a complete task implementation with:
+- Proper `@InputFiles`, `@OutputDirectory` annotations
+- Worker API for parallel execution
+- `@CacheableTask` with correct path sensitivity
+- Configuration cache compatible patterns (no `project` access at execution time)
+- A test that verifies cache behavior
+
+**What you get:** Production-ready task code, not a minimal example you'll spend hours debugging.
+
+---
+
+### "I inherited this build and have no idea what's wrong"
+
+New job. 50-module project. Build takes 8 minutes. No documentation. Previous build engineer left.
+
+```
+> /doctor
+```
+
+You get a complete health report:
+- Gradle 7.4 (outdated, missing 2 years of performance improvements)
+- Configuration cache: incompatible (23 issues)
+- Build cache: enabled but 34% hit rate (should be 80%+)
+- Parallel execution: disabled
+- 12 deprecated APIs
+- 3 plugins with known performance issues
+
+Each finding links to the fix. You now have a roadmap.
+
+**What you get:** Instant expertise on an unfamiliar codebase.
+
+---
+
 ## Who Is This For?
 
 | You are... | This plugin helps you... |

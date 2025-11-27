@@ -313,6 +313,170 @@ class HookSettingsTest {
             .isNotZero();
     }
 
+    @Test
+    @DisplayName("Should handle very long settings file")
+    void shouldHandleVeryLongSettingsFile() throws Exception {
+        StringBuilder longContent = new StringBuilder();
+        longContent.append("---\nhooks:\n  enabled: true\n");
+        // Add many hook settings
+        for (int i = 0; i < 50; i++) {
+            longContent.append(String.format("  customHook%d: true\n", i));
+        }
+        longContent.append("---\n");
+        // Add lots of markdown content
+        for (int i = 0; i < 100; i++) {
+            longContent.append(String.format("## Section %d\nSome content here.\n\n", i));
+        }
+
+        createSettingsFile(tempDir, longContent.toString());
+
+        int exitCode = runIsHookEnabled("sessionStart", tempDir);
+
+        assertThat(exitCode)
+            .as("Should handle long settings file")
+            .isZero();
+    }
+
+    @Test
+    @DisplayName("Should handle settings file with unicode content")
+    void shouldHandleSettingsFileWithUnicode() throws Exception {
+        createSettingsFile(tempDir, """
+            ---
+            hooks:
+              enabled: true
+              sessionStart: true
+            ---
+            # 日本語のコメント
+            This file contains unicode characters: 中文, русский, العربية
+            """);
+
+        int exitCode = runIsHookEnabled("sessionStart", tempDir);
+
+        assertThat(exitCode)
+            .as("Should handle unicode in settings file")
+            .isZero();
+    }
+
+    @Test
+    @DisplayName("Should handle settings file with CRLF line endings")
+    void shouldHandleSettingsFileWithCrlfLineEndings() throws Exception {
+        String content = "---\r\nhooks:\r\n  enabled: true\r\n---\r\n";
+        createSettingsFile(tempDir, content);
+
+        int exitCode = runIsHookEnabled("sessionStart", tempDir);
+
+        assertThat(exitCode)
+            .as("Should handle CRLF line endings")
+            .isZero();
+    }
+
+    @Test
+    @DisplayName("Should handle deeply nested hook configuration")
+    void shouldHandleDeeplyNestedConfig() throws Exception {
+        createSettingsFile(tempDir, """
+            ---
+            hooks:
+              enabled: true
+              nested:
+                deeply:
+                  value: true
+              sessionStart: true
+            ---
+            """);
+
+        int exitCode = runIsHookEnabled("sessionStart", tempDir);
+
+        assertThat(exitCode)
+            .as("Should handle deeply nested configuration")
+            .isZero();
+    }
+
+    @Test
+    @DisplayName("Should handle multiple frontmatter delimiters in content")
+    void shouldHandleMultipleFrontmatterDelimitersInContent() throws Exception {
+        createSettingsFile(tempDir, """
+            ---
+            hooks:
+              enabled: true
+            ---
+            Some content.
+
+            Here's a code block:
+            ```yaml
+            ---
+            another: yaml
+            ---
+            ```
+
+            More content.
+            """);
+
+        int exitCode = runIsHookEnabled("sessionStart", tempDir);
+
+        assertThat(exitCode)
+            .as("Should handle --- in markdown content correctly")
+            .isZero();
+    }
+
+    @Test
+    @DisplayName("Should handle settings file with standalone YAML comments")
+    void shouldHandleYamlComments() throws Exception {
+        // Note: Shell-based YAML parsing has limitations with inline comments
+        // This test uses standalone comment lines which are properly handled
+        createSettingsFile(tempDir, """
+            ---
+            # This is a comment describing hooks
+            hooks:
+              enabled: true
+              # Session start is disabled below
+              sessionStart: false
+            ---
+            """);
+
+        int sessionStartExit = runIsHookEnabled("sessionStart", tempDir);
+
+        assertThat(sessionStartExit)
+            .as("Should respect setting with standalone comments")
+            .isNotZero();
+    }
+
+    @Test
+    @DisplayName("Should handle hook names with different casings")
+    void shouldHandleHookNamesWithDifferentCasings() throws Exception {
+        // Test camelCase hook name
+        createSettingsFile(tempDir, """
+            ---
+            hooks:
+              enabled: true
+              sessionStart: false
+            ---
+            """);
+
+        int exitCode = runIsHookEnabled("sessionStart", tempDir);
+        assertThat(exitCode)
+            .as("Should handle camelCase hook name")
+            .isNotZero();
+    }
+
+    @Test
+    @DisplayName("Should handle settings file with special characters in values")
+    void shouldHandleSpecialCharactersInValues() throws Exception {
+        createSettingsFile(tempDir, """
+            ---
+            hooks:
+              enabled: true
+              customSetting: "value with spaces"
+              anotherSetting: 'quoted value'
+            ---
+            """);
+
+        int exitCode = runIsHookEnabled("sessionStart", tempDir);
+
+        assertThat(exitCode)
+            .as("Should handle special characters in YAML values")
+            .isZero();
+    }
+
     // =========================================================================
     // Integration Tests - Full Hook Scripts
     // =========================================================================

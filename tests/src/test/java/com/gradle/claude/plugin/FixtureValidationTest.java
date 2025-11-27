@@ -2,6 +2,7 @@ package com.gradle.claude.plugin;
 
 import com.gradle.claude.plugin.util.FixtureLoader;
 import com.gradle.claude.plugin.util.FixtureLoader.*;
+import com.gradle.claude.plugin.util.SensitiveDataDetector;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -9,6 +10,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.*;
@@ -114,10 +116,10 @@ class FixtureValidationTest {
             .as("simple-java should be a single project")
             .isEqualTo(ProjectType.SINGLE_PROJECT);
 
-        // Should use modern Gradle
+        // Should use modern Gradle (8.x or 9.x)
         assertThat(fixture.gradleVersion())
-            .as("simple-java should use Gradle 8.x")
-            .startsWith("8.");
+            .as("simple-java should use modern Gradle 8.x or 9.x")
+            .matches("(8|9)\\.\\d+(\\.\\d+)?");
     }
 
     @Test
@@ -177,6 +179,188 @@ class FixtureValidationTest {
             assertThat(issueNumbers.get(i))
                 .as("Issue numbers should be sequential starting from 1")
                 .isEqualTo(i + 1);
+        }
+    }
+
+    // =========================================================================
+    // Issue Category Coverage Tests
+    // =========================================================================
+
+    @Test
+    @DisplayName("config-cache-broken should cover all major issue categories")
+    void configCacheBrokenShouldCoverAllMajorCategories() throws IOException {
+        Fixture fixture = fixtureLoader.loadFixture("config-cache-broken");
+
+        // Should have a good spread of issue types for comprehensive testing
+        int eagerTaskCount = fixture.countIssuesByCategory(IssueCategory.EAGER_TASK);
+        int projectAccessCount = fixture.countIssuesByCategory(IssueCategory.PROJECT_ACCESS);
+        int systemAccessCount = fixture.countIssuesByCategory(IssueCategory.SYSTEM_ACCESS);
+
+        assertThat(eagerTaskCount)
+            .as("Should have multiple eager task issues for testing detection")
+            .isGreaterThanOrEqualTo(3);
+
+        assertThat(projectAccessCount)
+            .as("Should have multiple project access issues")
+            .isGreaterThanOrEqualTo(3);
+
+        assertThat(systemAccessCount)
+            .as("Should have multiple system access issues")
+            .isGreaterThanOrEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("Issue descriptions should be meaningful")
+    void issueDescriptionsShouldBeMeaningful() throws IOException {
+        Fixture fixture = fixtureLoader.loadFixture("config-cache-broken");
+
+        for (KnownIssue issue : fixture.knownIssues()) {
+            assertThat(issue.description())
+                .as("Issue %d description should be non-empty", issue.number())
+                .isNotBlank();
+
+            assertThat(issue.description().length())
+                .as("Issue %d description should be descriptive (>10 chars)", issue.number())
+                .isGreaterThan(10);
+        }
+    }
+
+    // =========================================================================
+    // Fixture Gradle Version Tests
+    // =========================================================================
+
+    @Test
+    @DisplayName("Fixtures should use appropriate Gradle versions for their purpose")
+    void fixturesShouldUseAppropriateGradleVersions() throws IOException {
+        // simple-java should use latest for best practices baseline
+        Fixture simpleJava = fixtureLoader.loadFixture("simple-java");
+        assertThat(simpleJava.gradleVersion())
+            .as("simple-java should use modern Gradle 8.x or 9.x")
+            .matches("(8|9)\\.\\d+(\\.\\d+)?");
+
+        // legacy-groovy should use older version for migration testing
+        Fixture legacyGroovy = fixtureLoader.loadFixture("legacy-groovy");
+        assertThat(legacyGroovy.gradleVersion())
+            .as("legacy-groovy should use Gradle 7.x for migration testing")
+            .startsWith("7.");
+    }
+
+    @Test
+    @DisplayName("Fixtures should not use EOL Gradle versions")
+    void fixturesShouldNotUseEolGradleVersions() throws IOException {
+        for (Fixture fixture : allFixtures) {
+            String version = fixture.gradleVersion();
+            if (!"unknown".equals(version)) {
+                int majorVersion = Integer.parseInt(version.split("\\.")[0]);
+                assertThat(majorVersion)
+                    .as("Fixture %s should use Gradle 7+ (Gradle 6.x is EOL)", fixture.name())
+                    .isGreaterThanOrEqualTo(7);
+            }
+        }
+    }
+
+    // =========================================================================
+    // Fixture Content Validation Tests
+    // =========================================================================
+
+    @Test
+    @DisplayName("No fixture should contain sensitive data patterns")
+    void noFixtureShouldContainSensitiveData() throws IOException {
+        for (Fixture fixture : allFixtures) {
+            Map<String, String> files = fixture.getAllFiles();
+
+            for (var entry : files.entrySet()) {
+                String content = entry.getValue();
+
+                // Use SensitiveDataDetector for comprehensive detection with allowlisting
+                var detectedPatterns = SensitiveDataDetector.detect(content);
+
+                assertThat(detectedPatterns)
+                    .as("File %s in fixture %s should not contain sensitive data. Found: %s",
+                        entry.getKey(), fixture.name(),
+                        detectedPatterns.stream()
+                            .map(SensitiveDataDetector.SensitivePattern::description)
+                            .toList())
+                    .isEmpty();
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("Multi-module fixture should have meaningful subprojects")
+    void multiModuleShouldHaveMeaningfulSubprojects() throws IOException {
+        Fixture fixture = fixtureLoader.loadFixture("multi-module");
+        Map<String, String> files = fixture.getAllFiles();
+
+        // Should have multiple build files (root + subprojects)
+        long buildFileCount = files.keySet().stream()
+            .filter(f -> f.endsWith("build.gradle") || f.endsWith("build.gradle.kts"))
+            .count();
+
+        assertThat(buildFileCount)
+            .as("Multi-module fixture should have at least 3 build files")
+            .isGreaterThanOrEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("spring-boot fixture should have Spring Boot specific configuration")
+    void springBootFixtureShouldHaveSpringConfig() throws IOException {
+        Fixture fixture = fixtureLoader.loadFixture("spring-boot");
+        String buildContent = fixture.buildFileContent();
+
+        assertThat(buildContent)
+            .as("Spring Boot fixture should reference Spring Boot plugin")
+            .containsIgnoringCase("spring");
+    }
+
+    // =========================================================================
+    // Cross-Fixture Consistency Tests
+    // =========================================================================
+
+    @Test
+    @DisplayName("All fixtures should have consistent wrapper distribution type")
+    void allFixturesShouldHaveConsistentWrapperDistribution() throws IOException {
+        for (Fixture fixture : allFixtures) {
+            Map<String, String> files = fixture.getAllFiles();
+
+            String wrapperProps = files.get("gradle/wrapper/gradle-wrapper.properties");
+            if (wrapperProps != null) {
+                // Should use -bin or -all distribution
+                assertThat(wrapperProps)
+                    .as("Fixture %s wrapper should use bin or all distribution", fixture.name())
+                    .containsPattern("gradle-\\d+\\.\\d+(\\.\\d+)?-(bin|all)\\.zip");
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("Fixtures should have unique purposes")
+    void fixturesShouldHaveUniquePurposes() {
+        // Each fixture should serve a distinct testing purpose
+        Map<String, String> fixturePurposes = Map.of(
+            "simple-java", "healthy baseline",
+            "config-cache-broken", "issue detection",
+            "legacy-groovy", "migration testing",
+            "multi-module", "scale testing",
+            "spring-boot", "framework compatibility"
+        );
+
+        for (Fixture fixture : allFixtures) {
+            assertThat(fixturePurposes)
+                .as("Fixture %s should have a documented purpose", fixture.name())
+                .containsKey(fixture.name());
+        }
+    }
+
+    @Test
+    @DisplayName("All fixtures should have gradle.properties")
+    void allFixturesShouldHaveGradleProperties() throws IOException {
+        for (Fixture fixture : allFixtures) {
+            Map<String, String> files = fixture.getAllFiles();
+
+            assertThat(files.keySet().stream().anyMatch(f -> f.equals("gradle.properties")))
+                .as("Fixture %s should have gradle.properties", fixture.name())
+                .isTrue();
         }
     }
 }

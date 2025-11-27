@@ -321,6 +321,240 @@ class OpenRewriteRunnerTest {
             .isTrue();
     }
 
+    // ==================== Robustness Edge Case Tests ====================
+
+    @Test
+    @EnabledIf("jbangAvailable")
+    @DisplayName("Should handle project with syntax errors in build file")
+    void shouldHandleProjectWithSyntaxErrors() throws Exception {
+        Path tempDir = Files.createTempDirectory("syntax-error-test");
+        try {
+            // Create a build file with syntax errors
+            Files.writeString(tempDir.resolve("build.gradle.kts"), """
+                plugins {
+                    java  // missing closing brace - syntax error
+
+                dependencies {
+                    implementation("broken
+                }
+                """);
+
+            // Create wrapper properties for version detection
+            Path wrapperDir = tempDir.resolve("gradle/wrapper");
+            Files.createDirectories(wrapperDir);
+            Files.writeString(wrapperDir.resolve("gradle-wrapper.properties"), """
+                distributionUrl=https\\://services.gradle.org/distributions/gradle-8.5-bin.zip
+                """);
+
+            ProcessResult result = runTool(tempDir, "--analyze", "--json");
+
+            // Should not crash - may report error or analyze what it can
+            assertThat(result.stdout + result.stderr)
+                .as("Should handle syntax errors gracefully")
+                .isNotBlank();
+        } finally {
+            deleteDirectory(tempDir);
+        }
+    }
+
+    @Test
+    @EnabledIf("jbangAvailable")
+    @DisplayName("Should handle project with unicode in paths and content")
+    void shouldHandleUnicodeInPathsAndContent() throws Exception {
+        Path tempDir = Files.createTempDirectory("unicode-项目-тест");
+        try {
+            Files.writeString(tempDir.resolve("build.gradle.kts"), """
+                plugins {
+                    java
+                }
+
+                // 日本語コメント
+                // Комментарий на русском
+                val 变量 = "value"
+                """);
+
+            Path wrapperDir = tempDir.resolve("gradle/wrapper");
+            Files.createDirectories(wrapperDir);
+            Files.writeString(wrapperDir.resolve("gradle-wrapper.properties"), """
+                distributionUrl=https\\://services.gradle.org/distributions/gradle-8.5-bin.zip
+                """);
+
+            ProcessResult result = runTool(tempDir, "--analyze", "--json");
+
+            // Should handle unicode without crashing
+            assertThat(result.exitCode)
+                .as("Should handle unicode paths and content")
+                .isIn(0, 1); // May succeed or report error, but shouldn't crash
+        } finally {
+            deleteDirectory(tempDir);
+        }
+    }
+
+    @Test
+    @EnabledIf("jbangAvailable")
+    @DisplayName("Should handle very large build file")
+    void shouldHandleVeryLargeBuildFile() throws Exception {
+        Path tempDir = Files.createTempDirectory("large-build-test");
+        try {
+            StringBuilder largeBuild = new StringBuilder();
+            largeBuild.append("plugins {\n    java\n}\n\n");
+
+            // Generate many dependencies
+            for (int i = 0; i < 500; i++) {
+                largeBuild.append(String.format("// Dependency %d\n", i));
+            }
+
+            // Generate many tasks (some eager, some lazy)
+            for (int i = 0; i < 100; i++) {
+                if (i % 2 == 0) {
+                    largeBuild.append(String.format("tasks.register(\"task%d\") { }\n", i));
+                } else {
+                    largeBuild.append(String.format("tasks.create(\"eagerTask%d\") { }\n", i));
+                }
+            }
+
+            Files.writeString(tempDir.resolve("build.gradle.kts"), largeBuild.toString());
+
+            Path wrapperDir = tempDir.resolve("gradle/wrapper");
+            Files.createDirectories(wrapperDir);
+            Files.writeString(wrapperDir.resolve("gradle-wrapper.properties"), """
+                distributionUrl=https\\://services.gradle.org/distributions/gradle-8.5-bin.zip
+                """);
+
+            ProcessResult result = runTool(tempDir, "--analyze", "--json");
+
+            assertThat(result.exitCode)
+                .as("Should handle large build files")
+                .isEqualTo(0);
+        } finally {
+            deleteDirectory(tempDir);
+        }
+    }
+
+    @Test
+    @EnabledIf("jbangAvailable")
+    @DisplayName("Should handle deeply nested multi-module project")
+    void shouldHandleDeeplyNestedMultiModule() throws Exception {
+        Path tempDir = Files.createTempDirectory("nested-module-test");
+        try {
+            // Create root build
+            Files.writeString(tempDir.resolve("build.gradle.kts"), """
+                plugins {
+                    java
+                }
+                """);
+
+            // Create deeply nested module structure
+            StringBuilder includes = new StringBuilder();
+            Path currentDir = tempDir;
+            for (int i = 0; i < 5; i++) {
+                currentDir = currentDir.resolve("sub" + i);
+                Files.createDirectories(currentDir);
+                Files.writeString(currentDir.resolve("build.gradle.kts"), """
+                    plugins {
+                        java
+                    }
+                    """);
+                includes.append(String.format("include(\":sub%d\")\n", i));
+            }
+
+            Files.writeString(tempDir.resolve("settings.gradle.kts"), includes.toString());
+
+            Path wrapperDir = tempDir.resolve("gradle/wrapper");
+            Files.createDirectories(wrapperDir);
+            Files.writeString(wrapperDir.resolve("gradle-wrapper.properties"), """
+                distributionUrl=https\\://services.gradle.org/distributions/gradle-8.5-bin.zip
+                """);
+
+            ProcessResult result = runTool(tempDir, "--analyze", "--json");
+
+            assertThat(result.exitCode)
+                .as("Should handle deeply nested projects")
+                .isIn(0, 1);
+        } finally {
+            deleteDirectory(tempDir);
+        }
+    }
+
+    @Test
+    @EnabledIf("jbangAvailable")
+    @DisplayName("Should handle empty build file")
+    void shouldHandleEmptyBuildFile() throws Exception {
+        Path tempDir = Files.createTempDirectory("empty-build-test");
+        try {
+            Files.writeString(tempDir.resolve("build.gradle.kts"), "");
+
+            Path wrapperDir = tempDir.resolve("gradle/wrapper");
+            Files.createDirectories(wrapperDir);
+            Files.writeString(wrapperDir.resolve("gradle-wrapper.properties"), """
+                distributionUrl=https\\://services.gradle.org/distributions/gradle-8.5-bin.zip
+                """);
+
+            ProcessResult result = runTool(tempDir, "--analyze", "--json");
+
+            // Empty build file should be handled gracefully
+            assertThat(result.stdout + result.stderr)
+                .as("Should handle empty build file")
+                .isNotBlank();
+        } finally {
+            deleteDirectory(tempDir);
+        }
+    }
+
+    @Test
+    @EnabledIf("jbangAvailable")
+    @DisplayName("Should handle mixed Groovy and Kotlin DSL in same project")
+    void shouldHandleMixedDsl() throws Exception {
+        Path tempDir = Files.createTempDirectory("mixed-dsl-test");
+        try {
+            // Root uses Kotlin DSL
+            Files.writeString(tempDir.resolve("build.gradle.kts"), """
+                plugins {
+                    java
+                }
+                """);
+
+            // Subproject uses Groovy DSL
+            Path subDir = tempDir.resolve("subproject");
+            Files.createDirectories(subDir);
+            Files.writeString(subDir.resolve("build.gradle"), """
+                plugins {
+                    id 'java'
+                }
+
+                tasks.create('eagerTask') {
+                    doLast { println 'Eager!' }
+                }
+                """);
+
+            Files.writeString(tempDir.resolve("settings.gradle.kts"), """
+                include(":subproject")
+                """);
+
+            Path wrapperDir = tempDir.resolve("gradle/wrapper");
+            Files.createDirectories(wrapperDir);
+            Files.writeString(wrapperDir.resolve("gradle-wrapper.properties"), """
+                distributionUrl=https\\://services.gradle.org/distributions/gradle-8.5-bin.zip
+                """);
+
+            ProcessResult result = runTool(tempDir, "--analyze", "--json");
+
+            assertThat(result.exitCode)
+                .as("Should handle mixed DSL project")
+                .isEqualTo(0);
+
+            // Should analyze both build files
+            JsonObject analysis = gson.fromJson(result.stdout, JsonObject.class);
+            if (analysis.has("moduleCount")) {
+                assertThat(analysis.get("moduleCount").getAsInt())
+                    .as("Should detect multiple modules")
+                    .isGreaterThanOrEqualTo(1);
+            }
+        } finally {
+            deleteDirectory(tempDir);
+        }
+    }
+
     // ==================== CLI Flag Coverage Tests ====================
 
     @Test

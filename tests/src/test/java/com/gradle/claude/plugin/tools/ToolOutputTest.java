@@ -9,6 +9,7 @@ import java.nio.file.*;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 /**
  * Tests for JBang tool outputs.
@@ -286,6 +287,252 @@ class ToolOutputTest {
                     }
                 });
         }
+    }
+
+    // =========================================================================
+    // Error Handling Tests
+    // =========================================================================
+
+    @Test
+    @EnabledIf("isJbangAvailable")
+    @DisplayName("Tools should handle non-existent project paths gracefully")
+    void toolsShouldHandleNonExistentPaths() throws Exception {
+        Path nonExistent = Path.of("/tmp/non-existent-project-" + System.currentTimeMillis());
+
+        String output = runToolRaw("gradle-analyzer.java", nonExistent.toString());
+
+        // Should produce an error message, not crash
+        assertThat(output.toLowerCase())
+            .as("Should report error for non-existent path")
+            .containsAnyOf("error", "not found", "does not exist", "invalid", "unable");
+    }
+
+    @Test
+    @EnabledIf("isJbangAvailable")
+    @DisplayName("Tools should handle empty directory gracefully")
+    void toolsShouldHandleEmptyDirectory() throws Exception {
+        Path emptyDir = Files.createTempDirectory("empty-gradle-project");
+        try {
+            String output = runToolRaw("gradle-analyzer.java", emptyDir.toString());
+
+            // Should handle gracefully - either error message or minimal analysis
+            assertThat(output)
+                .as("Should handle empty directory without crashing")
+                .isNotBlank();
+        } finally {
+            Files.deleteIfExists(emptyDir);
+        }
+    }
+
+    @Test
+    @EnabledIf("isJbangAvailable")
+    @DisplayName("gradle-analyzer should handle project with missing wrapper")
+    void gradleAnalyzerShouldHandleMissingWrapper() throws Exception {
+        Path projectWithNoWrapper = Files.createTempDirectory("no-wrapper-project");
+        try {
+            // Create minimal build.gradle but no wrapper
+            Files.writeString(projectWithNoWrapper.resolve("build.gradle"), """
+                plugins {
+                    id 'java'
+                }
+                """);
+
+            String output = runToolRaw("gradle-analyzer.java", projectWithNoWrapper.toString());
+
+            // Should still work or provide meaningful feedback
+            assertThat(output)
+                .as("Should handle missing wrapper gracefully")
+                .isNotBlank();
+        } finally {
+            // Use try-with-resources to avoid resource leak from Files.walk()
+            try (var paths = Files.walk(projectWithNoWrapper)) {
+                paths.sorted((a, b) -> b.compareTo(a))
+                    .forEach(p -> {
+                        try { Files.deleteIfExists(p); } catch (IOException e) { }
+                    });
+            }
+        }
+    }
+
+    @Test
+    @EnabledIf("isJbangAvailable")
+    @DisplayName("Tools should handle file path instead of directory")
+    void toolsShouldHandleFilePathInsteadOfDirectory() throws Exception {
+        // Pass a file path instead of directory path
+        Path tempFile = Files.createTempFile("not-a-project", ".txt");
+        try {
+            String output = runToolRaw("gradle-analyzer.java", tempFile.toString());
+
+            // Should handle this edge case
+            assertThat(output.toLowerCase())
+                .as("Should handle file path (not directory) gracefully")
+                .containsAnyOf("error", "not a directory", "invalid", "unable", "failed");
+        } finally {
+            Files.deleteIfExists(tempFile);
+        }
+    }
+
+    // =========================================================================
+    // JSON Output Validation Tests
+    // =========================================================================
+
+    @Test
+    @EnabledIf("isJbangAvailable")
+    @DisplayName("All JSON outputs should be valid and parseable")
+    void allJsonOutputsShouldBeValidAndParseable() throws Exception {
+        String[] fixtures = {"simple-java", "config-cache-broken", "multi-module"};
+
+        for (String fixture : fixtures) {
+            String output = runTool("task-analyzer.java", fixture, "--json");
+            String jsonOutput = filterJbangOutput(output);
+
+            assertThatCode(() -> gson.fromJson(jsonOutput, JsonObject.class))
+                .as("JSON output for %s should be parseable", fixture)
+                .doesNotThrowAnyException();
+
+            JsonObject json = gson.fromJson(jsonOutput, JsonObject.class);
+            assertThat(json)
+                .as("JSON should not be empty for %s", fixture)
+                .isNotNull();
+        }
+    }
+
+    @Test
+    @EnabledIf("isJbangAvailable")
+    @DisplayName("JSON output should have consistent schema across fixtures")
+    void jsonOutputShouldHaveConsistentSchema() throws Exception {
+        JsonObject simpleJson = parseJsonOutput(runTool("task-analyzer.java", "simple-java", "--json"));
+        JsonObject brokenJson = parseJsonOutput(runTool("task-analyzer.java", "config-cache-broken", "--json"));
+
+        // Both should have the same top-level keys
+        assertThat(simpleJson.keySet())
+            .as("JSON schema should be consistent")
+            .containsAll(brokenJson.keySet());
+    }
+
+    private JsonObject parseJsonOutput(String rawOutput) {
+        return gson.fromJson(filterJbangOutput(rawOutput), JsonObject.class);
+    }
+
+    // =========================================================================
+    // Boundary Condition Tests
+    // =========================================================================
+
+    @Test
+    @EnabledIf("isJbangAvailable")
+    @DisplayName("build-health-check should score between 0 and 100")
+    void buildHealthCheckScoreShouldBeBounded() throws Exception {
+        String[] fixtures = {"simple-java", "config-cache-broken", "legacy-groovy"};
+
+        for (String fixture : fixtures) {
+            String output = runTool("build-health-check.java", fixture, "--json");
+            String jsonOutput = filterJbangOutput(output);
+            JsonObject json = gson.fromJson(jsonOutput, JsonObject.class);
+
+            if (json.has("overallScore")) {
+                int score = json.get("overallScore").getAsInt();
+                assertThat(score)
+                    .as("Health score for %s should be between 0 and 100", fixture)
+                    .isBetween(0, 100);
+            }
+        }
+    }
+
+    @Test
+    @EnabledIf("isJbangAvailable")
+    @DisplayName("task-analyzer counts should be non-negative")
+    void taskAnalyzerCountsShouldBeNonNegative() throws Exception {
+        String output = runTool("task-analyzer.java", "config-cache-broken", "--json");
+        String jsonOutput = filterJbangOutput(output);
+        JsonObject json = gson.fromJson(jsonOutput, JsonObject.class);
+
+        // Check all numeric fields are non-negative
+        String[] numericFields = {"totalFiles", "lazyTaskRegistrations", "lazyTaskAccess",
+                                  "eagerTaskCreations", "configCacheIssues"};
+
+        for (String field : numericFields) {
+            if (json.has(field)) {
+                int value = json.get(field).getAsInt();
+                assertThat(value)
+                    .as("Field %s should be non-negative", field)
+                    .isGreaterThanOrEqualTo(0);
+            }
+        }
+    }
+
+    // =========================================================================
+    // Tool Comparison Tests
+    // =========================================================================
+
+    @Test
+    @EnabledIf("isJbangAvailable")
+    @DisplayName("Healthy project should score better than broken project")
+    void healthyProjectShouldScoreBetterThanBroken() throws Exception {
+        String healthyOutput = runTool("build-health-check.java", "simple-java", "--json");
+        String brokenOutput = runTool("build-health-check.java", "config-cache-broken", "--json");
+
+        JsonObject healthyJson = parseJsonOutput(healthyOutput);
+        JsonObject brokenJson = parseJsonOutput(brokenOutput);
+
+        int healthyScore = healthyJson.get("overallScore").getAsInt();
+        int brokenScore = brokenJson.get("overallScore").getAsInt();
+
+        assertThat(healthyScore)
+            .as("Healthy project should score higher than broken project")
+            .isGreaterThan(brokenScore);
+    }
+
+    @Test
+    @EnabledIf("isJbangAvailable")
+    @DisplayName("Task analyzer should find more issues in broken fixture")
+    void taskAnalyzerShouldFindMoreIssuesInBrokenFixture() throws Exception {
+        String healthyOutput = runTool("task-analyzer.java", "simple-java", "--json");
+        String brokenOutput = runTool("task-analyzer.java", "config-cache-broken", "--json");
+
+        JsonObject healthyJson = parseJsonOutput(healthyOutput);
+        JsonObject brokenJson = parseJsonOutput(brokenOutput);
+
+        int healthyIssues = healthyJson.has("configCacheIssues") ?
+            healthyJson.get("configCacheIssues").getAsInt() : 0;
+        int brokenIssues = brokenJson.has("configCacheIssues") ?
+            brokenJson.get("configCacheIssues").getAsInt() : 0;
+
+        assertThat(brokenIssues)
+            .as("Broken fixture should have more config cache issues")
+            .isGreaterThan(healthyIssues);
+    }
+
+    /**
+     * Run a JBang tool directly with raw arguments.
+     */
+    private String runToolRaw(String toolName, String... args) throws Exception {
+        Path toolPath = TOOLS_DIR.resolve(toolName);
+
+        var command = new java.util.ArrayList<String>();
+        command.add("jbang");
+        command.add(toolPath.toString());
+        command.addAll(java.util.Arrays.asList(args));
+
+        ProcessBuilder pb = new ProcessBuilder(command);
+        pb.directory(PLUGIN_ROOT.toFile());
+        pb.redirectErrorStream(true);
+
+        Process process = pb.start();
+
+        StringBuilder output = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.append(line).append("\n");
+            }
+        }
+
+        boolean completed = process.waitFor(60, TimeUnit.SECONDS);
+        if (!completed) {
+            process.destroyForcibly();
+        }
+
+        return output.toString();
     }
 
     /**
