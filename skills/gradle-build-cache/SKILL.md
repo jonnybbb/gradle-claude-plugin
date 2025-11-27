@@ -100,6 +100,13 @@ If you have the Develocity MCP server configured, query cache data:
 - `mcp__develocity__getBuilds` - Find builds with low cache hit rates
 - `mcp__develocity__getBuild` - Get detailed task cache information
 
+### DRV Aggregate Analytics
+
+For aggregate cache trends across many builds, use the DRV MCP server:
+- `mcp__drv__execute_query` - Query cache hit rates over time, identify projects with cache disabled
+- `/analyze-cache-trends` - Run the cache trends command
+- See the `develocity-analytics` skill for SQL patterns
+
 See [references/debugging.md](references/debugging.md) for comprehensive debugging guide.
 
 ## Quick Reference

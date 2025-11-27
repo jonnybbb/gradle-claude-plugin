@@ -75,6 +75,13 @@ Delegates to specialized skills:
 - **gradle-dependencies**: Dependency management
 - **gradle-structure**: Build organization
 
+## Cross-Build Analysis
+
+For aggregate health metrics across many builds, use DRV analytics:
+- `/build-health-dashboard` - View health dashboard with failure rates, cache metrics, test data
+- `develocity-analytics` skill - Custom SQL queries for trends and patterns
+- Compare CI vs local builds, track health over time
+
 ## Related Files
 
 - [references/workflow.md](references/workflow.md) - Analysis phases
