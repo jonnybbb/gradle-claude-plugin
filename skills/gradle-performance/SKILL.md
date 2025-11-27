@@ -84,6 +84,16 @@ org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g -XX:+UseParallelGC
 | File watching | org.gradle.vfs.watch=true |
 | Workers | org.gradle.workers.max=N |
 
+## JBang Tools
+
+```bash
+# Profile build performance
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/performance-profiler.java /path/to/project --report
+
+# Apply performance fixes automatically
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/performance-fixer.java /path/to/project --fix
+```
+
 ## Related Files
 
 - [references/bottlenecks.md](references/bottlenecks.md) - Common bottlenecks & fixes

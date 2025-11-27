@@ -718,6 +718,12 @@ Gradle automatically cleans unused entries after 7 days.
 - Use `/gradle-doctor` for build health checks
 - Use `/gradle-troubleshooting` for other build issues
 
+**JBang tools:**
+```bash
+# Detect and fix configuration cache issues
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/config-cache-fixer.java /path/to/project --fix
+```
+
 **Reference documentation:**
 - [references/debugging.md](references/debugging.md) - HTML report, Build Scans, debug mode
 - [references/patterns.md](references/patterns.md) - All fix patterns with examples

@@ -105,6 +105,13 @@ abstract class MyTask : DefaultTask() {
 4. Add `@PathSensitive(RELATIVE)` for file inputs
 5. Inject services instead of using project
 
+## JBang Tools
+
+```bash
+# Analyze task implementations in a project
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/task-analyzer.java /path/to/project --json
+```
+
 ## Related Files
 
 - [references/incremental.md](references/incremental.md) - Incremental processing

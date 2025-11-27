@@ -28,6 +28,21 @@ For debugging techniques, see [references/debugging.md](references/debugging.md)
 ./gradlew clean build
 ```
 
+## JBang Tools
+
+Quick automated analysis:
+
+```bash
+# Comprehensive build health check
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/build-health-check.java /path/to/project
+
+# Quick validation of common issues
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/quick-validate.java /path/to/project
+
+# Analyze project structure
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/gradle-analyzer.java /path/to/project --json
+```
+
 ## Common Errors
 
 ### Could Not Find Dependency

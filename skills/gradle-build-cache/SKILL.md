@@ -124,6 +124,16 @@ See [references/debugging.md](references/debugging.md) for comprehensive debuggi
 - **Gradle 7.x**: More tasks cacheable
 - **Gradle 8.x**: Most tasks cacheable by default
 
+## JBang Tools
+
+```bash
+# Validate cache configuration
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/cache-validator.java /path/to/project
+
+# Fix cache configuration issues
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/cache-validator.java /path/to/project --fix
+```
+
 ## Related Files
 
 - [references/debugging.md](references/debugging.md) - Debugging cache misses, Build Scan analysis

@@ -1,6 +1,6 @@
 ---
 name: gradle-structure
-description: This skill should be used when the user asks to "organize multi-project build", "share build logic", "set up composite build", "structure monorepo", "use buildSrc", "create convention plugins", or mentions settings.gradle, include(), includeBuild(), project organization, or allprojects/subprojects patterns.
+description: This skill should be used when the user asks to "organize multi-project build", "share build logic", "set up composite build", "structure monorepo", "use buildSrc", "create convention plugins", "gradle init", "create new Gradle project", "start new project", or mentions settings.gradle, include(), includeBuild(), project organization, or allprojects/subprojects patterns.
 ---
 
 # Gradle Build Structure
@@ -13,6 +13,45 @@ For multi-project setup, see [references/multi-project.md](references/multi-proj
 For composite builds, see [references/composite.md](references/composite.md).
 
 ## Quick Start
+
+### Create New Project (gradle init)
+
+```bash
+# Interactive mode
+gradle init
+
+# Non-interactive with options
+gradle init --type java-application --dsl kotlin --test-framework junit-jupiter
+
+# Available types:
+# - basic              - Empty project
+# - java-application   - Java app with main class
+# - java-library       - Java library
+# - kotlin-application - Kotlin app
+# - kotlin-library     - Kotlin library
+# - groovy-application - Groovy app
+# - groovy-library     - Groovy library
+# - scala-application  - Scala app
+# - scala-library      - Scala library
+# - cpp-application    - C++ app
+# - cpp-library        - C++ library
+```
+
+**Generated structure (java-application)**:
+```
+my-project/
+├── gradle/
+│   ├── libs.versions.toml    # Version catalog
+│   └── wrapper/
+├── app/
+│   ├── build.gradle.kts
+│   └── src/
+│       ├── main/java/
+│       └── test/java/
+├── settings.gradle.kts
+├── gradlew
+└── gradlew.bat
+```
 
 ### Multi-Project Structure
 
@@ -86,6 +125,13 @@ includeBuild("../my-library")
 | Large monorepo | Composite builds + convention plugins |
 | Multiple repositories, shared plugins | Published convention plugins |
 | Version alignment only | Platform projects |
+
+## JBang Tools
+
+```bash
+# Analyze project structure and configuration
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/gradle-analyzer.java /path/to/project --json
+```
 
 ## Related Files
 

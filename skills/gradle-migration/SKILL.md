@@ -83,6 +83,16 @@ tasks.register("myTask") { }
 | 8.x | 8 | 17 |
 | 9.x | 17 | 21 |
 
+## JBang Tools
+
+```bash
+# Apply migration fixes automatically
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/migration-fixer.java /path/to/project --target 8.11
+
+# Use OpenRewrite for large-scale migrations
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/openrewrite_runner.java /path/to/project --recipe org.openrewrite.gradle.MigrateToGradle8
+```
+
 ## Related Files
 
 - [references/gradle-7-to-8.md](references/gradle-7-to-8.md) - Detailed 7→8 guide
