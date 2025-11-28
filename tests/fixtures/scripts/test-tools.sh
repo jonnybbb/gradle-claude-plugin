@@ -9,7 +9,7 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$SCRIPT_DIR/../.."
+ROOT_DIR="$SCRIPT_DIR/../../.."
 FIXTURES_DIR="$SCRIPT_DIR/../projects"
 EXPECTED_DIR="$SCRIPT_DIR/../expected-outputs"
 TOOLS_DIR="$ROOT_DIR/tools"
@@ -29,12 +29,12 @@ FAIL=0
 
 log_pass() {
     echo -e "${GREEN}✓ PASS${NC}: $1"
-    ((PASS++))
+    ((++PASS))
 }
 
 log_fail() {
     echo -e "${RED}✗ FAIL${NC}: $1"
-    ((FAIL++))
+    ((++FAIL))
 }
 
 log_test() {
@@ -83,7 +83,7 @@ test_gradle_analyzer() {
     fi
     
     # Check wrapper detection
-    local has_wrapper=$(echo "$output" | jq -r '.hasWrapper // false')
+    local has_wrapper=$(echo "$output" | jq -r '.healthIndicators.hasWrapper // false')
     local expected_wrapper=$(jq -r '.hasWrapper' "$expected_file")
     
     if [[ "$has_wrapper" == "$expected_wrapper" ]]; then

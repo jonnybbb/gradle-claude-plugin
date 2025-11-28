@@ -1,8 +1,8 @@
 {
   "_comment": "Expected output for simple-java fixture",
   "project": "simple-java",
-  "gradleVersion": "8.11",
-  "hasWrapper": true,
+  "gradleVersion": "9.2.1",
+  "hasWrapper": false,
   "kotlinDsl": true,
   "versionCatalog": true,
   

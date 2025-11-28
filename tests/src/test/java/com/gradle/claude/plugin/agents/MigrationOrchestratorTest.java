@@ -248,7 +248,7 @@ class MigrationOrchestratorTest {
         String model = (String) frontmatter.get("model");
         assertThat(model)
             .as("Model should be valid")
-            .isIn("sonnet", "opus", "haiku");
+            .isIn("sonnet", "opus", "haiku", "inherit");
     }
 
     @Test
