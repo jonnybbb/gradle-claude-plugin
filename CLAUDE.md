@@ -13,7 +13,6 @@ This follows Claude Code plugin conventions:
 - `skills/*/SKILL.md` - Auto-discovered skills (10 total)
 - `commands/*.md` - Auto-discovered slash commands
 - `agents/*.md` - Claude Code markdown agents (doctor, migration)
-- `agents/src/*.ts` - External TypeScript SDK agents (optional tooling)
 - `tools/*.java` - JBang tools using Gradle Tooling API
 - `docs/reference/` - Reference documentation (skills link to these)
 
@@ -37,16 +36,6 @@ jbang tools/task-analyzer.java /path/to/project [--json]
 jbang tools/build-health-check.java /path/to/project
 ```
 
-### TypeScript Agents (optional)
-```bash
-cd agents
-npm install
-npm run build    # Compile TypeScript
-npm run dev      # Watch mode
-npm run lint     # ESLint
-npm run format   # Prettier
-```
-
 ### Testing
 ```bash
 # Setup test fixtures
@@ -65,7 +54,6 @@ jbang tools/build-health-check.java tests/fixtures/projects/simple-java
 ```
 Presentation (skills/SKILL.md) → User-facing skill definitions
 Orchestration (agents/*.md)    → Multi-step workflow coordination
-Analysis (agents/src/*.ts)     → External TypeScript tooling (optional)
 Tools (tools/*.java)           → JBang scripts using Gradle Tooling API
 Documentation (docs/reference) → Curated Gradle knowledge
 ```
@@ -94,6 +82,5 @@ Expected outputs in `tests/fixtures/expected-outputs/*.json`.
 ## Requirements
 
 - Java 25+ (for tools and tests)
-- JBang 0.115.0+
-- Node 18+ (for TypeScript agents only)
+- JBang 0.134.0+
 - Gradle 6.0+ (for analyzed projects)

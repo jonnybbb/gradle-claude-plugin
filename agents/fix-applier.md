@@ -35,7 +35,7 @@ tools:
   - Bash
   - Glob
   - AskUserQuestion
-model: sonnet
+model: inherit
 color: blue
 ---
 

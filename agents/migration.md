@@ -36,7 +36,7 @@ tools:
   - Glob
   - Grep
   - Bash
-model: sonnet
+model: inherit
 color: cyan
 ---
 

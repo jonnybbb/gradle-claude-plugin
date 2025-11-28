@@ -37,7 +37,7 @@ tools:
   - Edit
   - Write
   - AskUserQuestion
-model: sonnet
+model: inherit
 color: blue
 ---
 

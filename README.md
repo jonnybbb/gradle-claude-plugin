@@ -2,6 +2,56 @@
 
 Get expert Gradle help directly in Claude Code. Fix configuration cache issues, optimize slow builds, and migrate between Gradle versions—all with commands that analyze your actual project.
 
+## Prerequisites
+
+### Required
+
+- **Java 25+** - Required for JBang tools
+- **JBang 0.134.0+** - Script runner for analysis tools
+- **Gradle 6.0+** - In the projects you want to analyze
+
+### Installing JBang
+
+JBang is required to run the analysis tools that power this plugin's diagnostics capabilities.
+
+**macOS (Homebrew):**
+```bash
+brew install jbangdev/tap/jbang
+```
+
+**Linux/macOS (SDKMan):**
+```bash
+sdk install jbang
+```
+
+**Linux/macOS (curl):**
+```bash
+curl -Ls https://sh.jbang.dev | bash -s - app setup
+```
+
+**Windows (Scoop):**
+```powershell
+scoop bucket add jbangdev https://github.com/jbangdev/scoop-bucket
+scoop install jbang
+```
+
+**Windows (Chocolatey):**
+```powershell
+choco install jbang
+```
+
+For more installation options, see the [JBang installation guide](https://www.jbang.dev/download/).
+
+### Verify Installation
+
+```bash
+# Check JBang
+jbang --version
+
+# Check Java
+java --version
+```
+
 ## Installation
 
 ### Option 1: From GitHub (Recommended)
@@ -52,12 +102,6 @@ After installation, run:
 ```
 
 If the plugin is loaded correctly, you'll see the Gradle health check output.
-
-### Requirements
-
-- **Java 25+** — Required for JBang tools
-- **JBang 0.134.+** — Install via `curl -Ls https://sh.jbang.dev | bash` or `brew install jbang`
-- **Gradle 6.0+** — In the projects you want to analyze
 
 ## What Can You Do?
 
@@ -350,8 +394,8 @@ See [hooks/settings.template.md](hooks/settings.template.md) for the full templa
 | Version | Support Level |
 |---------|---------------|
 | Gradle 6.x | Basic analysis |
-| Gradle 7.x | Full analysis |
-| Gradle 8.x | Recommended |
+| Gradle 7.x | Full support |
+| Gradle 8.x | Full support |
 | Gradle 9.x | Full support |
 
 ## Contributing

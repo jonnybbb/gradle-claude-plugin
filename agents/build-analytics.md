@@ -37,7 +37,7 @@ tools:
   - mcp__drv__describe_table
   - mcp__drv__list_tables
   - mcp__drv__fetch_query_by_panel
-model: sonnet
+model: inherit
 color: blue
 ---
 
