@@ -90,7 +90,7 @@ Build Scans show:
 - Configuration inputs (what caused invalidation)
 - Time saved by cache reuse
 
-**If using Develocity MCP server**, you can query build scan data for configuration cache problems programmatically.
+**If using Develocity MCP server**, query build scan data for configuration cache problems programmatically.
 
 ## Common Problems & Fixes
 

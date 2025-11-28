@@ -52,20 +52,16 @@ dependencies {
 }
 
 tasks.test {
-    useJUnitPlatform()
+    maxParallelForks = (Runtime.getRuntime().availableProcessors() - 2).coerceAtLeast(1)
+    useJUnitPlatform {
+        // Exclude AI tests by default - they require API key and may hit rate limits
+        // Run AI tests explicitly with: ./gradlew aiTests
+        excludeTags("ai")
+    }
 
-    // Pass API key to tests (from local.env or system env)
-    environment("ANTHROPIC_API_KEY", localEnv["ANTHROPIC_API_KEY"] ?: System.getenv("ANTHROPIC_API_KEY") ?: "")
-
-    // Increase timeout for AI tests
-    systemProperty("junit.jupiter.execution.timeout.default", "120s")
-
-    // Enable parallel test execution for non-AI tests
+    // Enable parallel test execution
     systemProperty("junit.jupiter.execution.parallel.enabled", "true")
     systemProperty("junit.jupiter.execution.parallel.mode.default", "concurrent")
-
-    // But run AI tests sequentially to avoid rate limits
-    systemProperty("junit.jupiter.execution.parallel.mode.classes.default", "same_thread")
 
     testLogging {
         events("passed", "skipped", "failed")
@@ -81,12 +77,28 @@ tasks.register<Test>("toolTests") {
 }
 
 // Task to run only AI-powered tests (needs API key)
+// Usage: ./gradlew aiTests
 tasks.register<Test>("aiTests") {
+    group = "verification"
+    description = "Run AI-powered tests that require ANTHROPIC_API_KEY"
+
     useJUnitPlatform {
         includeTags("ai")
     }
+
+    // Pass API key to tests (from local.env or system env)
     environment("ANTHROPIC_API_KEY", localEnv["ANTHROPIC_API_KEY"] ?: System.getenv("ANTHROPIC_API_KEY") ?: "")
+
+    // Increase timeout for AI tests
     systemProperty("junit.jupiter.execution.timeout.default", "120s")
+
+    // Run AI tests sequentially to avoid rate limits
+    systemProperty("junit.jupiter.execution.parallel.enabled", "false")
+
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true
+    }
 }
 
 // Task to run skill quality tests

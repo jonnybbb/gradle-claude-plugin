@@ -31,22 +31,39 @@ class OpenRewriteRunnerTest {
     private static final Path FIXTURES_ROOT = Path.of("fixtures/projects").toAbsolutePath().normalize();
     private static final Gson gson = new Gson();
 
+    private static boolean jbangIsAvailable = false;
+
     @BeforeAll
-    static void checkToolExists() {
+    static void checkToolExistsAndBuild() throws Exception {
         assertThat(TOOL_PATH)
             .as("openrewrite_runner.java should exist")
             .exists();
-    }
 
-    static boolean jbangAvailable() {
+        // Check JBang availability
         try {
             Process process = new ProcessBuilder("jbang", "--version")
                 .redirectErrorStream(true)
                 .start();
-            return process.waitFor(10, TimeUnit.SECONDS) && process.exitValue() == 0;
+            jbangIsAvailable = process.waitFor(10, TimeUnit.SECONDS) && process.exitValue() == 0;
         } catch (Exception e) {
-            return false;
+            jbangIsAvailable = false;
         }
+
+        // Ensure fresh build to avoid incomplete jars
+        // JBang sometimes produces jars missing nested classes without --fresh
+        if (jbangIsAvailable) {
+            ProcessBuilder pb = new ProcessBuilder("jbang", "--fresh", "build", TOOL_PATH.toString());
+            pb.directory(PLUGIN_ROOT.toFile());
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+            // Consume output to prevent blocking
+            process.getInputStream().transferTo(OutputStream.nullOutputStream());
+            process.waitFor(120, TimeUnit.SECONDS);
+        }
+    }
+
+    static boolean jbangAvailable() {
+        return jbangIsAvailable;
     }
 
     // ==================== Error Handling Tests ====================

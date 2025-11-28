@@ -7,7 +7,7 @@ description: This skill should be used when the user asks about "Gradle best pra
 
 ## Overview
 
-Apply official Gradle best practices for maintainable, performant, and upgrade-friendly builds. These recommendations help ensure your build scripts are idiomatic, portable, and ready for future Gradle versions.
+Apply official Gradle best practices for maintainable, performant, and upgrade-friendly builds. These recommendations help ensure build scripts are idiomatic, portable, and ready for future Gradle versions.
 
 For detailed examples, see [references/best-practices-details.md](references/best-practices-details.md).
 
@@ -45,7 +45,7 @@ plugins {
 
 ## 2. Use Latest Minor Version
 
-Stay on the latest minor version of your current major Gradle release.
+Stay on the latest minor version of the current major Gradle release.
 
 ```bash
 # Update Gradle wrapper
@@ -150,7 +150,7 @@ org.gradle.jvmargs=-Xmx4g
 
 **Note:** Properties are not inherited in composite builds.
 
-## 6. Name Your Root Project
+## 6. Name the Root Project
 
 Always set `rootProject.name` in `settings.gradle.kts`.
 

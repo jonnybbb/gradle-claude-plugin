@@ -1,6 +1,6 @@
 ---
 name: develocity
-description: Query and analyze Gradle Build Scan data from Develocity using MCP tools. Use when users ask about build history, build failures, flaky tests, cache performance, build times, CI builds, or want to analyze patterns across builds. Triggers on phrases like "my builds", "build failures", "flaky tests", "cache hit rate", "build performance", "Build Scan", or "Develocity".
+description: This skill should be used when the user asks about "my builds", "build failures", "flaky tests", "cache hit rate", "build performance", "Build Scan", "Develocity", "build history", "CI builds", "test results", or wants to analyze patterns across builds using MCP tools.
 ---
 
 # Develocity
@@ -33,7 +33,7 @@ git config user.name 2>/dev/null
 | Time range | User wants something other than default (7 days) |
 | Build type | User wants CI-only or LOCAL-only builds |
 
-Example: "What is your Develocity username? (Git shows 'jdoe' - is that correct?)"
+Example: "What is the Develocity username? (Git shows 'jdoe' - is that correct?)"
 
 ## MCP Tools
 

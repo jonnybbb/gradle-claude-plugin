@@ -96,7 +96,7 @@ In the Build Scan:
 
 ### Develocity MCP Server
 
-If you have the Develocity MCP server configured, query cache data:
+If the Develocity MCP server is configured, query cache data:
 - `mcp__develocity__getBuilds` - Find builds with low cache hit rates
 - `mcp__develocity__getBuild` - Get detailed task cache information
 

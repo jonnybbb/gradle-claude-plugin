@@ -71,12 +71,12 @@ tasks.register("copyResources") {
     }
 }
 
-// ❌ ISSUE 9: project.exec in doLast
+// ❌ ISSUE 9: Capturing project reference at execution time
 tasks.register("runScript") {
     doLast {
-        project.exec {
-            commandLine("echo", "Hello from exec")
-        }
+        // Capturing project at execution time is a config cache issue
+        val projectRef = project
+        println("Project name: ${projectRef.name}")
     }
 }
 
@@ -121,13 +121,12 @@ tasks.register("printEnvVar") {
     }
 }
 
-// ❌ ISSUE 15: project.javaexec in doLast
+// ❌ ISSUE 15: Accessing sourceSets at execution time
 tasks.register("runJava") {
     doLast {
-        project.javaexec {
-            mainClass.set("com.example.Main")
-            classpath = sourceSets.main.get().runtimeClasspath
-        }
+        // Accessing sourceSets at execution time is a config cache issue
+        val cp = sourceSets.main.get().runtimeClasspath
+        println("Classpath has ${cp.files.size} entries")
     }
 }
 
