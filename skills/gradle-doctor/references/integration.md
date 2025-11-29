@@ -4,7 +4,7 @@
 
 ### build-health-check.java
 ```bash
-jbang tools/build-health-check.java <project-dir> [--json]
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/build-health-check.java <project-dir> [--json]
 ```
 
 Outputs:
@@ -14,7 +14,7 @@ Outputs:
 
 ### cache-validator.java
 ```bash
-jbang tools/cache-validator.java <project-dir> [--json] [--fix]
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/cache-validator.java <project-dir> [--json] [--fix]
 ```
 
 Checks:
@@ -24,7 +24,7 @@ Checks:
 
 ### performance-fixer.java
 ```bash
-jbang tools/performance-fixer.java <project-dir> [--json] [--auto]
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/performance-fixer.java <project-dir> [--json] [--auto]
 ```
 
 Outputs:
@@ -34,7 +34,7 @@ Outputs:
 
 ### task-analyzer.java
 ```bash
-jbang tools/task-analyzer.java <project-dir> [--json]
+jbang ${CLAUDE_PLUGIN_ROOT}/tools/task-analyzer.java <project-dir> [--json]
 ```
 
 Outputs:

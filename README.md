@@ -54,43 +54,11 @@ java --version
 
 ## Installation
 
-### Option 1: From GitHub (Recommended)
-
-Install directly from the GitHub repository:
+Add the marketplace and install the plugin:
 
 ```
-/plugin install jonnybbb/gradle-claude-plugin
-```
-
-Or use the interactive menu:
-```
-/plugin
-```
-Then select "Add Plugin" and enter `jonnybbb/gradle-claude-plugin`.
-
-### Option 2: Project-Specific Installation
-
-Add the plugin to a specific project only:
-
-```bash
-# In your project root
-mkdir -p .claude/plugins
-
-# Clone as a submodule (recommended for teams)
-git submodule add https://github.com/jonnybbb/gradle-claude-plugin.git .claude/plugins/gradle-claude-plugin
-
-# Or clone directly
-git clone https://github.com/jonnybbb/gradle-claude-plugin.git .claude/plugins/gradle-claude-plugin
-```
-
-Add `.claude/plugins/gradle-claude-plugin` to your `.gitignore` if you don't want to commit it.
-
-### Option 3: Local Development
-
-For local development or testing:
-
-```
-/plugin marketplace add ./path/to/gradle-claude-plugin
+/plugin marketplace add jonnybbb/gradle-claude-plugin
+/plugin install gradle
 ```
 
 ### Verify Installation
@@ -397,6 +365,34 @@ See [hooks/settings.template.md](hooks/settings.template.md) for the full templa
 | Gradle 7.x | Full support |
 | Gradle 8.x | Full support |
 | Gradle 9.x | Full support |
+
+## Development
+
+### Local Testing
+
+To test the plugin locally, add it as a local marketplace:
+
+```
+/plugin marketplace add ./path/to/gradle-claude-plugin
+/plugin install gradle
+```
+
+### Project-Specific Installation
+
+For teams that want to bundle the plugin with a project:
+
+```bash
+mkdir -p .claude/plugins
+git submodule add https://github.com/jonnybbb/gradle-claude-plugin.git .claude/plugins/gradle-claude-plugin
+```
+
+### Running Tests
+
+```bash
+cd tests/fixtures
+./scripts/setup-fixtures.sh
+./scripts/test-tools.sh
+```
 
 ## Contributing
 
