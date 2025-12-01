@@ -93,7 +93,7 @@ main() {
     if [[ -n "$issues" ]]; then
         message="Gradle project detected. Quick scan found potential improvements: $issues. Run /doctor for full analysis or /optimize-performance to auto-fix performance settings."
     else
-        message="Gradle project detected. Build configuration looks good. Run /doctor for comprehensive health check."
+        message="Gradle project detected. Build configuration looks good. Run /gradle:doctor for comprehensive health check."
     fi
 
     # Output JSON response

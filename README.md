@@ -66,7 +66,7 @@ Add the marketplace and install the plugin:
 After installation, run:
 
 ```
-/doctor
+/gradle:doctor
 ```
 
 If the plugin is loaded correctly, you'll see the Gradle health check output.
@@ -75,36 +75,36 @@ If the plugin is loaded correctly, you'll see the Gradle health check output.
 
 ### Run a Health Check
 ```bash
-/doctor
+/gradle:doctor
 ```
 Get a comprehensive analysis of your Gradle project: configuration issues, performance bottlenecks, outdated patterns, and actionable recommendations.
 
 ### Fix Configuration Cache Issues
 ```bash
-/fix-config-cache --auto      # Detect and fix issues automatically
-/fix-config-cache --dry-run   # Preview changes first
+/gradle:fix-config-cache --auto      # Detect and fix issues automatically
+/gradle:fix-config-cache --dry-run   # Preview changes first
 ```
 Automatically fixes 19+ patterns including `System.getProperty` → `providers.systemProperty`, `tasks.create` → `tasks.register`, and `$buildDir` → `layout.buildDirectory`.
 
 ### Upgrade Gradle Versions
 ```bash
-/upgrade 9.0 --auto           # Migrate to Gradle 9
-/upgrade 9.0 --dry-run        # See what would change
+/gradle:upgrade 9.0 --auto           # Migrate to Gradle 9
+/gradle:upgrade 9.0 --dry-run        # See what would change
 ```
 Handles deprecated APIs, task configuration changes, and property migrations between Gradle 7→8→9.
 
 ### Run Large-Scale Migrations with OpenRewrite
 ```bash
-/migrate 9.0                  # Full migration with OpenRewrite + Claude
-/migrate 9.0 --dry-run        # Preview all changes first
-/openrewrite suggest          # Get recipe recommendations for your project
-/openrewrite run <recipe>     # Run a specific OpenRewrite recipe
+/gradle:migrate 9.0                  # Full migration with OpenRewrite + Claude
+/gradle:migrate 9.0 --dry-run        # Preview all changes first
+/gradle:openrewrite suggest          # Get recipe recommendations for your project
+/gradle:openrewrite run <recipe>     # Run a specific OpenRewrite recipe
 ```
 For large codebases, combines OpenRewrite's deterministic bulk transformations with Claude's context-aware fixes for edge cases.
 
 ### Speed Up Your Build
 ```bash
-/optimize-performance --auto  # Apply performance improvements
+/gradle:optimize-performance --auto  # Apply performance improvements
 ```
 Enables parallel execution, build caching, optimizes JVM settings, and replaces eager task patterns.
 
@@ -128,10 +128,10 @@ Just ask naturally: "Why is my build slow?" or "How do I make this task cacheabl
 You're staring at a build that's been getting slower every sprint. No one knows why.
 
 ```
-> /doctor
+> /gradle:doctor
 ```
 
-The plugin analyzes your project and finds: parallel execution disabled, no build cache, eager task creation in 3 plugins, and JVM heap set too low. You run `/optimize-performance --auto` and watch your build drop to 4 minutes.
+The plugin analyzes your project and finds: parallel execution disabled, no build cache, eager task creation in 3 plugins, and JVM heap set too low. You run `/gradle:optimize-performance --auto` and watch your build drop to 4 minutes.
 
 **What you get:** A prioritized list of fixes with expected impact, not just generic "enable caching" advice.
 
@@ -142,13 +142,13 @@ The plugin analyzes your project and finds: parallel execution disabled, no buil
 Your team wants the 30-80% speedup from configuration cache. You enable it and get 47 errors across your multi-module project.
 
 ```
-> /fix-config-cache --dry-run
+> /gradle:fix-config-cache --dry-run
 ```
 
 The plugin categorizes every issue: 23 `System.getProperty` calls, 12 `Task.project` accesses, 8 `tasks.create` patterns, and 4 custom plugin problems. It shows exactly what each fix looks like before you approve.
 
 ```
-> /fix-config-cache --auto
+> /gradle:fix-config-cache --auto
 ```
 
 47 errors → 0. Build time drops from 45s to 12s on incremental builds.
@@ -162,7 +162,7 @@ The plugin categorizes every issue: 23 `System.getProperty` calls, 12 `Task.proj
 Your 200-module monorepo is stuck on Gradle 7.6. Management wants Java 21. You have 3 days.
 
 ```
-> /migrate 9.0 --dry-run
+> /gradle:migrate 9.0 --dry-run
 ```
 
 The plugin:
@@ -172,7 +172,7 @@ The plugin:
 4. Shows you exactly what will change before anything happens
 
 ```
-> /migrate 9.0
+> /gradle:migrate 9.0
 ```
 
 OpenRewrite handles the bulk transformations. Claude fixes the edge cases your custom plugins introduce. The build compiles. Tests pass.
@@ -200,7 +200,7 @@ The plugin analyzes your task's inputs and outputs, checks for absolute paths, n
 You're implementing a code generator. You want it fast, cacheable, and configuration-cache compatible.
 
 ```
-> /create-task GenerateApi --type worker-api
+> /gradle:create-task GenerateApi worker-api
 ```
 
 The plugin scaffolds a complete task implementation with:
@@ -219,7 +219,7 @@ The plugin scaffolds a complete task implementation with:
 New job. 50-module project. Build takes 8 minutes. No documentation. Previous build engineer left.
 
 ```
-> /doctor
+> /gradle:doctor
 ```
 
 You get a complete health report:
@@ -269,16 +269,16 @@ Skills and recommendations are tested against real Gradle projects with known is
 
 ## OpenRewrite Integration
 
-This plugin includes built-in [OpenRewrite](https://docs.openrewrite.org/) integration for large-scale migrations. Use `/migrate` for the best of both worlds:
+This plugin includes built-in [OpenRewrite](https://docs.openrewrite.org/) integration for large-scale migrations. Use `/gradle:migrate` for the best of both worlds:
 
 | Use Case | Recommended Approach |
 |----------|---------------------|
-| Small projects (< 10 modules) | `/fix-config-cache --auto` or `/upgrade --auto` |
-| Large codebases (100+ modules) | `/migrate` (uses OpenRewrite + Claude) |
-| CI/CD automated migrations | `/openrewrite run <recipe>` |
-| Understanding issues first | `/doctor` then `/openrewrite suggest` |
+| Small projects (< 10 modules) | `/gradle:fix-config-cache --auto` or `/gradle:upgrade --auto` |
+| Large codebases (100+ modules) | `/gradle:migrate` (uses OpenRewrite + Claude) |
+| CI/CD automated migrations | `/gradle:openrewrite run <recipe>` |
+| Understanding issues first | `/gradle:doctor` then `/gradle:openrewrite suggest` |
 
-**How `/migrate` works:**
+**How `/gradle:migrate` works:**
 
 1. Analyzes project complexity (SMALL/MEDIUM/LARGE)
 2. Recommends strategy: Claude-primary, OpenRewrite-primary, or Hybrid
@@ -288,17 +288,17 @@ This plugin includes built-in [OpenRewrite](https://docs.openrewrite.org/) integ
 
 ```bash
 # Full migration workflow
-/migrate 9.0 --dry-run    # Preview everything first
-/migrate 9.0              # Execute the migration
+/gradle:migrate 9.0 --dry-run    # Preview everything first
+/gradle:migrate 9.0              # Execute the migration
 ```
 
 **Direct OpenRewrite access:**
 
 ```bash
-/openrewrite suggest                    # Recommend recipes for your project
-/openrewrite list gradle                # List available Gradle recipes
-/openrewrite run MigrateToGradle8       # Run a specific recipe
-/openrewrite dry-run MigrateToGradle8   # Preview changes
+/gradle:openrewrite suggest                    # Recommend recipes for your project
+/gradle:openrewrite list gradle                # List available Gradle recipes
+/gradle:openrewrite run MigrateToGradle8       # Run a specific recipe
+/gradle:openrewrite dry-run MigrateToGradle8   # Preview changes
 ```
 
 ## Develocity Integration
@@ -307,7 +307,7 @@ If your team uses [Develocity](https://gradle.com/develocity/) (formerly Gradle 
 - Query build success rates and failure patterns
 - Analyze cache hit rates and performance trends
 - Identify flaky tests across builds
-- Include Develocity data in `/doctor` reports
+- Include Develocity data in `/gradle:doctor` reports
 
 **Setup** (optional):
 
@@ -340,7 +340,7 @@ The plugin watches your work and warns you proactively:
 **When you edit build files:**
 - Configuration cache compatibility issues
 - Deprecated patterns like `$buildDir` or `tasks.create`
-- Suggests `/fix-config-cache` when issues are detected
+- Suggests `/gradle:fix-config-cache` when issues are detected
 
 ### Disabling Hooks
 
