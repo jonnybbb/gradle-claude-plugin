@@ -1,6 +1,6 @@
 ---
 description: Run comprehensive Gradle build health analysis
-allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, mcp__develocity__getBuilds, mcp__develocity__getTestResults
+allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, mcp__develocity__get_builds, mcp__develocity__get_build_by_id, mcp__develocity__get_build_failures, mcp__develocity__get_test_results, mcp__develocity__get_develocity_server_url
 ---
 
 # Gradle Doctor - Comprehensive Health Check
@@ -94,6 +94,70 @@ Example clarification questions:
 
 **Important**: The Develocity MCP server URL and credentials are user/environment-specific. If the MCP tools fail or are not available, continue with local analysis only and note that Develocity insights are unavailable.
 
+#### Step 1.5.4: Detect Environment Mismatches (CI vs LOCAL)
+
+**CRITICAL**: This step detects the common "works in CI but not locally" (or vice versa) issues by comparing environment variables between CI and LOCAL builds.
+
+1. **Query CI builds** (recent, up to 10):
+   - Use `mcp__develocity__get_builds` with:
+     - `project`: the detected root project name
+     - `userTags`: `["CI"]`
+     - `maxBuilds`: 10
+     - `additionalDataToInclude`: `["attributes"]`
+
+2. **Query LOCAL builds** (recent, up to 10):
+   - Use `mcp__develocity__get_builds` with:
+     - `project`: the detected root project name
+     - `userTags`: `["LOCAL"]`
+     - `maxBuilds`: 10
+     - `additionalDataToInclude`: `["attributes"]`
+
+3. **Compare build outcomes**:
+   - Check if CI builds consistently pass (`hasFailed: false`) while LOCAL builds fail (`hasFailed: true`), or vice versa
+   - If there's a pattern mismatch, proceed to environment comparison
+
+4. **Compare environment variables**:
+   - Extract `values` from the build attributes (these are custom key-value pairs)
+   - Look for values that differ between CI and LOCAL builds, especially:
+     - Values with names containing "ENV", "CI", "SECRET", "KEY", "TOKEN"
+     - The `environment.username` field
+     - Any value that is "not set" in one environment but has a value in another
+
+5. **Identify the root cause**:
+   - If a value like `CI_ENV` shows `"true"` in CI builds but `"not set"` in LOCAL builds, this is likely the cause
+   - Check if the failing builds have error messages referencing environment variables
+
+6. **Report and suggest fix**:
+   - If environment mismatch is detected, add to the health report:
+   ```
+   ── Environment Mismatch Detected ─────────────────────────────
+
+   Pattern: CI builds PASS but LOCAL builds FAIL
+
+   Environment differences found:
+     • CI_ENV: "true" (CI) vs "not set" (LOCAL)
+
+   Root cause: Build requires CI=true environment variable
+
+   FIX: Set the CI environment variable when running locally:
+        CI=true ./gradlew <task>
+
+   Or add to your shell profile (~/.zshrc or ~/.bashrc):
+        export CI=true
+
+   Build Scans:
+     • CI (passed): https://ge.gradle.org/s/abc123
+     • LOCAL (failed): https://ge.gradle.org/s/def456
+   ───────────────────────────────────────────────────────────────
+   ```
+
+**When to trigger this analysis**:
+- Always run this check when Develocity is available
+- Especially important when:
+  - Recent LOCAL builds have failed
+  - User mentions "works in CI but not locally" or similar
+  - Build fails with environment-related errors
+
 ### Step 2: Analyze Results
 
 Categorize findings into:
@@ -105,6 +169,7 @@ Categorize findings into:
 5. **Compatibility** - deprecated APIs, version-specific issues
 6. **Build History** (Develocity) - recent build success rate, failure patterns
 7. **Test Health** (Develocity) - flaky tests, test failure trends
+8. **Environment Mismatch** (Develocity) - CI vs LOCAL environment differences
 
 ### Step 3: Present Health Report
 
@@ -127,6 +192,7 @@ Gradle Version: X.X
 ├──────────────────┼────────┼──────────────────────────────────┤
 │ Build History    │ ⚠      │ 23% failure rate (7 days)        │
 │ Test Health      │ ✗      │ 3 flaky tests detected           │
+│ Env Mismatch     │ ✗      │ CI passes, LOCAL fails           │
 └──────────────────┴────────┴──────────────────────────────────┘
 
 Overall Health: NEEDS ATTENTION
@@ -247,6 +313,7 @@ Suggest commands based on what was found:
 | Flaky tests detected | Review flaky tests, consider `@RerunFailingTests` |
 | Low cache hit rate (<50%) | Check cache configuration, run `/optimize-performance` |
 | OOM failures | Increase heap in `gradle.properties` |
+| Environment mismatch (CI vs LOCAL) | Set missing environment variable locally (e.g., `CI=true ./gradlew <task>`) |
 | All clean | "Build is healthy!" |
 
 Only recommend commands that are relevant to the findings. Don't suggest `/upgrade` if already on latest version.

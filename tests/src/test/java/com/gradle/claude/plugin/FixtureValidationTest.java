@@ -35,7 +35,7 @@ class FixtureValidationTest {
     @Test
     @DisplayName("Should have expected fixture count")
     void shouldHaveExpectedFixtureCount() {
-        assertThat(allFixtures).hasSize(5);
+        assertThat(allFixtures).hasSize(6);
     }
 
     static Stream<Fixture> allFixturesProvider() {
@@ -50,7 +50,8 @@ class FixtureValidationTest {
             "config-cache-broken",
             "legacy-groovy",
             "multi-module",
-            "spring-boot"
+            "spring-boot",
+            "ci-env-mismatch"
         );
 
         List<String> actualNames = allFixtures.stream()
@@ -342,7 +343,8 @@ class FixtureValidationTest {
             "config-cache-broken", "issue detection",
             "legacy-groovy", "migration testing",
             "multi-module", "scale testing",
-            "spring-boot", "framework compatibility"
+            "spring-boot", "framework compatibility",
+            "ci-env-mismatch", "CI environment detection"
         );
 
         for (Fixture fixture : allFixtures) {
