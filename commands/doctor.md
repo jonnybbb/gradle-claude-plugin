@@ -1,6 +1,6 @@
 ---
 description: Run comprehensive Gradle build health analysis
-allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, mcp__develocity__get_builds, mcp__develocity__get_build_by_id, mcp__develocity__get_build_failures, mcp__develocity__get_test_results, mcp__develocity__get_develocity_server_url
+allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion
 ---
 
 # Gradle Doctor - Comprehensive Health Check
@@ -30,134 +30,6 @@ jbang ${CLAUDE_PLUGIN_ROOT}/tools/performance-fixer.java . --json
 jbang ${CLAUDE_PLUGIN_ROOT}/tools/task-analyzer.java . --json
 ```
 
-### Step 1.5: Query Develocity (if available)
-
-If the Develocity MCP tools are available (`mcp__develocity__getBuilds` and `mcp__develocity__getTestResults`), query for additional insights. Skip this step gracefully if Develocity is not configured.
-
-#### Step 1.5.1: Gather Context
-
-Before querying Develocity, you MUST establish the correct context. Develocity queries require proper filtering to return relevant results.
-
-**Auto-detect what you can:**
-
-1. **Project name** from `settings.gradle(.kts)`:
-   ```bash
-   grep -E "^rootProject.name" settings.gradle* 2>/dev/null | head -1
-   ```
-
-2. **Current git branch**:
-   ```bash
-   git branch --show-current 2>/dev/null
-   ```
-
-3. **Current username** (for "my builds" context):
-   ```bash
-   git config user.name 2>/dev/null
-   ```
-
-**Ask user for clarification if needed:**
-
-If any of the following are unclear or ambiguous, use `AskUserQuestion` to clarify BEFORE querying Develocity:
-
-| Context | When to ask |
-|---------|-------------|
-| **Project** | If `rootProject.name` cannot be detected, or if analyzing a multi-repo setup |
-| **Username** | If user asks about "my builds" but git username doesn't match Develocity username |
-| **Branch** | If user wants branch-specific analysis (CI vs local, feature branch vs main) |
-| **Time range** | If user wants something other than "last 7 days" default |
-| **Build type** | If user wants to filter by CI vs LOCAL builds |
-
-Example clarification questions:
-- "What is your Develocity username? (Your git username is 'jdoe' - is that the same?)"
-- "Should I analyze builds from all branches, or just the current branch ('feature/xyz')?"
-- "Should I include only CI builds, only local builds, or both?"
-
-#### Step 1.5.2: Query Recent Builds
-
-**Query recent builds** (last 7 days, up to 50 builds):
-- Use `mcp__develocity__getBuilds` with:
-  - `project`: the detected root project name (REQUIRED - ask if unknown)
-  - `fromDate`: 7 days ago in ISO-8601 format
-  - `maxBuilds`: 50
-  - `additionalDataToInclude`: `["attributes", "build_performance", "caching", "failures"]`
-  - `userTags`: (optional) filter by `["CI"]` or `["LOCAL"]` if user specified
-  - `username`: (optional) if user asked for "my builds"
-
-#### Step 1.5.3: Query for Flaky Tests
-
-**Query for flaky tests** (last 7 days):
-- Use `mcp__develocity__getTestResults` with:
-  - `project`: the detected root project name (REQUIRED - ask if unknown)
-  - `fromDate`: 7 days ago
-  - `includeOutcomes`: `["flaky", "failed"]`
-  - `userTags`: (optional) match the build query filters
-
-**Important**: The Develocity MCP server URL and credentials are user/environment-specific. If the MCP tools fail or are not available, continue with local analysis only and note that Develocity insights are unavailable.
-
-#### Step 1.5.4: Detect Environment Mismatches (CI vs LOCAL)
-
-**CRITICAL**: This step detects the common "works in CI but not locally" (or vice versa) issues by comparing environment variables between CI and LOCAL builds.
-
-1. **Query CI builds** (recent, up to 10):
-   - Use `mcp__develocity__get_builds` with:
-     - `project`: the detected root project name
-     - `userTags`: `["CI"]`
-     - `maxBuilds`: 10
-     - `additionalDataToInclude`: `["attributes"]`
-
-2. **Query LOCAL builds** (recent, up to 10):
-   - Use `mcp__develocity__get_builds` with:
-     - `project`: the detected root project name
-     - `userTags`: `["LOCAL"]`
-     - `maxBuilds`: 10
-     - `additionalDataToInclude`: `["attributes"]`
-
-3. **Compare build outcomes**:
-   - Check if CI builds consistently pass (`hasFailed: false`) while LOCAL builds fail (`hasFailed: true`), or vice versa
-   - If there's a pattern mismatch, proceed to environment comparison
-
-4. **Compare environment variables**:
-   - Extract `values` from the build attributes (these are custom key-value pairs)
-   - Look for values that differ between CI and LOCAL builds, especially:
-     - Values with names containing "ENV", "CI", "SECRET", "KEY", "TOKEN"
-     - The `environment.username` field
-     - Any value that is "not set" in one environment but has a value in another
-
-5. **Identify the root cause**:
-   - If a value like `CI_ENV` shows `"true"` in CI builds but `"not set"` in LOCAL builds, this is likely the cause
-   - Check if the failing builds have error messages referencing environment variables
-
-6. **Report and suggest fix**:
-   - If environment mismatch is detected, add to the health report:
-   ```
-   ── Environment Mismatch Detected ─────────────────────────────
-
-   Pattern: CI builds PASS but LOCAL builds FAIL
-
-   Environment differences found:
-     • CI_ENV: "true" (CI) vs "not set" (LOCAL)
-
-   Root cause: Build requires CI=true environment variable
-
-   FIX: Set the CI environment variable when running locally:
-        CI=true ./gradlew <task>
-
-   Or add to your shell profile (~/.zshrc or ~/.bashrc):
-        export CI=true
-
-   Build Scans:
-     • CI (passed): https://ge.gradle.org/s/abc123
-     • LOCAL (failed): https://ge.gradle.org/s/def456
-   ───────────────────────────────────────────────────────────────
-   ```
-
-**When to trigger this analysis**:
-- Always run this check when Develocity is available
-- Especially important when:
-  - Recent LOCAL builds have failed
-  - User mentions "works in CI but not locally" or similar
-  - Build fails with environment-related errors
-
 ### Step 2: Analyze Results
 
 Categorize findings into:
@@ -167,9 +39,6 @@ Categorize findings into:
 3. **Dependencies** - conflicts, version management, resolution
 4. **Structure** - project organization, conventions
 5. **Compatibility** - deprecated APIs, version-specific issues
-6. **Build History** (Develocity) - recent build success rate, failure patterns
-7. **Test Health** (Develocity) - flaky tests, test failure trends
-8. **Environment Mismatch** (Develocity) - CI vs LOCAL environment differences
 
 ### Step 3: Present Health Report
 
@@ -189,10 +58,7 @@ Gradle Version: X.X
 │ Build Cache      │ ✓      │ Enabled and working              │
 │ Dependencies     │ ✓      │ No conflicts detected            │
 │ Structure        │ ⚠      │ Consider convention plugins      │
-├──────────────────┼────────┼──────────────────────────────────┤
-│ Build History    │ ⚠      │ 23% failure rate (7 days)        │
-│ Test Health      │ ✗      │ 3 flaky tests detected           │
-│ Env Mismatch     │ ✗      │ CI passes, LOCAL fails           │
+│ Compatibility    │ ✓      │ No deprecated APIs detected      │
 └──────────────────┴────────┴──────────────────────────────────┘
 
 Overall Health: NEEDS ATTENTION
@@ -228,46 +94,7 @@ Found 16 compatibility issues:
   • 2 tasks.getByName calls
   • 2 project references in task actions
 
-── Build History (Develocity) ─────────────────────────────────
-
-Last 7 days: 47 builds analyzed
-  • Success rate: 77% (36 passed, 11 failed)
-  • Avg build time: 2m 34s
-  • Cache hit rate: 68%
-
-Recent failures (last 3):
-  • 2025-01-15 14:32 - CompilationFailedException in :app:compileKotlin
-  • 2025-01-15 10:15 - TestFailure in UserServiceTest.testLogin
-  • 2025-01-14 16:45 - OOM during :app:test (heap exhausted)
-
-Build Scan links:
-  • https://develocity.example.com/s/abc123
-  • https://develocity.example.com/s/def456
-
-── Test Health (Develocity) ───────────────────────────────────
-
-Flaky tests detected (3):
-  1. UserServiceTest.testConcurrentLogin
-     Flaky rate: 23% (7/30 runs failed)
-
-  2. PaymentProcessorTest.testTimeout
-     Flaky rate: 15% (3/20 runs failed)
-
-  3. DatabaseConnectionTest.testPoolExhaustion
-     Flaky rate: 10% (2/20 runs failed)
-
-Top failing tests (last 7 days):
-  1. IntegrationTest.testFullWorkflow - 8 failures
-  2. ApiClientTest.testRetry - 5 failures
-
 ═══════════════════════════════════════════════════════════════
-```
-
-**Note**: Build History and Test Health sections only appear if Develocity is configured and accessible. If unavailable, display:
-```
-── Develocity Insights ────────────────────────────────────────
-Develocity not configured. To enable build history and test
-health insights, configure the Develocity MCP server.
 ```
 
 ### Step 5: Recommend Next Steps
@@ -309,11 +136,6 @@ Suggest commands based on what was found:
 | Config cache issues found | `/fix-config-cache` |
 | Gradle version < 8.0 | `/upgrade <latest>` |
 | Deprecated APIs detected | `/upgrade` |
-| High failure rate (>20%) | Investigate recent Build Scan failures |
-| Flaky tests detected | Review flaky tests, consider `@RerunFailingTests` |
-| Low cache hit rate (<50%) | Check cache configuration, run `/optimize-performance` |
-| OOM failures | Increase heap in `gradle.properties` |
-| Environment mismatch (CI vs LOCAL) | Set missing environment variable locally (e.g., `CI=true ./gradlew <task>`) |
 | All clean | "Build is healthy!" |
 
 Only recommend commands that are relevant to the findings. Don't suggest `/upgrade` if already on latest version.
@@ -328,21 +150,6 @@ Recommended actions (in order):
   2. /fix-config-cache --dry-run   (16 issues to review)
 ```
 
-For a project with Develocity insights showing issues:
-
-```
-Recommended actions (in order):
-  1. /optimize-performance --auto  (quick wins: parallel, caching)
-  2. /fix-config-cache --dry-run   (16 issues to review)
-
-Develocity insights:
-  3. Investigate flaky tests: UserServiceTest.testConcurrentLogin (23% flaky)
-     → Consider adding retry logic or fixing race condition
-  4. Review OOM failure from 2025-01-14:
-     → Build Scan: https://develocity.example.com/s/abc123
-     → Try increasing heap: org.gradle.jvmargs=-Xmx4g
-```
-
 For a healthy project:
 
 ```
@@ -351,15 +158,6 @@ For a healthy project:
 Optional improvements:
   • Consider enabling configuration cache for faster builds
   • Run /optimize-performance --benchmark to measure current performance
-```
-
-For a project without Develocity:
-
-```
-✓ Local analysis complete. Build is healthy!
-
-Note: Develocity MCP server not configured.
-      Configure it to get build history and test health insights.
 ```
 
 ## Related

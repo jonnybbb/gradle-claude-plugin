@@ -1,0 +1,61 @@
+package com.example;
+
+/**
+ * Client for connecting to the Example API service.
+ * Requires EXAMPLE_API_KEY environment variable to be configured.
+ */
+public class ApiClient {
+    private final String apiKey;
+
+    /**
+     * Creates a new ApiClient using the EXAMPLE_API_KEY environment variable.
+     *
+     * @throws IllegalStateException if EXAMPLE_API_KEY is not set or invalid
+     */
+    public ApiClient() {
+        this.apiKey = System.getenv("EXAMPLE_API_KEY");
+        if (apiKey == null || apiKey.isEmpty()) {
+            throw new IllegalStateException(
+                    "EXAMPLE_API_KEY environment variable is required but not set. " +
+                    "Please configure this secret in your CI environment or set it locally."
+            );
+        }
+        if (!apiKey.startsWith("prod_")) {
+            throw new IllegalStateException(
+                    "EXAMPLE_API_KEY must start with 'prod_' prefix. Got: " + maskKey(apiKey)
+            );
+        }
+    }
+
+    /**
+     * Returns true if the client is properly configured.
+     */
+    public boolean isConfigured() {
+        return apiKey != null && apiKey.startsWith("prod_");
+    }
+
+    /**
+     * Returns the configured API key.
+     */
+    public String getApiKey() {
+        return apiKey;
+    }
+
+    /**
+     * Simulates making an API call.
+     */
+    public String callApi(String endpoint) {
+        if (!isConfigured()) {
+            throw new IllegalStateException("ApiClient is not properly configured");
+        }
+        // Simulate API response
+        return "Response from " + endpoint + " (authenticated)";
+    }
+
+    private String maskKey(String key) {
+        if (key == null || key.length() < 4) {
+            return "***";
+        }
+        return key.substring(0, 4) + "***";
+    }
+}

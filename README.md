@@ -1,6 +1,6 @@
 # Gradle Claude Plugin
 
-Get expert Gradle help directly in Claude Code. Fix configuration cache issues, optimize slow builds, and migrate between Gradle versions—all with commands that analyze your actual project.
+Get expert Gradle help directly in Claude Code. Fix configuration cache issues, optimize slow builds, migrate between Gradle versions, and analyze build health with Develocity—all with commands that analyze your actual project.
 
 ## Prerequisites
 
@@ -9,6 +9,10 @@ Get expert Gradle help directly in Claude Code. Fix configuration cache issues, 
 - **Java 25+** - Required for JBang tools
 - **JBang 0.134.0+** - Script runner for analysis tools
 - **Gradle 6.0+** - In the projects you want to analyze
+
+### Optional
+
+- **Develocity** - For build analytics, flaky test detection, and cross-build insights
 
 ### Installing JBang
 
@@ -73,27 +77,29 @@ If the plugin is loaded correctly, you'll see the Gradle health check output.
 
 ## What Can You Do?
 
-### Run a Health Check
+### Local Build Analysis
+
+#### Run a Health Check
 ```bash
 /gradle:doctor
 ```
 Get a comprehensive analysis of your Gradle project: configuration issues, performance bottlenecks, outdated patterns, and actionable recommendations.
 
-### Fix Configuration Cache Issues
+#### Fix Configuration Cache Issues
 ```bash
 /gradle:fix-config-cache --auto      # Detect and fix issues automatically
 /gradle:fix-config-cache --dry-run   # Preview changes first
 ```
 Automatically fixes 19+ patterns including `System.getProperty` → `providers.systemProperty`, `tasks.create` → `tasks.register`, and `$buildDir` → `layout.buildDirectory`.
 
-### Upgrade Gradle Versions
+#### Upgrade Gradle Versions
 ```bash
 /gradle:upgrade 9.0 --auto           # Migrate to Gradle 9
 /gradle:upgrade 9.0 --dry-run        # See what would change
 ```
 Handles deprecated APIs, task configuration changes, and property migrations between Gradle 7→8→9.
 
-### Run Large-Scale Migrations with OpenRewrite
+#### Run Large-Scale Migrations with OpenRewrite
 ```bash
 /gradle:migrate 9.0                  # Full migration with OpenRewrite + Claude
 /gradle:migrate 9.0 --dry-run        # Preview all changes first
@@ -102,11 +108,61 @@ Handles deprecated APIs, task configuration changes, and property migrations bet
 ```
 For large codebases, combines OpenRewrite's deterministic bulk transformations with Claude's context-aware fixes for edge cases.
 
-### Speed Up Your Build
+#### Speed Up Your Build
 ```bash
 /gradle:optimize-performance --auto  # Apply performance improvements
 ```
 Enables parallel execution, build caching, optimizes JVM settings, and replaces eager task patterns.
+
+---
+
+### Develocity Build Analytics
+
+These commands require [Develocity integration](#develocity-integration) to be configured.
+
+#### Get Build Insights
+```bash
+/gradle:build-insights
+```
+Get a high-level overview of your build health from Develocity:
+- **Success rate** with trend comparison (this week vs last week)
+- **Cache hit rate** and performance metrics
+- **Flaky tests** detected across builds
+- **CI vs Local** environment comparison
+- **Actionable recommendations** based on findings
+
+#### Diagnose Specific Issues
+```bash
+/gradle:diagnose flaky-tests         # Deep-dive into flaky test patterns
+/gradle:diagnose outcome-mismatch    # Why CI passes but local fails (or vice versa)
+/gradle:diagnose failure-patterns    # Analyze recurring build failures
+```
+
+Each diagnose topic launches a specialized agent that:
+- Queries your Develocity build history
+- Analyzes patterns across multiple builds
+- Provides root cause analysis
+- Recommends prioritized fixes
+
+**Flaky Tests Analysis:**
+- Pareto analysis (which tests cause 80% of flaky failures?)
+- Tolerance calculation (is your flakiness level acceptable?)
+- Threshold-based recommendations (fix, quarantine, or disable)
+- Root cause classification (race conditions, timing, external dependencies)
+
+**Outcome Mismatch Analysis:**
+- Side-by-side CI vs LOCAL environment comparison
+- Missing environment variables detection
+- Tool version differences (Java, Gradle, OS)
+- Specific fix recommendations
+
+**Failure Patterns Analysis:**
+- Groups similar failures across builds
+- Classifies verification vs non-verification failures
+- Prioritizes infrastructure issues (they block everyone)
+- Tracks failure trends over time
+
+---
 
 ### Ask About Anything Gradle
 
@@ -181,6 +237,82 @@ OpenRewrite handles the bulk transformations. Claude fixes the edge cases your c
 
 ---
 
+### "Our CI has been red a lot lately. What's going on?"
+
+Builds keep failing but no one knows if it's flaky tests, infrastructure issues, or actual code problems.
+
+```
+> /gradle:build-insights
+```
+
+You get an immediate overview: 23% failure rate (up from 15% last week), 37% of failures are infrastructure issues (dependency resolution, OOM), and 3 flaky tests are causing noise.
+
+```
+> /gradle:diagnose failure-patterns
+```
+
+The plugin groups 35 failures into 8 patterns and classifies them:
+- **Non-verification (fix immediately):** 6 OOM errors, 4 dependency resolution failures
+- **Verification (normal priority):** 12 compilation errors from a bad merge, 8 test failures
+
+**What you get:** Prioritized action items—fix the OOM and dependency issues first because they block everyone. The compilation errors affect individual PRs.
+
+---
+
+### "Tests pass locally but fail on CI"
+
+Classic "works on my machine" problem. You've wasted hours trying to reproduce CI failures.
+
+```
+> /gradle:diagnose outcome-mismatch
+```
+
+The plugin compares your recent local builds against CI builds from Develocity:
+
+```
+┌──────────────────────┬─────────────────┬─────────────────┐
+│ Variable             │ CI (passing)    │ LOCAL (failing) │
+├──────────────────────┼─────────────────┼─────────────────┤
+│ CI                   │ "true"          │ (not set)       │
+│ DATABASE_URL         │ "jdbc:..."      │ (not set)       │
+│ Java version         │ 21.0.2          │ 17.0.1          │
+└──────────────────────┴─────────────────┴─────────────────┘
+```
+
+**What you get:** The exact environment differences causing the mismatch, with specific fix commands.
+
+---
+
+### "We have flaky tests but don't know which ones to fix first"
+
+Your test suite has accumulated flaky tests over time. Fixing all of them would take weeks.
+
+```
+> /gradle:diagnose flaky-tests
+```
+
+The plugin runs a Pareto analysis:
+
+```
+Top 3 tests cause 52% of all flaky failures:
+
+┌─────────────────────────────────────┬────────┬─────────┬────────────┐
+│ Test                                │ Flakes │ % Total │ Cumulative │
+├─────────────────────────────────────┼────────┼─────────┼────────────┤
+│ UserServiceTest.testConcurrentLogin │ 45     │ 28%     │ 28%        │
+│ PaymentTest.testTimeout             │ 25     │ 16%     │ 44%        │
+│ DbTest.testPoolExhaustion           │ 12     │ 8%      │ 52%        │
+└─────────────────────────────────────┴────────┴─────────┴────────────┘
+
+Fixing these 3 tests would eliminate 52% of flaky failures.
+```
+
+It also calculates your tolerance threshold and recommends specific actions (fix, quarantine, or disable) based on each test's flakiness rate.
+
+**What you get:** A data-driven prioritization that maximizes impact with minimal effort.
+
+---
+
 ### "Why did this task run? It should have been cached!"
 
 You're debugging a flaky cache miss in CI. The task runs on some machines but not others.
@@ -244,6 +376,7 @@ Each finding links to the fix. You now have a roadmap.
 | **Team adopting configuration cache** | Systematically detect and fix all 16+ issue patterns |
 | **Migrating Gradle versions** | Navigate API changes and deprecations between 7→8→9 |
 | **Build engineer** | Save time with consistent, repeatable analysis |
+| **Team with Develocity** | Get actionable insights from build data without writing queries |
 
 **Honest note**: If you're a Gradle expert, vanilla Claude Code with good prompting gets you 80% there. This plugin adds tested accuracy, structured workflows, and Tooling API introspection.
 
@@ -303,30 +436,53 @@ This plugin includes built-in [OpenRewrite](https://docs.openrewrite.org/) integ
 
 ## Develocity Integration
 
-If your team uses [Develocity](https://gradle.com/develocity/) (formerly Gradle Enterprise), the plugin can:
-- Query build success rates and failure patterns
-- Analyze cache hit rates and performance trends
-- Identify flaky tests across builds
-- Include Develocity data in `/gradle:doctor` reports
+[Develocity](https://gradle.com/develocity/) (formerly Gradle Enterprise) provides build analytics that power the plugin's cross-build analysis features. With Develocity configured, you can:
 
-**Setup** (optional):
+- **Query build history** — Success rates, failure patterns, performance trends
+- **Analyze cache performance** — Hit rates, time saved, optimization opportunities
+- **Detect flaky tests** — Identify tests that pass on retry, track flakiness over time
+- **Compare environments** — Why does CI pass but local fail?
+- **Prioritize fixes** — Focus on issues with the highest impact
 
-1. Add the Develocity MCP server to your project:
+### Commands Requiring Develocity
+
+| Command | What It Does |
+|---------|--------------|
+| `/gradle:build-insights` | Overview of build health with trends |
+| `/gradle:diagnose flaky-tests` | Deep analysis of flaky test patterns |
+| `/gradle:diagnose outcome-mismatch` | Compare CI vs local environments |
+| `/gradle:diagnose failure-patterns` | Analyze recurring build failures |
+
+### Setup
+
+1. **Get a Develocity access key** from your Develocity server (Settings → Access Keys)
+
+2. **Add the Develocity MCP server** to your project:
 ```bash
-claude mcp add --transport http develocity https://dv.yourcompany.com/mcp \
+claude mcp add --transport http develocity https://develocity.yourcompany.com/mcp \
   --header "Authorization: Bearer YOUR_ACCESS_KEY"
 ```
 
-2. Grant the plugin permission to use it by adding to `.claude/settings.local.json`:
+3. **Grant the plugin permission** by adding to `.claude/settings.local.json`:
 ```json
 {
   "permissions": {
-    "allow": ["mcp__develocity__*"]
+    "allow": ["mcp__develocity__*", "mcp__drv__*"]
   }
 }
 ```
 
 **Full Setup Guide**: See [Develocity setup guide](skills/develocity/references/setup.md)
+
+### Without Develocity
+
+The plugin works fine without Develocity—you just won't have access to cross-build analytics. Use these commands instead:
+
+| Instead of... | Use... |
+|---------------|--------|
+| `/gradle:build-insights` | `/gradle:doctor` (local analysis) |
+| `/gradle:diagnose flaky-tests` | Run tests with `--rerun-tasks` locally |
+| `/gradle:diagnose outcome-mismatch` | Compare local environment manually |
 
 ## Automatic Warnings
 
@@ -356,6 +512,30 @@ hooks:
 ```
 
 See [hooks/settings.template.md](hooks/settings.template.md) for the full template.
+
+## Command Reference
+
+### Local Analysis (No Develocity Required)
+
+| Command | Description |
+|---------|-------------|
+| `/gradle:doctor` | Comprehensive local build health check |
+| `/gradle:fix-config-cache` | Fix configuration cache issues |
+| `/gradle:upgrade <version>` | Upgrade Gradle version |
+| `/gradle:migrate <version>` | Large-scale migration with OpenRewrite |
+| `/gradle:optimize-performance` | Apply performance improvements |
+| `/gradle:create-task <name>` | Scaffold a new Gradle task |
+| `/gradle:create-plugin <name>` | Scaffold a new Gradle plugin |
+| `/gradle:openrewrite <cmd>` | Run OpenRewrite recipes |
+
+### Develocity Analytics (Requires Setup)
+
+| Command | Description |
+|---------|-------------|
+| `/gradle:build-insights` | Build health overview with trends |
+| `/gradle:diagnose flaky-tests` | Analyze flaky test patterns |
+| `/gradle:diagnose outcome-mismatch` | Compare CI vs local environments |
+| `/gradle:diagnose failure-patterns` | Analyze recurring failures |
 
 ## Gradle Version Support
 

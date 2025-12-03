@@ -141,6 +141,47 @@ Flaky tests (3):
   2. PaymentProcessorTest.testTimeout - 15% flaky (3/20 runs)
 ```
 
+## Failure Classification
+
+Develocity classifies build failures into two types:
+
+### Verification Failures (Expected)
+Problems with **developer inputs** - expected during normal development.
+
+| Type | Message Prefixes |
+|------|------------------|
+| Compilation | "Compilation failed" |
+| Test | "Test failed", "Tests failed" |
+| Lint/Analysis | "Analysis failed", "Lint failed", "Check failed" |
+| Code generation | "Code generation failed", "Generation failed" |
+
+**Key insight:** These failures mean the build is working correctly - catching real code problems.
+
+### Non-Verification Failures (Unexpected)
+Problems with **build infrastructure** - NOT expected during normal development.
+
+| Type | Message Prefixes |
+|------|------------------|
+| Dependency | "Could not resolve", "Could not find" |
+| Infrastructure | "Unexpected error", "Unexpected failure" |
+| Configuration | "Could not create task" |
+
+**Key insight:** These failures block ALL developers and should be prioritized.
+
+### Custom Exception Classification
+
+To ensure proper classification for custom exceptions:
+```java
+// Extend VerificationException for verification failures
+public class MyCheckException extends org.gradle.api.tasks.VerificationException {
+    public MyCheckException(String message) {
+        super("Check failed: " + message);  // Use recognized prefix
+    }
+}
+```
+
+See [Failure Classification Guide](https://docs.gradle.com/develocity/current/guides/failure-classification-guide/) for details.
+
 ## Error Handling
 
 If MCP tools fail or are unavailable:
