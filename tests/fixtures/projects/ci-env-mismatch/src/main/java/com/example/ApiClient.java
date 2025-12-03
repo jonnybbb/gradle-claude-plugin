@@ -1,25 +1,15 @@
 package com.example;
 
-/**
- * Client for connecting to the Example API service.
- * Requires EXAMPLE_API_KEY environment variable to be configured.
- */
 public class ApiClient {
     private final String apiKey;
 
-    /**
-     * Creates a new ApiClient using the EXAMPLE_API_KEY environment variable.
-     *
-     * @throws IllegalStateException if EXAMPLE_API_KEY is not set or invalid
-     */
     public ApiClient() {
         this.apiKey = System.getenv("EXAMPLE_API_KEY");
         if (apiKey == null || apiKey.isEmpty()) {
-            throw new IllegalStateException(
-                    "EXAMPLE_API_KEY environment variable is required but not set. " +
-                    "Please configure this secret in your CI environment or set it locally."
+            throw new IllegalStateException("EXAMPLE_API_KEY environment variable is required but not set."
             );
         }
+
         if (!apiKey.startsWith("prod_")) {
             throw new IllegalStateException(
                     "EXAMPLE_API_KEY must start with 'prod_' prefix. Got: " + maskKey(apiKey)

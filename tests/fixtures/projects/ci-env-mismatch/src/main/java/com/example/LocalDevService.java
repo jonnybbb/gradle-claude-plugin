@@ -5,9 +5,6 @@ package com.example;
  * This service explicitly fails in CI environments to prevent
  * accidental use of development-only features in production pipelines.
  *
- * Scenario: LOCAL passes, CI fails
- * - Local developers can use this service freely
- * - CI builds should not use this service (it's dev-only tooling)
  */
 public class LocalDevService {
     private final boolean devMode;
@@ -22,8 +19,7 @@ public class LocalDevService {
         if ("true".equalsIgnoreCase(ciEnv)) {
             throw new IllegalStateException(
                     "LocalDevService cannot be used in CI environments. " +
-                    "This service is intended for local development only. " +
-                    "CI detected: CI=" + ciEnv
+                    "This service is intended for local development only. "
             );
         }
         this.devMode = true;
