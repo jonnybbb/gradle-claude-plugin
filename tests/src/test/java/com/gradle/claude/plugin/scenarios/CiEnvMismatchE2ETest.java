@@ -7,7 +7,6 @@ import org.gradle.testkit.runner.GradleRunner;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
-import java.io.*;
 import java.net.URI;
 import java.net.http.*;
 import java.nio.file.*;
@@ -30,13 +29,14 @@ import static org.gradle.testkit.runner.TaskOutcome.*;
  * <ol>
  *   <li>Run tests with CI=true and EXAMPLE_API_KEY (passes, tagged "CI")</li>
  *   <li>Run tests without CI secrets (fails due to missing EXAMPLE_API_KEY, tagged "LOCAL")</li>
- *   <li>Wait for build scans to be indexed on ge.gradle.org</li>
+ *   <li>Wait for build scans to be indexed on Develocity server</li>
  *   <li>Run /gradle:doctor and verify it detects the environment mismatch</li>
  * </ol>
  *
  * <h2>Prerequisites:</h2>
  * <ul>
- *   <li>DEVELOCITY_ACCESS_KEY environment variable (ge.gradle.org access key)</li>
+ *   <li>DEVELOCITY_ACCESS_KEY environment variable (Develocity server access key)</li>
+ *   <li>DEVELOCITY_SERVER environment variable (optional, defaults to https://ge.gradle.org)</li>
  *   <li>ANTHROPIC_API_KEY environment variable (for Claude API)</li>
  * </ul>
  *
@@ -66,6 +66,8 @@ class CiEnvMismatchE2ETest {
     private static String ciBuildScanId;
     private static String localBuildScanId;
 
+    private static final String DEFAULT_DEVELOCITY_SERVER = "https://ge.gradle.org";
+
     private static HttpClient httpClient;
     private static String develocityServer;
 
@@ -75,11 +77,13 @@ class CiEnvMismatchE2ETest {
                 .connectTimeout(Duration.ofSeconds(30))
                 .build();
 
-        // Read Develocity server from fixture's build configuration, allow env override
+        // Configure Develocity server from environment (with default fallback)
         develocityServer = System.getenv("DEVELOCITY_SERVER");
         if (develocityServer == null || develocityServer.isBlank()) {
-            develocityServer = extractDevelocityServer(FIXTURE_PATH);
+            develocityServer = DEFAULT_DEVELOCITY_SERVER;
         }
+        // Remove trailing slash if present
+        develocityServer = develocityServer.replaceAll("/$", "");
         System.out.println("Using Develocity server: " + develocityServer);
 
         // Verify fixture exists
@@ -247,37 +251,24 @@ class CiEnvMismatchE2ETest {
                 ## Project Information
 
                 Project: ci-env-mismatch
-                Path: %s
                 Gradle Version: %s
 
                 ## Recent Build Scans
 
-                This project has recent build scans on ge.gradle.org:
+                This project has recent build scans on %s:
 
                 1. CI Build (PASSED):
                    - Build Scan ID: %s
                    - URL: %s/s/%s
-                   - Tagged: CI
-                   - CI_ENV value: "true"
 
                 2. LOCAL Build (FAILED):
                    - Build Scan ID: %s
                    - URL: %s/s/%s
-                   - Tagged: LOCAL
-                   - CI_ENV value: "not set"
-                   - Error: ENVIRONMENT VERIFICATION FAILED - CI environment variable not set
-
-                ## Build File
-
-                ```kotlin
-                %s
-                ```
                 """,
-                FIXTURE_PATH,
                 GRADLE_VERSION,
+                develocityServer,
                 ciBuildScanId, develocityServer, ciBuildScanId,
-                localBuildScanId, develocityServer, localBuildScanId,
-                Files.readString(FIXTURE_PATH.resolve("build.gradle.kts"))
+                localBuildScanId, develocityServer, localBuildScanId
         );
 
         // Run the doctor agent
@@ -301,21 +292,22 @@ class CiEnvMismatchE2ETest {
             // Verify environment mismatch detection
             assertThat(response.toLowerCase())
                     .as("Doctor should detect environment-related issue")
-                    .containsAnyOf("environment", "ci", "env");
+                    .containsAnyOf("environment", "api", "key", "secret");
 
             assertThat(response.toLowerCase())
                     .as("Doctor should identify the pattern of CI passing and LOCAL failing")
-                    .containsAnyOf("ci", "local", "pass", "fail");
+                    .containsAnyOf("ci", "local", "pass", "fail", "missing");
 
-            // Verify CI=true suggestion
-            assertThat(response)
-                    .as("Doctor should suggest setting CI=true")
-                    .containsAnyOf("CI=true", "CI environment", "set CI", "export CI");
+            // Verify suggestion about the missing environment variable
+            assertThat(response.toUpperCase())
+                    .as("Doctor should identify EXAMPLE_API_KEY as the issue")
+                    .containsAnyOf("EXAMPLE_API_KEY", "API_KEY", "APIKEY");
 
-            // Verify build scan references
+            // Verify build scan references (check for server host or build scan IDs)
+            String serverHost = develocityServer.replaceAll("^https?://", "").toLowerCase();
             assertThat(response.toLowerCase())
                     .as("Doctor should reference build scans")
-                    .containsAnyOf("build scan", "ge.gradle.org", ciBuildScanId.toLowerCase(), localBuildScanId.toLowerCase());
+                    .containsAnyOf("build scan", serverHost, ciBuildScanId.toLowerCase(), localBuildScanId.toLowerCase());
 
             System.out.println("\n✅ All assertions passed - Doctor successfully detected the environment mismatch!");
         }
@@ -326,8 +318,13 @@ class CiEnvMismatchE2ETest {
     // =========================================================================
 
     private String extractBuildScanId(String output) {
-        // Pattern: https://ge.gradle.org/s/[buildScanId]
-        Pattern pattern = Pattern.compile("https://ge\\.gradle\\.org/s/([a-z0-9]+)");
+        // Pattern: https://<server>/s/[buildScanId]
+        // Extract host from develocityServer URL and escape dots for regex
+        String serverHost = develocityServer
+                .replaceAll("^https?://", "")  // Remove protocol
+                .replaceAll("/.*$", "")         // Remove path
+                .replace(".", "\\.");           // Escape dots for regex
+        Pattern pattern = Pattern.compile("https://" + serverHost + "/s/([a-z0-9]+)");
         Matcher matcher = pattern.matcher(output);
         if (matcher.find()) {
             return matcher.group(1);
@@ -352,19 +349,4 @@ class CiEnvMismatchE2ETest {
         }
     }
 
-    private static String extractDevelocityServer(Path projectDir) {
-        // Use GradleRunner to query the Develocity server from the build
-        BuildResult result = GradleRunner.create()
-                .withProjectDir(projectDir.toFile())
-                .withGradleVersion(GRADLE_VERSION)
-                .withArguments("printDevelocityServer", "--quiet")
-                .build();
-
-        Pattern pattern = Pattern.compile("DEVELOCITY_SERVER=(.+)");
-        Matcher matcher = pattern.matcher(result.getOutput());
-        if (matcher.find()) {
-            return matcher.group(1).trim();
-        }
-        throw new IllegalStateException("Could not find DEVELOCITY_SERVER in task output");
-    }
 }

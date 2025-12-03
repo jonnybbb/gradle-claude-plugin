@@ -40,11 +40,3 @@ develocity {
 tasks.named<Test>("test") {
     useJUnitPlatform()
 }
-
-// Helper task for tests to query Develocity server URL
-tasks.register("printDevelocityServer") {
-    group = "help"
-    doLast {
-        println("DEVELOCITY_SERVER=${develocity.server.get()}")
-    }
-}

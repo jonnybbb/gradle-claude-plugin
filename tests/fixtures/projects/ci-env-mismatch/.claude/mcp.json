@@ -2,7 +2,7 @@
   "mcpServers": {
     "develocity": {
       "type": "http",
-      "url": "https://ge.gradle.org/mcp",
+      "url": "${DEVELOCITY_SERVER:-https://ge.gradle.org}/mcp",
       "headers": {
         "Authorization": "Bearer ${DEVELOCITY_ACCESS_KEY}"
       }

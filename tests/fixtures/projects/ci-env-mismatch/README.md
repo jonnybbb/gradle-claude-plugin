@@ -28,7 +28,7 @@ Two test classes demonstrate different failure patterns:
 
 ## Build Scan Configuration
 
-- **Server**: `ge.gradle.org`
+- **Server**: Configurable via `DEVELOCITY_SERVER` environment variable (defaults to `ge.gradle.org`)
 - **Tags**: `CI` (when CI=true) or `LOCAL` (when CI is not set)
 - **Custom Value**: `CI_ENV` captures the CI environment variable value
 
@@ -83,10 +83,11 @@ The `/gradle:doctor` command should:
 
 ## MCP Configuration
 
-The `.claude/mcp.json` file configures a project-local Develocity MCP server for `ge.gradle.org`. The access key is passed via `DEVELOCITY_ACCESS_KEY` environment variable.
+The `.claude/mcp.json` file configures a project-local Develocity MCP server. The server URL is configurable via `DEVELOCITY_SERVER` environment variable (defaults to `ge.gradle.org`). The access key is passed via `DEVELOCITY_ACCESS_KEY` environment variable.
 
 ## Prerequisites
 
-- `DEVELOCITY_ACCESS_KEY` environment variable (ge.gradle.org access key)
+- `DEVELOCITY_ACCESS_KEY` environment variable (Develocity server access key)
+- `DEVELOCITY_SERVER` environment variable (optional, defaults to `https://ge.gradle.org`)
 - `claude` CLI installed
 - `jq` installed

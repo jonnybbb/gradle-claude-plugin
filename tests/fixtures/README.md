@@ -88,7 +88,7 @@ Features:
 This fixture tests the `/gradle:doctor` command's ability to detect the common "works in CI but not locally" problem.
 
 Features:
-- Develocity plugin configured for `ge.gradle.org`
+- Develocity plugin (configurable via `DEVELOCITY_SERVER` env var, defaults to `ge.gradle.org`)
 - `verifyEnvironment` task that requires `CI=true`
 - Build scans tagged with `CI` or `LOCAL`
 - Custom value capturing `CI_ENV` environment variable
@@ -99,8 +99,8 @@ Test scenario:
 
 **JUnit 5 Test**: `CiEnvMismatchE2ETest`
 - Run with: `./gradlew develocityE2ETests`
-- Requires `GE_ACCESS_KEY` and `ANTHROPIC_API_KEY` environment variables
-- Creates real build scans on ge.gradle.org
+- Requires `DEVELOCITY_ACCESS_KEY` and `ANTHROPIC_API_KEY` environment variables
+- Creates real build scans on Develocity server (configurable via `DEVELOCITY_SERVER`)
 - Verifies `/gradle:doctor` detects the environment mismatch
 
 ## Running Tests
@@ -175,7 +175,7 @@ Tests the `/gradle:doctor` command's Develocity integration for detecting enviro
 
 ```bash
 # Add credentials to tests/local.env
-echo "GE_ACCESS_KEY=your-ge-access-key" >> tests/local.env
+echo "DEVELOCITY_ACCESS_KEY=your-ge-access-key" >> tests/local.env
 echo "ANTHROPIC_API_KEY=your-anthropic-key" >> tests/local.env
 
 # Run the E2E test
@@ -186,7 +186,7 @@ cd tests
 **What it tests:**
 1. Runs CI build with `CI=true` (passes, publishes build scan with "CI" tag)
 2. Runs LOCAL build without CI (fails, publishes build scan with "LOCAL" tag)
-3. Waits for build scans to be indexed on ge.gradle.org (polls with timeout)
+3. Waits for build scans to be indexed on Develocity server (polls with timeout)
 4. Runs `/gradle:doctor` agent and verifies it identifies the CI environment variable mismatch
 5. Verifies doctor suggests the correct fix (`CI=true ./gradlew <task>`)
 

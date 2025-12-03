@@ -15,7 +15,7 @@ public class ClaudeTestClient implements AutoCloseable {
     private final AnthropicClient client;
     private final Model model;
 
-    private static final Model DEFAULT_MODEL = Model.CLAUDE_SONNET_4_20250514;
+    private static final Model DEFAULT_MODEL = Model.CLAUDE_HAIKU_4_5;
 
     public ClaudeTestClient() {
         this(System.getenv("ANTHROPIC_API_KEY"), DEFAULT_MODEL);

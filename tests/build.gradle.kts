@@ -66,7 +66,6 @@ tasks.test {
     // Enable parallel test execution
     systemProperty("junit.jupiter.execution.parallel.enabled", "true")
     systemProperty("junit.jupiter.execution.parallel.mode.default", "concurrent")
-
     testLogging {
         events("passed", "skipped", "failed")
         showStandardStreams = true
