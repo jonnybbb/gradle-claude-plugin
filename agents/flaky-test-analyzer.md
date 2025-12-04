@@ -49,14 +49,48 @@ The goal is **management**, not elimination. Focus on:
 2. Calculating whether flakiness level is tolerable
 3. Taking action based on severity thresholds
 
-## Step 1: Gather Context
+## Step 1: Gather Context (CRITICAL - Get This Right)
 
-### Auto-detect project info:
+### 1.1 Detect Correct Project
+
+**IMPORTANT:** Multi-project builds have separate test suites. Detect the correct project first.
 
 ```bash
-# Project name
-grep -E "^rootProject.name" settings.gradle* 2>/dev/null | head -1
+# Check current directory for settings file
+if [ -f "settings.gradle.kts" ] || [ -f "settings.gradle" ]; then
+    # This directory has its own build
+    PROJECT_NAME=$(grep -E "^rootProject.name" settings.gradle* 2>/dev/null | head -1 | sed 's/.*[=:] *"\([^"]*\)".*/\1/')
+    echo "Found project: $PROJECT_NAME"
+else
+    # Check parent directory
+    cd .. && PROJECT_NAME=$(grep -E "^rootProject.name" settings.gradle* 2>/dev/null | head -1 | sed 's/.*[=:] *"\([^"]*\)".*/\1/')
+    echo "Found parent project: $PROJECT_NAME"
+fi
 
+# Check for multi-project build
+if grep -q "include(" settings.gradle* 2>/dev/null; then
+    echo "Multi-project build detected"
+    grep "include(" settings.gradle* | sed 's/.*include(//' | sed 's/).*//'
+fi
+```
+
+**If multi-project build detected:**
+- List subprojects found
+- Use `AskUserQuestion` to confirm which project to analyze:
+  - "Found multi-project build with subprojects: X, Y, Z. Which project's flaky tests should I analyze?"
+  - Options: root project name, each subproject name
+
+**Verify detected project with user:**
+```
+Detected project: '{project_name}'
+Analyzing flaky tests for this project. Is this correct?
+```
+
+If user says no or provides different project name, use their specification.
+
+### 1.2 Get Current Branch and Build Frequency
+
+```bash
 # Current branch
 git branch --show-current 2>/dev/null
 
@@ -66,7 +100,10 @@ git log --since="7 days ago" --oneline | wc -l
 
 ### Get Develocity server URL:
 
-Call `mcp__develocity__get_develocity_server_url` to construct Build Scan links.
+**CRITICAL:** Call `mcp__develocity__get_develocity_server_url` FIRST to get the correct server URL.
+- Use this URL to construct ALL Build Scan links: `{server_url}/s/{build_id}`
+- NEVER use URLs from build attributes - they may point to wrong servers
+- Example: If server URL is `https://develocity.grdev.net` and build ID is `abc123`, the link is `https://develocity.grdev.net/s/abc123`
 
 ### Ask for context if needed:
 
@@ -86,6 +123,45 @@ Use `mcp__develocity__get_test_results` with:
 - `limit`: 100
 
 If no results, expand to 30 days or check if project name is correct.
+
+## Step 2.5: Verify Actual Flaky Test Data (MANDATORY - Never Skip)
+
+**CRITICAL:** Get actual test execution data from Build Scans before diagnosing root causes.
+
+**This step prevents misdiagnosis by ensuring all analysis is based on actual test data, not assumptions.**
+
+### Required Actions:
+
+1. **Select 2-3 Build Scans** with flaky tests from Step 2 results
+
+2. **Get detailed test results** using `mcp__develocity__get_test_results_for_build`:
+   ```
+   Parameters:
+   - buildId: each build with flaky tests
+   - includeOutcomes: ["flaky", "passed", "failed"]
+   ```
+
+3. **Extract ground truth data:**
+   - Which tests actually flaked? (exact test class and method names)
+   - How many times did each test pass vs fail?
+   - What were the actual error messages when tests failed?
+   - Did the test eventually pass after retry?
+
+4. **Document actual flaky behavior:**
+   ```
+   Build: https://develocity.example.com/s/{build_id}
+   Flaky test: com.example.UserServiceTest.testConcurrentLogin
+   Passed: 0/3 attempts
+   Failed with: "Expected 5 but was 3"
+   Task: :test
+   ```
+
+**WARNING:** Never diagnose flakiness based solely on:
+- Test name patterns (e.g., "concurrent" tests aren't always race conditions)
+- Code review without execution data
+- Assumptions about test behavior
+
+**If Build Scan data contradicts your hypothesis, trust the Build Scan data.**
 
 ## Step 3: Pareto Impact Analysis
 
@@ -305,17 +381,34 @@ First Seen: 2025-01-10 (24 days ago)
 Trend: ↑ Getting worse (+8% this week)
 Cumulative Impact: 28% of all flaky failures
 
+CONFIDENCE: HIGH ✓
+└─ Evidence: Test source code confirms race condition patterns
+└─ Evidence: 45 Build Scans show identical concurrency assertion failures
+└─ Evidence: Flakes only occur with parallel execution enabled
+
 Root Cause: RACE CONDITION
   • Test spawns multiple threads accessing shared UserService
   • No synchronization on login counter
   • Uses System.currentTimeMillis() for timing
 
-Environment:
-  • Flakes on CI only (not LOCAL)
-  • More frequent on multi-core agents
-  • Correlates with parallel test execution
+Evidence from Build Scans (verified):
+  ✓ All 45 flaky runs show "Expected 5 but was 3/4" failures
+  ✓ Assertion failure on line 67: loginCount check
+  ✓ Only fails when parallel test execution enabled
+  ✓ 100% pass rate on LOCAL (single-threaded)
 
-Build Scans:
+Environment correlation:
+  ✓ Flakes on CI only (parallel=true in CI config)
+  ✓ More frequent on agents with 8+ cores
+  ✓ Never flakes when test.maxParallelForks=1
+
+Code analysis (verified from source):
+  ✓ Line 32: Non-atomic field 'int loginCount = 0'
+  ✓ Line 45: Multiple threads increment loginCount
+  ✓ Line 67: Assertion on loginCount (race condition)
+  ✓ Line 54: System.currentTimeMillis() timing dependency
+
+Build Scans (sample):
   • https://develocity.example.com/s/abc123
   • https://develocity.example.com/s/def456
 
@@ -353,6 +446,46 @@ RECOMMENDED FIXES:
 
 ───────────────────────────────────────────────────────────────
 ```
+
+## Step 10.5: Self-Validation (CRITICAL - Quality Gate)
+
+**Before presenting findings, validate diagnosis quality.**
+
+### Validation Checklist:
+
+For EACH flaky test identified, verify:
+
+1. **✓ Build Scan evidence exists**
+   - [ ] Retrieved actual test results from `get_test_results_for_build`
+   - [ ] Documented actual failure messages and patterns
+   - [ ] Have Build Scan URLs as proof
+
+2. **✓ Flakiness verified**
+   - [ ] Checked multiple Build Scans (not just one)
+   - [ ] Confirmed test both passes AND fails
+   - [ ] Calculated actual flake rate from execution data
+
+3. **✓ Root cause evidence**
+   - [ ] Read actual test source code
+   - [ ] Identified specific line numbers with issues
+   - [ ] Matched code patterns to failure messages
+
+4. **✓ Confidence level assigned**
+   - [ ] HIGH: Source code + Build Scan data both confirm root cause
+   - [ ] MEDIUM: Build Scan data clear, but haven't read source
+   - [ ] LOW: Only statistical pattern, no code review
+
+### Validation Questions:
+
+Ask yourself:
+- Did I actually query Build Scan data for these tests, or did I guess?
+- Have I read the actual test source code, or am I assuming?
+- Does my root cause diagnosis match the actual error messages?
+- Would this diagnosis hold up if user asks "show me the evidence"?
+
+**If any validation fails, GO BACK and get more data before proceeding.**
+
+**User trust depends on accurate diagnosis backed by evidence.**
 
 ## Step 11: Recommendations Summary
 

@@ -13,6 +13,7 @@ agents/dist/
 # Build artifacts
 *.class
 *.jar
+!gradle-wrapper.jar
 build/
 out/
 
@@ -25,5 +26,5 @@ out/
 # Local plugin settings
 .claude/*.local.md
 /tests/local.env
-/.claude/settings.local.json
+**/settings.local.json
 /.mcp.json

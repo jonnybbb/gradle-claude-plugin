@@ -85,7 +85,7 @@ tasks.register<Test>("toolTests") {
 // Usage: ./gradlew aiTests
 tasks.register<Test>("aiTests") {
     group = "verification"
-    description = "Run AI-powered tests that require ANTHROPIC_API_KEY"
+    description = "Run AI-powered tests using Claude CLI with AWS Bedrock authentication"
 
     testClassesDirs = sourceSets["test"].output.classesDirs
     classpath = sourceSets["test"].runtimeClasspath
@@ -94,8 +94,6 @@ tasks.register<Test>("aiTests") {
         includeTags("ai")
     }
 
-    // Pass API key to tests (from local.env or system env)
-    environment("ANTHROPIC_API_KEY", localEnv["ANTHROPIC_API_KEY"] ?: System.getenv("ANTHROPIC_API_KEY") ?: "")
 
     // Increase timeout for AI tests
     systemProperty("junit.jupiter.execution.timeout.default", "120s")
@@ -127,11 +125,11 @@ tasks.register<Test>("hookTests") {
     }
 }
 
-// Task to run Develocity E2E tests (requires DEVELOCITY_ACCESS_KEY and ANTHROPIC_API_KEY)
+// Task to run Develocity E2E tests (requires DEVELOCITY_SERVER, DEVELOCITY_ACCESS_KEY, and AWS Bedrock auth)
 // Usage: ./gradlew develocityE2ETests
 tasks.register<Test>("develocityE2ETests") {
     group = "verification"
-    description = "Run Develocity end-to-end tests that require DEVELOCITY_ACCESS_KEY and ANTHROPIC_API_KEY"
+    description = "Run Develocity end-to-end tests that require DEVELOCITY_ACCESS_KEY"
 
     // Wire up the test source set (required for custom Test tasks)
     testClassesDirs = sourceSets["test"].output.classesDirs
@@ -142,9 +140,16 @@ tasks.register<Test>("develocityE2ETests") {
     }
 
     // Pass API keys and server config to tests (from local.env or system env)
+    environment("DEVELOCITY_SERVER", localEnv["DEVELOCITY_SERVER"] ?: System.getenv("DEVELOCITY_SERVER") ?: "")
     environment("DEVELOCITY_ACCESS_KEY", localEnv["DEVELOCITY_ACCESS_KEY"] ?: System.getenv("DEVELOCITY_ACCESS_KEY") ?: "")
-    environment("ANTHROPIC_API_KEY", localEnv["ANTHROPIC_API_KEY"] ?: System.getenv("ANTHROPIC_API_KEY") ?: "")
-    environment("DEVELOCITY_SERVER", localEnv["DEVELOCITY_SERVER"] ?: System.getenv("DEVELOCITY_SERVER") ?: "https://ge.gradle.org")
+    environment("DRV_ACCESS_KEY", localEnv["DRV_ACCESS_KEY"] ?: System.getenv("DRV_ACCESS_KEY") ?: "")
+
+    // Claude CLI / Bedrock authentication
+    environment("CLAUDE_CODE_USE_BEDROCK", localEnv["CLAUDE_CODE_USE_BEDROCK"] ?: System.getenv("CLAUDE_CODE_USE_BEDROCK") ?: "")
+    environment("AWS_BEARER_TOKEN_BEDROCK", localEnv["AWS_BEARER_TOKEN_BEDROCK"] ?: System.getenv("AWS_BEARER_TOKEN_BEDROCK") ?: "")
+    environment("AWS_REGION", localEnv["AWS_REGION"] ?: System.getenv("AWS_REGION") ?: "")
+    environment("ANTHROPIC_MODEL", localEnv["ANTHROPIC_MODEL"] ?: System.getenv("ANTHROPIC_MODEL") ?: "")
+    environment("ANTHROPIC_SMALL_FAST_MODEL", localEnv["ANTHROPIC_SMALL_FAST_MODEL"] ?: System.getenv("ANTHROPIC_SMALL_FAST_MODEL") ?: "")
 
     // Long timeout for E2E tests (build scan indexing can take time)
     systemProperty("junit.jupiter.execution.timeout.default", "10m")

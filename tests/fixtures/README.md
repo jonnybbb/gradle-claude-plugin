@@ -12,6 +12,9 @@ Test projects for validating the Gradle Expert Framework tools.
 | multi-module | 8.11 | Kotlin | Scale testing | 75-95 |
 | spring-boot | 8.5 | Kotlin | Platform testing | 70-90 |
 | ci-env-mismatch | 9.2.1 | Kotlin | CI vs LOCAL env detection | 70-90 |
+| flaky-tests | 9.2.1 | Kotlin | Flaky test detection | N/A |
+| failure-patterns | 9.2.1 | Kotlin | Failure categorization | N/A |
+| build-cache-analytics | 9.2.1 | Kotlin | Cache performance analysis | N/A |
 
 ## Fixture Details
 
@@ -88,7 +91,7 @@ Features:
 This fixture tests the `/gradle:doctor` command's ability to detect the common "works in CI but not locally" problem.
 
 Features:
-- Develocity plugin (configurable via `DEVELOCITY_SERVER` env var, defaults to `ge.gradle.org`)
+- Develocity plugin (configurable via required `DEVELOCITY_SERVER` env var)
 - `verifyEnvironment` task that requires `CI=true`
 - Build scans tagged with `CI` or `LOCAL`
 - Custom value capturing `CI_ENV` environment variable
@@ -99,9 +102,81 @@ Test scenario:
 
 **JUnit 5 Test**: `CiEnvMismatchE2ETest`
 - Run with: `./gradlew develocityE2ETests`
-- Requires `DEVELOCITY_ACCESS_KEY` and `ANTHROPIC_API_KEY` environment variables
+- Requires `DEVELOCITY_SERVER`, `DEVELOCITY_ACCESS_KEY`, and AWS Bedrock authentication (see tests/local.env.template)
 - Creates real build scans on Develocity server (configurable via `DEVELOCITY_SERVER`)
 - Verifies `/gradle:doctor` detects the environment mismatch
+
+### flaky-tests
+**Purpose**: Flaky test detection through build scan analysis
+
+This fixture demonstrates tests that fail intermittently due to random behavior, enabling analysis of flaky tests across multiple build runs.
+
+Features:
+- Develocity plugin for build scan publishing
+- Tests using random values that sometimes fail assertions
+- Multiple test methods with different flakiness rates (~20-50% failure)
+- Seeded random test for comparison (stable)
+
+Test scenarios:
+- `testRandomPercentageAboveThreshold` - ~20% failure rate
+- `testUnreliableOperationSucceeds` - ~30% failure rate
+- `testValueAboveThreshold` - ~50% failure rate
+- `testTimedOperationFast` - timing-dependent (~50% failure)
+
+**JUnit 5 Test**: `FlakyTestsE2ETest`
+- Run with: `./gradlew develocityE2ETests --tests "*FlakyTestsE2ETest*"`
+- Runs tests multiple times to generate mixed outcomes
+- Analyzes build scans to identify tests with inconsistent results
+- Uses Claude to provide root cause analysis and fix recommendations
+
+### failure-patterns
+**Purpose**: Failure pattern categorization and analysis
+
+This fixture can produce different types of build failures based on the `FAILURE_TYPE` environment variable, enabling analysis of failure patterns across build scans.
+
+Failure types:
+- `FAILURE_TYPE=none` - Successful build (baseline)
+- `FAILURE_TYPE=compilation` - Compilation error (syntax errors in generated code)
+- `FAILURE_TYPE=test` - Test assertion failures (buggy Calculator.square method)
+- `FAILURE_TYPE=dependency` - Dependency resolution failure (non-existent artifact)
+- `FAILURE_TYPE=resource` - Resource exhaustion (OutOfMemoryError with -Xmx16m)
+
+Features:
+- Develocity plugin for build scan publishing
+- Generated source code that can be valid or invalid
+- Conditional dependency on non-existent artifact
+- Test failures with clear assertion messages and stack traces
+- OOM test with configurable JVM memory
+
+**JUnit 5 Test**: `FailurePatternsE2ETest`
+- Run with: `./gradlew develocityE2ETests --tests "*FailurePatternsE2ETest*"`
+- Runs build with each failure type
+- Analyzes build scans to categorize failures
+- Uses Claude to identify distinguishing characteristics of each failure type
+
+### build-cache-analytics
+**Purpose**: Build cache performance analysis
+
+This fixture demonstrates different cache scenarios to enable analysis of cache effectiveness and performance metrics.
+
+Cache scenarios (controlled by `CACHE_SCENARIO` env var):
+- `fresh` - All cache misses (new cache directory)
+- `warm` - All cache hits (same inputs, populated cache)
+- `partial` - Mixed cache behavior (some inputs change)
+- `invalidate` - Cache invalidation (source code changes)
+
+Features:
+- Develocity plugin for build scan publishing
+- Local build cache with scenario-specific directories
+- Generated version file with stable or varying content
+- Custom cacheable task (`processData`)
+- Generated source code with stable or timestamp-based content
+
+**JUnit 5 Test**: `BuildCacheAnalyticsE2ETest`
+- Run with: `./gradlew develocityE2ETests --tests "*BuildCacheAnalyticsE2ETest*"`
+- Runs builds with different cache scenarios
+- Analyzes build scans for cache hit rates and time savings
+- Uses Claude to provide cache optimization recommendations
 
 ## Running Tests
 
@@ -175,8 +250,8 @@ Tests the `/gradle:doctor` command's Develocity integration for detecting enviro
 
 ```bash
 # Add credentials to tests/local.env
+echo "DEVELOCITY_SERVER=https://your-develocity-server.com" >> tests/local.env
 echo "DEVELOCITY_ACCESS_KEY=your-ge-access-key" >> tests/local.env
-echo "ANTHROPIC_API_KEY=your-anthropic-key" >> tests/local.env
 
 # Run the E2E test
 cd tests

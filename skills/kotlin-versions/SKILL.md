@@ -1,6 +1,6 @@
 ---
 name: kotlin-versions
-description: Comprehensive Kotlin version reference for upgrades and feature adoption. Use when working with Kotlin code that needs upgrading between versions (1.9→2.0, 2.0→2.1, 2.1→2.2), when adopting new Kotlin language features, when converting legacy patterns to modern Kotlin idioms, when configuring Gradle for specific Kotlin versions, when working with Kotlin Multiplatform, Kotlin/Native, Kotlin/Wasm, or Kotlin/JS targets, or when explaining Kotlin feature evolution. Covers K2 compiler, context parameters, guard conditions, data objects, inline value classes, virtual threads interop, Compose compiler, smart cast improvements, and all major features from Kotlin 1.9 through 2.2.
+description: This skill should be used when the user asks to "upgrade Kotlin version", "migrate Kotlin 1.9 to 2.0", "migrate Kotlin 2.0 to 2.1", "use K2 compiler", "use context parameters", "use guard conditions", "use data objects", "configure Kotlin Multiplatform", or mentions Kotlin/Wasm, Kotlin/Native, Compose compiler plugin, smart cast improvements, multi-dollar interpolation, or enum entries.
 ---
 
 # Kotlin Versions Skill
@@ -20,7 +20,7 @@ Reference for Kotlin language features, version upgrades, and modern idiom adopt
 
 ## Version-Specific References
 
-Select the appropriate reference based on your starting version:
+Select the appropriate reference based on the starting version:
 
 - **Kotlin 1.9.x Features**: See [references/kotlin-1.9.md](references/kotlin-1.9.md) - K2 Beta, data objects, time API, ..<operator
 - **Kotlin 2.0.x Features**: See [references/kotlin-2.0.md](references/kotlin-2.0.md) - K2 Stable, smart casts, Compose compiler

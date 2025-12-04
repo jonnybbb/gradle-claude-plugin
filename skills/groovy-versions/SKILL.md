@@ -1,6 +1,6 @@
 ---
 name: groovy-versions
-description: Comprehensive Groovy version reference for upgrades and feature adoption. Use when working with Groovy code that needs upgrading between versions (2.x→3.0, 3.0→4.0, 4.0→5.0), when adopting new Groovy language features, when converting legacy patterns to modern Groovy idioms, when configuring Gradle/Maven for specific Groovy versions, or when explaining Groovy feature evolution. Covers Parrot Parser, Lambda expressions, Method references, Switch expressions, Records, Sealed classes, GINQ queries, Extension methods, and all major features from Groovy 3.0 through 5.0.
+description: This skill should be used when the user asks to "upgrade Groovy version", "migrate Groovy 2 to 3", "migrate Groovy 3 to 4", "migrate Groovy 4 to 5", "use Groovy lambdas", "use Groovy records", "use GINQ queries", "configure Groovy in Gradle", or mentions Parrot Parser, Groovy switch expressions, Groovy sealed classes, Groovy extension methods, groovy-all dependency, or org.apache.groovy groupId changes.
 ---
 
 # Groovy Versions Skill
@@ -17,7 +17,7 @@ Reference for Groovy language features, version upgrades, and modern idiom adopt
 
 ## Version-Specific References
 
-Select the appropriate reference based on your starting version:
+Select the appropriate reference based on the starting version:
 
 - **Groovy 2.x → 3.0**: See [references/groovy-2-to-3.md](references/groovy-2-to-3.md) - Parrot Parser, Lambdas, Method references
 - **Groovy 3.0 → 4.0**: See [references/groovy-3-to-4.md](references/groovy-3-to-4.md) - Switch expressions, Records, Sealed classes, GINQ

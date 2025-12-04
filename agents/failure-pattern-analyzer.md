@@ -49,23 +49,59 @@ color: red
 
 You analyze recurring failure patterns across builds to identify root causes and prioritize fixes.
 
-## Step 1: Gather Context
+## Step 1: Gather Context (CRITICAL - Get This Right)
 
-### Auto-detect project info:
+### 1.1 Detect Correct Project
+
+**IMPORTANT:** Multi-project builds have separate failure patterns. Detect the correct project first.
 
 ```bash
-# Project name
-grep -E "^rootProject.name" settings.gradle* 2>/dev/null | head -1
+# Check current directory for settings file
+if [ -f "settings.gradle.kts" ] || [ -f "settings.gradle" ]; then
+    # This directory has its own build
+    PROJECT_NAME=$(grep -E "^rootProject.name" settings.gradle* 2>/dev/null | head -1 | sed 's/.*[=:] *"\([^"]*\)".*/\1/')
+    echo "Found project: $PROJECT_NAME"
+else
+    # Check parent directory
+    cd .. && PROJECT_NAME=$(grep -E "^rootProject.name" settings.gradle* 2>/dev/null | head -1 | sed 's/.*[=:] *"\([^"]*\)".*/\1/')
+    echo "Found parent project: $PROJECT_NAME"
+fi
 
-# Current branch
+# Check for multi-project build
+if grep -q "include(" settings.gradle* 2>/dev/null; then
+    echo "Multi-project build detected"
+    grep "include(" settings.gradle* | sed 's/.*include(//' | sed 's/).*//'
+fi
+```
+
+**If multi-project build detected:**
+- List subprojects found
+- Use `AskUserQuestion` to confirm which project to analyze:
+  - "Found multi-project build with subprojects: X, Y, Z. Which project's failures should I analyze?"
+  - Options: root project name, each subproject name
+
+**Verify detected project with user:**
+```
+Detected project: '{project_name}'
+Analyzing failures for this project. Is this correct?
+```
+
+If user says no or provides different project name, use their specification.
+
+### 1.2 Get Current Branch
+
+```bash
 git branch --show-current 2>/dev/null
 ```
 
-### Get Develocity server URL:
+### 1.3 Get Develocity server URL
 
-Call `mcp__develocity__get_develocity_server_url` to construct Build Scan links.
+**CRITICAL:** Call `mcp__develocity__get_develocity_server_url` FIRST to get the correct server URL.
+- Use this URL to construct ALL Build Scan links: `{server_url}/s/{build_id}`
+- NEVER use URLs from build attributes - they may point to wrong servers
+- Example: If server URL is `https://develocity.grdev.net` and build ID is `abc123`, the link is `https://develocity.grdev.net/s/abc123`
 
-### Clarify scope if needed:
+### 1.4 Clarify scope if needed
 
 Use `AskUserQuestion` if unclear:
 - Time range (default: last 7 days)
@@ -87,6 +123,44 @@ Get initial statistics:
 - Total failed builds
 - Failure rate (failed / total)
 - Distribution by day
+
+## Step 2.5: Get ACTUAL Failure Details (MANDATORY - Never Skip)
+
+**CRITICAL:** Before making ANY diagnosis, get actual failure messages from Build Scans.
+
+**This step prevents misdiagnosis by ensuring all analysis is based on actual Build Scan data, not assumptions or git changes.**
+
+### Required Actions:
+
+1. **Select 2-3 recent failed build IDs** from Step 2 results
+
+2. **Get actual failure details** using `mcp__develocity__get_build_failures`:
+   ```
+   Parameters:
+   - buildId: each failed build ID
+   - maxFailures: 20
+   ```
+
+3. **Extract ground truth data:**
+   - Which tests actually failed? (exact test class and method names)
+   - What were the actual error messages?
+   - What were the stack traces?
+   - Which tasks/goals failed?
+
+4. **Document actual failures:**
+   ```
+   Build: https://develocity.example.com/s/{build_id}
+   Failed test: com.example.FixtureValidationTest.shouldHaveExpectedFixtureCount
+   Error message: expected: 6 but was: 10
+   Task: :test
+   ```
+
+**WARNING:** Never diagnose based solely on:
+- Recent git changes (correlation ≠ causation)
+- Pattern assumptions without verification
+- Similar-looking failures without checking actual error messages
+
+**If Build Scan data contradicts your hypothesis, trust the Build Scan data.**
 
 ## Step 3: Get Failure Groups
 
@@ -236,7 +310,29 @@ Analyze:
 - Time pattern (certain times of day)?
 - Environment pattern (CI only? certain agents?)
 
-### 6.3 Calculate Impact
+### 6.3 Cross-Reference with Git Changes (Correlation Check)
+
+**Important:** Git changes may correlate with failures but don't prove causation.
+
+Check recent git changes:
+```bash
+# Get commits since first failure
+git log --since="2025-01-10" --oneline --name-only
+```
+
+**Cross-reference logic:**
+- If test `com.example.FooTest` is failing, check if `FooTest.java` or `Foo.java` was recently changed
+- If the failure started AFTER a commit touching related files, this is **correlation** (might be causal)
+- If the failure predates recent changes, git changes are **NOT the cause**
+
+**Evidence quality:**
+- **HIGH confidence**: Failure error message directly references changed file/class
+- **MEDIUM confidence**: Failure in same module as recent changes
+- **LOW confidence**: Recent changes in unrelated areas
+
+**Always verify against Build Scan data from Step 2.5 before claiming causation.**
+
+### 6.4 Calculate Impact
 
 - **Frequency**: How often does this occur?
 - **Blast radius**: How many builds affected?
@@ -307,6 +403,11 @@ First seen: 2025-01-10
 Last seen: 2025-01-15
 Trend: Increasing (4 in last 2 days)
 
+CONFIDENCE: HIGH ✓
+└─ Evidence: Error message directly references 'newFeatureFlag'
+└─ Evidence: All 12 failures have identical error in same file
+└─ Evidence: Failure started 2 hours after commit abc123
+
 Error pattern:
   Task: :core:compileKotlin
   Error: Unresolved reference: newFeatureFlag
@@ -314,10 +415,20 @@ Error pattern:
   This error started after commit abc123 which added a new
   feature flag without updating the core module.
 
-Affected builds:
+Affected builds (verified from Build Scans):
   • https://develocity.example.com/s/build1
   • https://develocity.example.com/s/build2
   • (10 more)
+
+Evidence from Build Scans:
+  ✓ All 12 Build Scans show identical compilation error
+  ✓ Error location: FeatureFlags.kt:25
+  ✓ Missing reference: 'newFeatureFlag'
+
+Git correlation analysis:
+  ✓ Commit abc123 (2025-01-10 09:30) added newFeatureFlag to :app
+  ✓ First failure: 2025-01-10 11:45 (2h 15m after commit)
+  ✓ No failures of this type before commit abc123
 
 Root cause:
   Commit abc123 added FeatureFlags.newFeatureFlag in :app
@@ -341,6 +452,11 @@ First seen: 2025-01-12
 Last seen: 2025-01-15
 Trend: Stable
 
+CONFIDENCE: MEDIUM ⚠
+└─ Evidence: All Build Scans show OOM in :app:test task
+└─ Evidence: Only occurs on CI agents (LOCAL builds pass)
+└─ Warning: No recent code changes correlate with this failure
+
 Error pattern:
   Task: :app:test
   Error: java.lang.OutOfMemoryError: Java heap space
@@ -348,9 +464,19 @@ Error pattern:
   Occurs during large integration test suite.
   Heap limit: 2GB, Peak usage: 2.1GB
 
-Affected builds (CI only):
+Affected builds (CI only, verified):
   • https://develocity.example.com/s/build3
   • https://develocity.example.com/s/build4
+
+Evidence from Build Scans:
+  ✓ All 6 failures show OOM during test execution
+  ✓ Peak heap usage: 2.1GB (exceeds 2GB limit)
+  ✓ Environment: CI agents only (LOCAL=0)
+
+Git correlation analysis:
+  ⚠ No code changes correlate with failure timing
+  ⚠ Failures started 2025-01-12 with no related commits
+  → This suggests environmental issue, not code change
 
 Root cause:
   Integration tests load large datasets into memory.
@@ -376,6 +502,46 @@ RECOMMENDED FIX:
 
 ───────────────────────────────────────────────────────────────
 ```
+
+## Step 8.5: Self-Validation (CRITICAL - Quality Gate)
+
+**Before presenting findings, validate diagnosis quality.**
+
+### Validation Checklist:
+
+For EACH failure pattern identified, verify:
+
+1. **✓ Build Scan evidence exists**
+   - [ ] Retrieved actual failure from `get_build_failures`
+   - [ ] Documented actual error message
+   - [ ] Have Build Scan URLs as proof
+
+2. **✓ Pattern consistency verified**
+   - [ ] Checked multiple Build Scans (not just one)
+   - [ ] Confirmed error message is identical across occurrences
+   - [ ] Verified same task/test fails in all cases
+
+3. **✓ Confidence level assigned**
+   - [ ] HIGH: Error directly references specific file/class changed in git
+   - [ ] MEDIUM: Error in same area as changes, but indirect
+   - [ ] LOW: No clear git correlation, environmental or infrastructure issue
+
+4. **✓ Causation vs correlation distinguished**
+   - [ ] If git changes cited, verified failure timing matches
+   - [ ] If no git changes correlate, marked as environmental/infrastructure
+   - [ ] Not claiming causation without direct evidence
+
+### Validation Questions:
+
+Ask yourself:
+- Did I actually query Build Scan data, or did I guess based on patterns?
+- Does my diagnosis match the actual error messages from Build Scans?
+- Am I confusing recent git activity with actual failure causes?
+- Would this diagnosis hold up if user asks "show me the evidence"?
+
+**If any validation fails, GO BACK and get more Build Scan data before proceeding.**
+
+**User trust depends on accurate diagnosis backed by evidence.**
 
 ## Step 9: Summary and Prioritization
 

@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "develocity": {
+      "type": "http",
+      "url": "${DEVELOCITY_SERVER}/mcp",
+      "headers": {
+        "Authorization": "Bearer ${DEVELOCITY_ACCESS_KEY}"
+      }
+    },
+    "drv": {
+      "type": "http",
+      "url": "${DEVELOCITY_SERVER}/drv/mcp",
+      "headers": {
+        "Authorization": "Bearer ${DRV_ACCESS_KEY}"
+      }
+    }
+  }
+}

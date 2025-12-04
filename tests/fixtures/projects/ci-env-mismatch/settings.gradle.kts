@@ -10,14 +10,29 @@ plugins {
 rootProject.name = "ci-env-mismatch"
 
 val develocityServerUrl = providers.environmentVariable("DEVELOCITY_SERVER")
-    .orElse("https://ge.gradle.org")
-    .get()
+    .getOrElse(
+        throw GradleException("DEVELOCITY_SERVER environment variable is required")
+    )
 
 develocity {
     server = develocityServerUrl
     buildScan {
         uploadInBackground = false
         publishing.onlyIf { true } // Always publish
+
+        // Add tags from environment for test filtering
+        val testTag = providers.environmentVariable("E2E_TEST_TAG").orNull
+        if (testTag != null) {
+            tag(testTag)
+        }
+        tag("ci-env-mismatch-fixture")
+
+        // Tag CI vs LOCAL builds
+        if (providers.environmentVariable("CI").orNull != null) {
+            tag("CI")
+        } else {
+            tag("LOCAL")
+        }
     }
 }
 

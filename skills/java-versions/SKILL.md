@@ -1,6 +1,6 @@
 ---
 name: java-versions
-description: Comprehensive Java version reference for upgrades and feature adoption. Use when working with Java code that needs upgrading between versions (8→11, 11→17, 17→21, 21→25), when adopting new Java language features, when converting legacy patterns to modern Java idioms, when configuring Gradle/Maven for specific Java versions, or when explaining Java feature evolution. Covers HTTP Client API, Records, Sealed Classes, Pattern Matching, Virtual Threads, Text Blocks, Switch Expressions, Stream Gatherers, Flexible Constructor Bodies, Scoped Values, and all major JEPs from Java 11 through 25.
+description: This skill should be used when the user asks to "upgrade Java version", "migrate Java 8 to 11", "migrate Java 11 to 17", "migrate Java 17 to 21", "migrate Java 21 to 25", "use Java records", "use virtual threads", "use pattern matching", "configure Java toolchain", or mentions switch expressions, sealed classes, text blocks, Stream Gatherers, Scoped Values, flexible constructor bodies, or specific JEP numbers.
 ---
 
 # Java Versions Skill
@@ -18,7 +18,7 @@ Reference for Java language features, version upgrades, and modern idiom adoptio
 
 ## Version-Specific References
 
-Select the appropriate reference based on your starting version:
+Select the appropriate reference based on the starting version:
 
 - **Java 11 Baseline**: See [references/java-11-baseline.md](references/java-11-baseline.md) - HTTP Client, String/Files methods, var in lambdas
 - **Java 11 → 17**: See [references/java-11-to-17.md](references/java-11-to-17.md) - 47 JEPs including Records, Sealed Classes, Pattern Matching

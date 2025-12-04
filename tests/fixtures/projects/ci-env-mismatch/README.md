@@ -28,7 +28,7 @@ Two test classes demonstrate different failure patterns:
 
 ## Build Scan Configuration
 
-- **Server**: Configurable via `DEVELOCITY_SERVER` environment variable (defaults to `ge.gradle.org`)
+- **Server**: Required `DEVELOCITY_SERVER` environment variable
 - **Tags**: `CI` (when CI=true) or `LOCAL` (when CI is not set)
 - **Custom Value**: `CI_ENV` captures the CI environment variable value
 
@@ -56,8 +56,8 @@ Run the end-to-end test:
 
 ```bash
 # Add credentials to tests/local.env
+echo "DEVELOCITY_SERVER=https://your-develocity-server.com" >> tests/local.env
 echo "DEVELOCITY_ACCESS_KEY=your-ge-access-key" >> tests/local.env
-echo "ANTHROPIC_API_KEY=your-anthropic-key" >> tests/local.env
 
 # Run the test
 cd tests
@@ -83,11 +83,11 @@ The `/gradle:doctor` command should:
 
 ## MCP Configuration
 
-The `.claude/mcp.json` file configures a project-local Develocity MCP server. The server URL is configurable via `DEVELOCITY_SERVER` environment variable (defaults to `ge.gradle.org`). The access key is passed via `DEVELOCITY_ACCESS_KEY` environment variable.
+The `.claude/mcp.json` file configures a project-local Develocity MCP server. The server URL is required via `DEVELOCITY_SERVER` environment variable. The access key is passed via `DEVELOCITY_ACCESS_KEY` environment variable.
 
 ## Prerequisites
 
 - `DEVELOCITY_ACCESS_KEY` environment variable (Develocity server access key)
-- `DEVELOCITY_SERVER` environment variable (optional, defaults to `https://ge.gradle.org`)
+- `DEVELOCITY_SERVER` environment variable (required)
 - `claude` CLI installed
 - `jq` installed

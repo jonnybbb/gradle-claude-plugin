@@ -66,14 +66,48 @@ Common scenarios:
 | Some devs pass, others fail | Developer machine differences |
 | Same commit, different results | Environment variables, caching issues |
 
-## Step 2: Gather Context
+## Step 2: Gather Context (CRITICAL - Get This Right)
 
-### Auto-detect project info:
+### 2.1 Detect Correct Project
+
+**IMPORTANT:** Multi-project builds may have different environments per subproject. Detect the correct project first.
 
 ```bash
-# Project name
-grep -E "^rootProject.name" settings.gradle* 2>/dev/null | head -1
+# Check current directory for settings file
+if [ -f "settings.gradle.kts" ] || [ -f "settings.gradle" ]; then
+    # This directory has its own build
+    PROJECT_NAME=$(grep -E "^rootProject.name" settings.gradle* 2>/dev/null | head -1 | sed 's/.*[=:] *"\([^"]*\)".*/\1/')
+    echo "Found project: $PROJECT_NAME"
+else
+    # Check parent directory
+    cd .. && PROJECT_NAME=$(grep -E "^rootProject.name" settings.gradle* 2>/dev/null | head -1 | sed 's/.*[=:] *"\([^"]*\)".*/\1/')
+    echo "Found parent project: $PROJECT_NAME"
+fi
 
+# Check for multi-project build
+if grep -q "include(" settings.gradle* 2>/dev/null; then
+    echo "Multi-project build detected"
+    grep "include(" settings.gradle* | sed 's/.*include(//' | sed 's/).*//'
+fi
+```
+
+**If multi-project build detected:**
+- List subprojects found
+- Use `AskUserQuestion` to confirm which project to analyze:
+  - "Found multi-project build with subprojects: X, Y, Z. Which project's outcome mismatch should I investigate?"
+  - Options: root project name, each subproject name
+
+**Verify detected project with user:**
+```
+Detected project: '{project_name}'
+Analyzing builds for this project. Is this correct?
+```
+
+If user says no or provides different project name, use their specification.
+
+### 2.2 Get Git Context
+
+```bash
 # Current commit
 git rev-parse HEAD 2>/dev/null
 
@@ -83,7 +117,10 @@ git branch --show-current 2>/dev/null
 
 ### Get Develocity server URL:
 
-Call `mcp__develocity__get_develocity_server_url` to construct Build Scan links.
+**CRITICAL:** Call `mcp__develocity__get_develocity_server_url` FIRST to get the correct server URL.
+- Use this URL to construct ALL Build Scan links: `{server_url}/s/{build_id}`
+- NEVER use URLs from build attributes - they may point to wrong servers
+- Example: If server URL is `https://develocity.grdev.net` and build ID is `abc123`, the link is `https://develocity.grdev.net/s/abc123`
 
 ## Step 3: Query Builds by Environment
 
@@ -122,11 +159,47 @@ Create a comparison table:
 ⚠ Mismatch detected: CI passes but LOCAL fails
 ```
 
-## Step 5: Deep Comparison of Passing vs Failing Build
+## Step 5: Get ACTUAL Build Data (MANDATORY - Never Skip)
 
-Select one passing build (CI) and one failing build (LOCAL), then use `mcp__develocity__get_build_by_id` with `additionalDataToInclude`: `["attributes"]` to get detailed info.
+**CRITICAL:** Get actual build data from Build Scans before diagnosing environment differences.
 
-### 5.1 Environment Variables
+**This step prevents misdiagnosis by ensuring all analysis is based on actual Build Scan data, not assumptions.**
+
+### Required Actions:
+
+1. **Select one passing and one failing build** from Step 4 results
+
+2. **Get detailed build data** using `mcp__develocity__get_build_by_id`:
+   ```
+   Parameters:
+   - buildId: passing build ID
+   - additionalDataToInclude: ["attributes", "build_performance"]
+
+   (Repeat for failing build)
+   ```
+
+3. **If builds failed, get failure details** using `mcp__develocity__get_build_failures`:
+   ```
+   Parameters:
+   - buildId: failing build ID
+   - maxFailures: 20
+   ```
+
+4. **Extract ground truth data:**
+   - What actually failed? (exact task name, error message)
+   - What environment variables are present?
+   - What tool versions are used?
+   - What Gradle properties are set?
+
+**WARNING:** Never diagnose based on assumptions about environment differences without verifying from Build Scans.
+
+**If Build Scan data contradicts your hypothesis, trust the Build Scan data.**
+
+## Step 6: Deep Comparison of Passing vs Failing Build
+
+Using the data from Step 5, create detailed comparisons:
+
+### 6.1 Environment Variables
 
 Compare the `values` from build attributes:
 
@@ -208,6 +281,46 @@ cat .circleci/config.yml 2>/dev/null
 
 Identify environment variables set in CI that might be missing locally.
 
+## Step 7.5: Self-Validation (CRITICAL - Quality Gate)
+
+**Before presenting findings, validate diagnosis quality.**
+
+### Validation Checklist:
+
+For EACH root cause identified, verify:
+
+1. **✓ Build Scan evidence exists**
+   - [ ] Retrieved actual build data from `get_build_by_id`
+   - [ ] Retrieved actual failure from `get_build_failures` (if applicable)
+   - [ ] Have Build Scan URLs as proof
+
+2. **✓ Comparison is valid**
+   - [ ] Compared SAME commit across environments (apples to apples)
+   - [ ] Confirmed different outcomes (one passes, one fails)
+   - [ ] Checked multiple builds to rule out flakiness
+
+3. **✓ Root cause evidence**
+   - [ ] Identified specific environment difference from Build Scan data
+   - [ ] Matched difference to actual failure message
+   - [ ] Verified difference exists in both Build Scans
+
+4. **✓ Confidence level assigned**
+   - [ ] HIGH: Failure message directly references missing env var/version
+   - [ ] MEDIUM: Clear correlation between difference and failure
+   - [ ] LOW: Suspected difference but not definitively proven
+
+### Validation Questions:
+
+Ask yourself:
+- Did I actually query Build Scan data for both environments?
+- Does my root cause diagnosis match the actual error messages?
+- Am I comparing the same commit in both environments?
+- Would this diagnosis hold up if user asks "show me the evidence"?
+
+**If any validation fails, GO BACK and get more Build Scan data before proceeding.**
+
+**User trust depends on accurate diagnosis backed by evidence.**
+
 ## Step 8: Generate Report
 
 ```
@@ -224,18 +337,38 @@ Comparison Summary:
 Root Causes Identified:
 
 1. [CRITICAL] Missing environment variable: CI
+   CONFIDENCE: HIGH ✓
+   └─ Evidence: Failure message "Feature flag 'CI' not set"
+   └─ Evidence: CI Build Scan shows CI=true
+   └─ Evidence: LOCAL Build Scan has no CI variable
+
    • CI builds have CI=true
    • LOCAL builds don't have CI set
    • Build logic depends on CI variable for feature flags
 
+   Evidence from Build Scans (verified):
+   ✓ CI Build Scan shows: values=["CI=true"]
+   ✓ LOCAL Build Scan shows: (no CI variable)
+   ✓ Failure message: "Feature flag 'CI' not found"
+
 2. [HIGH] Java version mismatch
+   CONFIDENCE: HIGH ✓
+   └─ Evidence: Compilation error "cannot find symbol: var"
+   └─ Evidence: CI uses Java 21 (supports var pattern)
+   └─ Evidence: LOCAL uses Java 17 (no var pattern support)
+
    • CI uses Java 21.0.2
    • LOCAL uses Java 17.0.1
-   • Some code uses Java 21 features
+   • Some code uses Java 21 features (var pattern matching)
 
-Build Scans Compared:
-  • CI (passed):    https://develocity.example.com/s/abc123
-  • LOCAL (failed): https://develocity.example.com/s/def456
+   Evidence from Build Scans (verified):
+   ✓ CI Build Scan: Java 21.0.2
+   ✓ LOCAL Build Scan: Java 17.0.1
+   ✓ Compilation error at line 45 using var pattern
+
+Build Scans Compared (construct using server URL from get_develocity_server_url):
+  • CI (passed):    {server_url}/s/{ci_build_id}
+  • LOCAL (failed): {server_url}/s/{local_build_id}
 
 ═══════════════════════════════════════════════════════════════
                     RECOMMENDED FIXES

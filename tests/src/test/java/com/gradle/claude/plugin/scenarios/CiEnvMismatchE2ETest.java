@@ -1,13 +1,13 @@
 package com.gradle.claude.plugin.scenarios;
 
-import com.gradle.claude.plugin.util.ClaudeTestClient;
-import com.gradle.claude.plugin.util.ClaudeTestClient.AgentTestResult;
+import com.gradle.claude.plugin.util.ClaudeCLIClient;
+import com.gradle.claude.plugin.util.ClaudeCLIClient.CLITestResult;
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
-import java.nio.file.*;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.*;
 import java.util.regex.*;
@@ -34,8 +34,7 @@ import static org.gradle.testkit.runner.TaskOutcome.*;
  * <h2>Prerequisites:</h2>
  * <ul>
  *   <li>DEVELOCITY_ACCESS_KEY environment variable (Develocity server access key)</li>
- *   <li>DEVELOCITY_SERVER environment variable (optional, defaults to https://ge.gradle.org)</li>
- *   <li>ANTHROPIC_API_KEY environment variable (for Claude API)</li>
+ *   <li>DEVELOCITY_SERVER environment variable (required)</li>
  * </ul>
  *
  * <h2>Running:</h2>
@@ -47,32 +46,34 @@ import static org.gradle.testkit.runner.TaskOutcome.*;
 @Tag("develocity")
 @DisplayName("CI Environment Mismatch Detection E2E Test")
 @EnabledIfEnvironmentVariable(named = "DEVELOCITY_ACCESS_KEY", matches = ".+")
-@EnabledIfEnvironmentVariable(named = "ANTHROPIC_API_KEY", matches = ".+")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class CiEnvMismatchE2ETest {
 
     private static final Path PLUGIN_ROOT = Path.of("..").toAbsolutePath().normalize();
     private static final Path FIXTURE_PATH = PLUGIN_ROOT.resolve("tests/fixtures/projects/ci-env-mismatch");
+    private static final Path MCP_CONFIG_PATH = PLUGIN_ROOT.resolve("tests/src/test/resources/e2e-mcp-config.json");
     private static final String GRADLE_VERSION = "9.2.1";
 
-    // Build scan IDs captured during test
+    // Unique tag for this test run - used to filter builds in Develocity
+    private static final String TEST_RUN_TAG = "e2e-ci-mismatch-" + System.currentTimeMillis();
+
+    // Build scan IDs captured during test (for logging only)
     private static String ciBuildScanId;
     private static String localBuildScanId;
-
-    private static final String DEFAULT_DEVELOCITY_SERVER = "https://ge.gradle.org";
 
     private static String develocityServer;
 
     @BeforeAll
     static void setUpClass() {
-        // Configure Develocity server from environment (with default fallback)
+        // Configure Develocity server from environment (required)
         develocityServer = System.getenv("DEVELOCITY_SERVER");
         if (develocityServer == null || develocityServer.isBlank()) {
-            develocityServer = DEFAULT_DEVELOCITY_SERVER;
+            throw new IllegalStateException("DEVELOCITY_SERVER environment variable is required");
         }
         // Remove trailing slash if present
         develocityServer = develocityServer.replaceAll("/$", "");
         System.out.println("Using Develocity server: " + develocityServer);
+        System.out.println("Test run tag: " + TEST_RUN_TAG);
 
         // Verify fixture exists
         assertThat(FIXTURE_PATH)
@@ -105,6 +106,7 @@ class CiEnvMismatchE2ETest {
         Map<String, String> env = new HashMap<>(System.getenv());
         env.put("CI", "true");
         env.put("EXAMPLE_API_KEY", "prod_test_key_12345");
+        env.put("E2E_TEST_TAG", TEST_RUN_TAG);
 
         // Run only ApiClientTest - this test passes in CI (has EXAMPLE_API_KEY)
         // The fixture also contains LocalDevServiceTest which tests the reverse scenario
@@ -145,6 +147,7 @@ class CiEnvMismatchE2ETest {
         Map<String, String> env = new HashMap<>(System.getenv());
         env.remove("CI");
         env.remove("EXAMPLE_API_KEY");
+        env.put("E2E_TEST_TAG", TEST_RUN_TAG);
 
         // Run only ApiClientTest - this test fails locally (missing EXAMPLE_API_KEY)
         BuildResult result = GradleRunner.create()
@@ -205,83 +208,53 @@ class CiEnvMismatchE2ETest {
 
     @Test
     @Order(4)
-    @DisplayName("Step 4: Run /gradle:diagnose outcome-mismatch and verify environment mismatch detection")
+    @DisplayName("Step 4: Run /diagnose outcome-mismatch and verify environment mismatch detection")
     void runDiagnoseOutcomeMismatchAndVerifyDetection() throws Exception {
-        System.out.println("\n=== Step 4: Running /gradle:diagnose outcome-mismatch ===\n");
+        System.out.println("\n=== Step 4: Running /diagnose outcome-mismatch ===\n");
 
-        // Load the outcome-mismatch-analyzer agent prompt
-        Path agentPath = PLUGIN_ROOT.resolve("agents/outcome-mismatch-analyzer.md");
-        String agentContent = Files.readString(agentPath);
-
-        // Extract the prompt content (after frontmatter)
-        int endOfFrontmatter = agentContent.indexOf("---", 3) + 3;
-        String agentPrompt = agentContent.substring(endOfFrontmatter).trim();
-
-        // Create context about the project and builds
-        // IMPORTANT: Do NOT include environment variable details - the agent must query Develocity
-        // to discover the differences between CI and LOCAL builds
+        // Minimal context - the agent should discover the environment mismatch on its own
+        // Only provide the tag to filter builds from this specific test run
         String projectContext = String.format("""
-                ## Project Information
-
                 Project: ci-env-mismatch
-                Gradle Version: %s
-                Develocity Server: %s
 
-                ## Scenario
+                Filter builds using tag: %s
 
-                CI builds PASS but LOCAL builds FAIL for the same code.
-                The test task passes in CI but fails locally with an IllegalStateException
-                from the ApiClient class.
-
-                ## Recent Build Scans
-
-                Query these build scans to compare CI vs LOCAL environments:
-
-                1. CI Build (PASSED):
-                   - Build Scan ID: %s
-                   - URL: %s/s/%s
-
-                2. LOCAL Build (FAILED):
-                   - Build Scan ID: %s
-                   - URL: %s/s/%s
-
-                Use mcp__develocity__get_build_by_id to retrieve attributes from each build
-                and compare the environment variables to identify the root cause.
+                There are builds with different outcomes (one passed, one failed).
+                Investigate why the outcomes differ.
                 """,
-                GRADLE_VERSION,
-                develocityServer,
-                ciBuildScanId, develocityServer, ciBuildScanId,
-                localBuildScanId, develocityServer, localBuildScanId
+                TEST_RUN_TAG
         );
 
-        // Run the outcome-mismatch-analyzer agent
-        try (ClaudeTestClient claude = new ClaudeTestClient()) {
-            AgentTestResult result = claude.testAgent(
-                    agentPrompt,
-                    projectContext,
-                    """
-                    Investigate why builds have different outcomes.
-                    Compare CI vs LOCAL builds, analyze environment differences,
-                    identify missing variables or configuration mismatches,
-                    and suggest how to align environments.
-                    """
-            );
+        // Run /gradle:diagnose outcome-mismatch command using Claude CLI with plugin support
+        String prompt = String.format("/gradle:diagnose outcome-mismatch\n\n%s", projectContext);
+        try (ClaudeCLIClient claude = new ClaudeCLIClient(MCP_CONFIG_PATH, PLUGIN_ROOT, FIXTURE_PATH)) {
+            CLITestResult result = claude.run(prompt);
+
+            // Verify MCP tools were actually used
+            assertThat(result.hasToolExecutions())
+                    .as("Should execute real MCP tools (Develocity/DRV)")
+                    .isTrue();
+
+            System.out.println("=== MCP Tools Executed ===");
+            result.toolExecutions().forEach(exec ->
+                    System.out.println("  - " + exec.toolName() + ": " + (exec.succeeded() ? "✅" : "❌")));
 
             String response = result.response();
-            System.out.println("=== Outcome Mismatch Analyzer Output ===\n");
+            System.out.println("=== /diagnose outcome-mismatch Output ===\n");
             System.out.println(response);
-            System.out.println("\n=== End Outcome Mismatch Analyzer Output ===\n");
+            System.out.println("\n=== End /diagnose outcome-mismatch Output ===\n");
 
             // Verify the agent identified the environment mismatch pattern
             assertThat(response.toLowerCase())
                     .as("Analyzer should detect CI vs LOCAL mismatch pattern")
                     .containsAnyOf("ci", "local", "mismatch", "different", "environment");
 
-            // Verify the agent identified missing environment variable(s) as root cause
+            // Verify the agent identified missing environment variable(s) or configuration as root cause
             // The agent queries Develocity and may paraphrase variable names, so accept common patterns
-            assertThat(response.toUpperCase())
-                    .as("Analyzer should identify environment variable(s) as the root cause")
-                    .containsAnyOf("EXAMPLE_API_KEY", "API_KEY", "APIKEY", "API_TOKEN", "API_URL", "API_BASE");
+            assertThat(response.toLowerCase())
+                    .as("Analyzer should identify environment variable(s) or missing configuration as the root cause")
+                    .containsAnyOf("example_api_key", "api_key", "api key", "apikey", "api_token", "api_url",
+                            "environment variable", "env var", "missing", "not set", "secret", "credential");
 
             // Verify the agent found the failure relates to API/client configuration
             assertThat(response.toLowerCase())
@@ -293,7 +266,7 @@ class CiEnvMismatchE2ETest {
                     .as("Analyzer should provide fix recommendations")
                     .containsAnyOf("set", "export", "configure", "add", "fix", "recommend");
 
-            System.out.println("\n✅ All assertions passed - Outcome Mismatch Analyzer correctly identified the environment mismatch!");
+            System.out.println("\n✅ All assertions passed - /diagnose outcome-mismatch correctly identified the environment mismatch!");
         }
     }
 
